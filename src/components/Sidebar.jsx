@@ -1,11 +1,13 @@
 import React from 'react';
-import { Sparkles, BookOpen, CalendarDays, Wallet, Users, LogOut, ArrowLeftRight, Shield } from 'lucide-react';
+import { Sparkles, BookOpen, CalendarDays, Wallet, Users, LogOut, ArrowLeftRight, Shield, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function Sidebar({ activeView, setActiveView, onOpenSwitchUser }) {
   const { currentUser, logout, isAdmin } = useAuth();
   const { data } = useStore();
+  const { isInstallable, isInstalled, promptInstall } = usePWAInstall();
 
   const myPendingTasks = data.tasks.filter(
     t => !(t.completedStudentIds || []).includes(currentUser?.id)
@@ -111,6 +113,33 @@ export default function Sidebar({ activeView, setActiveView, onOpenSwitchUser })
           );
         })}
       </nav>
+
+      {/* PWA Install Button (Desktop) */}
+      {isInstallable && !isInstalled && (
+        <div style={{ padding: '0 0.85rem 0.65rem 0.85rem' }}>
+          <button
+            onClick={promptInstall}
+            id="btn-pwa-install-sidebar"
+            className="btn btn-secondary"
+            style={{
+              width: '100%',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              padding: '0.5rem 0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              backgroundColor: 'var(--primary-soft)',
+              borderColor: 'var(--primary-border)',
+              color: 'var(--primary)'
+            }}
+          >
+            <Download size={14} />
+            <span>Install Aplikasi</span>
+          </button>
+        </div>
+      )}
 
       {/* User Mini-Profile Card */}
       <div style={{

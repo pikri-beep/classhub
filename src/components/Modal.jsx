@@ -6,8 +6,14 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -17,18 +23,19 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        backdropFilter: 'blur(3px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.55)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         zIndex: 1000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem'
+        padding: '0.85rem'
       }}
       onClick={onClose}
     >
       <div
-        className="card"
+        className="card modal-inner"
         style={{
           width: '100%',
           maxWidth,
@@ -36,7 +43,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
           maxHeight: '90vh',
           overflowY: 'auto',
           boxShadow: 'var(--shadow-lg)',
-          animation: 'fadeIn 0.2s ease'
+          animation: 'modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -48,25 +55,41 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
           paddingBottom: '0.65rem',
           borderBottom: '1px solid var(--border)'
         }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{title}</h3>
+          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className="btn-ghost"
+            className="btn btn-ghost btn-sm"
             style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              color: 'var(--text-muted)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '4px',
-              display: 'flex'
+              padding: '0.4rem',
+              minWidth: '36px',
+              minHeight: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 'var(--radius-full)'
             }}
+            aria-label="Tutup dialog"
           >
             <X size={18} />
           </button>
         </div>
         {children}
       </div>
+
+      <style>{`
+        @keyframes modalPop {
+          from {
+            opacity: 0;
+            transform: scale(0.96) translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

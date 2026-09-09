@@ -64,11 +64,11 @@ export default function LoginGate() {
         padding: '1.5rem'
       }}>
         <div className="card" style={{
-        width: '100%',
-        maxWidth: '420px',
-        padding: '2.25rem 2rem',
-        boxShadow: 'var(--shadow-md)'
-      }}>
+          width: '100%',
+          maxWidth: '420px',
+          padding: '2rem 1.35rem',
+          boxShadow: 'var(--shadow-md)'
+        }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '2.25rem', lineHeight: 1, marginBottom: '0.5rem' }}>🏫</div>

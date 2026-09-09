@@ -135,7 +135,7 @@ export default function ScheduleView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
           <button
             onClick={() => setActiveSubTab('lessons')}
             className={`btn ${activeSubTab === 'lessons' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
@@ -159,20 +159,20 @@ export default function ScheduleView() {
       {activeSubTab === 'lessons' && (
         <div>
           {/* Day Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', overflowX: 'auto', marginBottom: '1.25rem' }}>
+          <div className="scrollable-tabs" style={{ marginBottom: '1.25rem' }}>
             {days.map(d => (
               <button
                 key={d}
                 onClick={() => setActiveDay(d)}
                 className={`btn ${activeDay === d ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-                style={{ fontWeight: activeDay === d ? 700 : 500 }}
+                style={{ fontWeight: activeDay === d ? 700 : 500, minWidth: '60px' }}
               >
                 {d}
               </button>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             {/* Left: Subjects */}
             <div>
               <div className="notion-section-title" style={{ marginTop: 0 }}>
@@ -278,7 +278,7 @@ export default function ScheduleView() {
 
       {/* 4. CALENDAR CONTENT */}
       {activeSubTab === 'calendar' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
           {/* Calendar Grid */}
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: '1rem' }}>

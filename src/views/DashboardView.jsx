@@ -147,7 +147,7 @@ export default function DashboardView({ onNavigate }) {
         )}
       </div>
 
-      {/* 5. TODAY'S LESSONS TABLE */}
+      {/* 5. TODAY'S LESSONS */}
       <div className="notion-section-title">
         <span>Jadwal Pelajaran Hari {currentDayName}</span>
         <button onClick={() => onNavigate('schedule')} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
@@ -156,7 +156,8 @@ export default function DashboardView({ onNavigate }) {
         </button>
       </div>
 
-      <div className="notion-table-wrapper">
+      {/* Desktop Table View */}
+      <div className="notion-table-wrapper desktop-only-table">
         <table className="notion-table">
           <thead>
             <tr>
@@ -187,6 +188,32 @@ export default function DashboardView({ onNavigate }) {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card List View */}
+      <div className="mobile-only-cards" style={{ marginBottom: '1.5rem' }}>
+        {(todaySchedule.subjects || []).length === 0 ? (
+          <div className="card" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Tidak ada jam pelajaran hari ini (Libur / Kegiatan Sekolah).
+          </div>
+        ) : (
+          todaySchedule.subjects.map((sub, idx) => (
+            <div key={idx} className="card" style={{ padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>#{idx + 1}</span>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>{sub.subject}</strong>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  {sub.teacher || 'Guru Pengampu'} • <span style={{ color: 'var(--text-muted)' }}>{sub.room || 'Ruang Kelas'}</span>
+                </div>
+              </div>
+              <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
+                {sub.timeStart} - {sub.timeEnd}
+              </span>
+            </div>
+          ))
+        )}
       </div>
 
       {/* 6. LATEST ANNOUNCEMENT */}

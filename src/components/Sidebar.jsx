@@ -22,18 +22,7 @@ export default function Sidebar({ activeView, setActiveView, onOpenSwitchUser })
   ];
 
   return (
-    <aside style={{
-      width: 'var(--sidebar-width)',
-      height: '100vh',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      backgroundColor: 'var(--bg-sidebar)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 50
-    }}>
+    <aside className="desktop-sidebar">
       {/* Brand Header */}
       <div style={{
         padding: '1.25rem 1.25rem 1rem 1.25rem',

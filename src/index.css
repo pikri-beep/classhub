@@ -161,6 +161,20 @@ button, input, select, textarea {
   min-height: 100vh;
 }
 
+.desktop-sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  transition: transform var(--transition-base);
+}
+
 .main-content-wrapper {
   flex: 1;
   margin-left: var(--sidebar-width);
@@ -746,6 +760,10 @@ button, input, select, textarea {
    RESPONSIVE MEDIA QUERIES (BREAKPOINTS)
    ========================================================================== */
 @media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+
   .mobile-nav-dock {
     display: flex !important;
   }
@@ -816,6 +834,10 @@ button, input, select, textarea {
 
   .page-container {
     padding: 0.85rem 0.65rem calc(var(--bottom-nav-height) + 1.25rem) 0.65rem;
+  }
+
+  .install-banner-desc {
+    display: none;
   }
 }
 

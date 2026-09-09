@@ -1,176 +1,19 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ClassHub - Web Aplikasi Manajemen Kelas Modern, Clean & Minimalis untuk Siswa dan Pengurus Kelas" />
-  <title>ClassHub — Manajemen Kelas Terpadu</title>
+  <meta name="description" content="ClassHub - Portal Manajemen Terpadu Kelas Modern, Clean & User Friendly" />
+  <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+  <title>ClassHub — Portal Kelas Terpadu</title>
 
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- CSS Design System & Modules -->
-  <link rel="stylesheet" href="css/tokens.css" />
-  <link rel="stylesheet" href="css/main.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/views.css" />
 </head>
 <body>
-
-  <!-- MOBILE SIDEBAR OVERLAY -->
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-  <!-- APP SHELL -->
-  <div class="app-container">
-
-    <!-- SIDEBAR NAVIGATION (HIDDEN WHEN NOT LOGGED IN) -->
-    <aside class="sidebar" id="sidebar">
-      <!-- Brand Logo / Header with Image Slot -->
-      <div class="sidebar-brand">
-        <div class="brand-logo-container" title="Foto / Logo Kelas (letakkan di folder assets/logo.svg atau assets/logo.png)">
-          <img src="assets/logo.svg" alt="Logo Kelas" class="brand-logo-img" id="sidebar-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-          <div class="brand-logo-fallback" style="display: none;">
-            <span>CH</span>
-          </div>
-        </div>
-        <div class="brand-info">
-          <span class="brand-title">ClassHub</span>
-          <span class="brand-subtitle">XII PPLG 1</span>
-        </div>
-      </div>
-
-      <!-- Navigation Links -->
-      <nav class="sidebar-nav">
-        <span class="nav-section-title">Menu Utama</span>
-        
-        <a href="#dashboard" class="nav-item active">
-          <i data-lucide="layout-dashboard"></i>
-          <span>Dashboard</span>
-        </a>
-
-        <a href="#announcements" class="nav-item">
-          <i data-lucide="megaphone"></i>
-          <span>Pengumuman</span>
-        </a>
-
-        <a href="#tasks" class="nav-item">
-          <i data-lucide="check-square"></i>
-          <span>Daftar Tugas</span>
-        </a>
-
-        <a href="#exams" class="nav-item">
-          <i data-lucide="hourglass"></i>
-          <span>Countdown Ujian</span>
-        </a>
-
-        <span class="nav-section-title">Akademik & Jadwal</span>
-
-        <a href="#schedules" class="nav-item">
-          <i data-lucide="calendar-clock"></i>
-          <span>Jadwal & Piket</span>
-        </a>
-
-        <a href="#calendar" class="nav-item">
-          <i data-lucide="calendar-days"></i>
-          <span>Kalender Kelas</span>
-        </a>
-
-        <span class="nav-section-title">Keuangan & Organisasi</span>
-
-        <a href="#cash" class="nav-item">
-          <i data-lucide="wallet"></i>
-          <span>Kas & Iuran</span>
-        </a>
-
-        <a href="#members" class="nav-item">
-          <i data-lucide="users"></i>
-          <span>Daftar Anggota</span>
-        </a>
-      </nav>
-
-      <!-- User Mini Card & Logout in Sidebar Footer -->
-      <div class="sidebar-footer">
-        <div class="user-mini-card" id="sidebar-user-card" style="cursor: pointer;" title="Klik untuk ganti akun">
-          <div class="user-avatar" id="sidebar-user-avatar">AF</div>
-          <div class="user-meta">
-            <div class="user-name" id="sidebar-user-name">Ahmad Fauzan</div>
-            <div class="user-role-badge" id="sidebar-user-role">
-              <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
-              <span>Ketua Kelas</span>
-            </div>
-          </div>
-          <i data-lucide="arrow-left-right" style="width: 15px; height: 15px; color: var(--text-muted); flex-shrink: 0;"></i>
-        </div>
-
-        <button class="btn btn-secondary btn-sm" id="sidebar-logout-btn" style="width: 100%; justify-content: center; gap: 0.4rem; color: var(--text-muted);">
-          <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
-          <span>Keluar / Kunci Akses</span>
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT WRAPPER -->
-    <div class="main-wrapper" id="main-wrapper">
-      
-      <!-- TOP STICKY HEADER (HIDDEN WHEN NOT LOGGED IN) -->
-      <header class="top-header" id="top-header">
-        <div class="header-left">
-          <button class="header-btn menu-toggle-btn" id="menu-toggle-btn" aria-label="Buka Menu">
-            <i data-lucide="menu"></i>
-          </button>
-          
-          <div class="page-title-wrap">
-            <h1 class="page-title" id="header-title">Dashboard Kelas</h1>
-            <span class="page-subtitle" id="header-subtitle">Ringkasan aktivitas dan fokus harian</span>
-          </div>
-        </div>
-
-        <div class="header-right">
-          <!-- Role Indicator Badge -->
-          <span class="badge badge-primary" id="header-role-badge">
-            <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
-            Admin Mode
-          </span>
-
-          <!-- Ganti Akun Button -->
-          <button class="btn btn-secondary btn-sm" id="header-switch-user-btn" style="display: inline-flex; align-items: center; gap: 0.4rem;" title="Ganti Akun Siswa / Admin">
-            <i data-lucide="users" style="width: 14px; height: 14px;"></i>
-            <span>Ganti Akun</span>
-          </button>
-
-          <!-- Logout Button -->
-          <button class="btn btn-soft-danger btn-sm btn-icon-only" id="header-logout-btn" title="Kunci Akses / Keluar">
-            <i data-lucide="log-out"></i>
-          </button>
-
-          <!-- Dark/Light Theme Switcher -->
-          <button class="header-btn" id="theme-toggle-btn" aria-label="Ubah Tema Tampilan" title="Ubah Tema (Terang/Gelap)">
-            <i data-lucide="moon" id="theme-icon"></i>
-          </button>
-        </div>
-      </header>
-
-      <!-- DYNAMIC CONTENT AREA -->
-      <main class="content-area" id="main-view-container">
-        <!-- Rendered dynamically by views -->
-      </main>
-
-    </div>
-
-  </div>
-
-  <!-- APP MODAL DIALOG OVERLAY -->
-  <div class="modal-overlay" id="app-modal-overlay"></div>
-
-  <!-- TOAST NOTIFICATION CONTAINER -->
-  <div class="toast-container" id="toast-container"></div>
-
-  <!-- Main JavaScript App Entry -->
-  <script type="module" src="js/app.js"></script>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

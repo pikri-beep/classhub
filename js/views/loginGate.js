@@ -1,6 +1,6 @@
 /**
- * LOGIN GATEKEEPER VIEW
- * ClassHub - Gerbang Masuk Kelas Terproteksi
+ * LOGIN GATEKEEPER VIEW - NOTION ULTRA-SIMPLE WORKSPACE
+ * ClassHub - Gerbang Masuk Kelas Terproteksi (Clean & Minimalist)
  */
 
 import { store } from '../store.js';
@@ -15,82 +15,78 @@ export function renderLoginGate(container) {
   container.innerHTML = `
     <div class="login-gate-wrapper">
       <div class="login-gate-card card">
-        <!-- BRANDING HEADER WITH LOGO IMAGE SLOT -->
+        
+        <!-- HEADER -->
         <div class="login-gate-header">
-          <div class="brand-logo-container" style="width: 54px; height: 54px; margin: 0 auto 0.85rem; border-radius: var(--radius-lg);" title="Logo Kelas">
-            <img src="assets/logo.svg" alt="Logo Kelas" class="brand-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-            <div class="brand-logo-fallback" style="display: none; font-size: 1.15rem;">
-              <span>CH</span>
-            </div>
-          </div>
+          <div style="font-size: 2.5rem; line-height: 1; margin-bottom: 0.5rem;">🔒</div>
           <h1 class="login-gate-title">ClassHub</h1>
-          <p class="login-gate-subtitle">Portal Manajemen Terpadu Kelas <strong>${classInfo.name}</strong> • ${classInfo.school}</p>
-          <div class="login-gate-badge">
-            <i data-lucide="lock" style="width: 13px; height: 13px;"></i>
-            Akses Terproteksi Anggota Kelas
+          <p class="login-gate-subtitle">Portal Terpadu Kelas <strong>${classInfo.name}</strong> • ${classInfo.school}</p>
+          <div style="margin-top: 0.5rem;">
+            <span class="notion-tag notion-tag-gray">Akses Terproteksi Anggota Kelas</span>
           </div>
         </div>
 
         <!-- TAB SWITCHER -->
-        <div class="login-tab-group">
-          <button class="login-tab-btn ${activeLoginTab === 'student' ? 'active' : ''}" id="tab-btn-student">
+        <div style="display: flex; gap: 0.35rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+          <button class="btn ${activeLoginTab === 'student' ? 'btn-secondary' : 'btn-ghost'} btn-sm" id="tab-btn-student" style="flex: 1; font-weight: ${activeLoginTab === 'student' ? '700' : '500'};">
             <i data-lucide="user"></i> Masuk Siswa
           </button>
-          <button class="login-tab-btn ${activeLoginTab === 'admin' ? 'active' : ''}" id="tab-btn-admin">
+          <button class="btn ${activeLoginTab === 'admin' ? 'btn-secondary' : 'btn-ghost'} btn-sm" id="tab-btn-admin" style="flex: 1; font-weight: ${activeLoginTab === 'admin' ? '700' : '500'};">
             <i data-lucide="shield-check"></i> Pengurus / Admin
           </button>
         </div>
 
         <!-- FORM CONTENT -->
-        <div class="login-form-area">
+        <div>
           ${activeLoginTab === 'student' ? `
             <form id="form-gate-student">
-              <div class="form-group">
-                <label class="form-label">Pilih Nama Anda (Anggota Kelas)</label>
+              <div class="form-group" style="margin-bottom: 0.85rem;">
+                <label class="form-label">Pilih Nama Anda</label>
                 <select class="form-select" id="gate-student-id" required>
-                  <option value="" disabled selected>-- Pilih Nama Siswa --</option>
                   ${members.map(m => `
-                    <option value="${m.id}">Absen ${m.absentNo}. ${m.name} (${m.roleTitle || 'Siswa'})</option>
+                    <option value="${m.id}" ${m.id === 'std-1' ? 'selected' : ''}>Absen ${m.absentNo}. ${m.name} (${m.roleTitle || 'Siswa'})</option>
                   `).join('')}
                 </select>
               </div>
 
-              <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                   <label class="form-label">PIN Siswa</label>
-                  <span style="font-size: 0.72rem; color: var(--primary); font-weight: 600;">PIN Bawaan: 1234</span>
+                  <span style="font-size: 0.78rem; color: var(--text-muted);">Default: 1234</span>
                 </div>
-                <input type="password" class="form-input" id="gate-student-pin" placeholder="Masukkan 4 digit PIN" value="1234" required />
+                <input type="password" class="form-input" id="gate-student-pin" placeholder="Masukkan PIN" value="1234" required />
               </div>
 
-              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem; padding: 0.75rem;">
-                <i data-lucide="log-in"></i> Masuk ke Kelas Saya
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-size: 0.9rem;">
+                Masuk ke Kelas Saya →
+              </button>
+
+              <button type="button" class="btn btn-ghost" id="btn-quick-login-std1" style="width: 100%; margin-top: 0.5rem; font-size: 0.8125rem; border: 1px dashed var(--border);">
+                ⚡ Masuk Instan (Ahmad Fauzan - Demo)
               </button>
             </form>
           ` : `
             <form id="form-gate-admin">
-              <div class="form-group">
-                <label class="form-label">Master PIN Pengurus / Administrator</label>
-                <input type="password" class="form-input" id="gate-admin-pin" placeholder="Masukkan Master PIN Admin" value="admin123" required />
-                <span class="form-help" style="color: var(--warning);">
-                  <i data-lucide="info" style="width: 12px; height: 12px; display: inline;"></i> PIN Default Pengurus: <strong>admin123</strong>
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label">Master PIN Pengurus / Admin</label>
+                <input type="password" class="form-input" id="gate-admin-pin" placeholder="Masukkan PIN Admin" value="admin123" required />
+                <span class="form-help" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; display: block;">
+                  PIN Bawaan Pengurus: <strong>admin123</strong>
                 </span>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem; padding: 0.75rem; background-color: var(--primary);">
-                <i data-lucide="shield-check"></i> Buka Akses Admin Kelas
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.65rem; font-size: 0.9rem;">
+                Buka Akses Admin Kelas →
               </button>
             </form>
           `}
         </div>
 
         <!-- FOOTER INFO -->
-        <div class="login-gate-footer">
-          <p>Wali Kelas: <strong>${classInfo.homeroomTeacher}</strong></p>
-          <p style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">
-            Informasi kelas disimpan secara terpusat dan aman.
-          </p>
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.8125rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 0.85rem;">
+          Wali Kelas: <strong style="color: var(--text-primary);">${classInfo.homeroomTeacher}</strong>
         </div>
+
       </div>
     </div>
   `;
@@ -112,6 +108,19 @@ export function renderLoginGate(container) {
     tabAdmin.addEventListener('click', () => {
       activeLoginTab = 'admin';
       renderLoginGate(container);
+    });
+  }
+
+  // Quick instant login button
+  const quickLoginBtn = container.querySelector('#btn-quick-login-std1');
+  if (quickLoginBtn) {
+    quickLoginBtn.addEventListener('click', () => {
+      const res = auth.loginAsStudent('std-1', '1234');
+      if (res.success) {
+        showToast(`Selamat datang, ${res.user.name}! (Demo)`, 'success');
+      } else {
+        showToast(res.message, 'error');
+      }
     });
   }
 

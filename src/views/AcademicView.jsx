@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap } from 'lucide-react';
+import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function AcademicView() {
   const { currentUser, isAdmin } = useAuth();
@@ -17,6 +18,7 @@ export default function AcademicView() {
   // Modals
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isAddExamOpen, setIsAddExamOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // New task form state
   const [taskSubject, setTaskSubject] = useState('');
@@ -143,21 +145,35 @@ export default function AcademicView() {
           </button>
         </div>
 
-        {isAdmin && (
-          <div>
-            {activeSubTab === 'tasks' ? (
-              <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
-                <Plus size={15} />
-                <span>+ Tambah Tugas</span>
-              </button>
-            ) : (
-              <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
-                <Plus size={15} />
-                <span>+ Jadwalkan Ujian</span>
-              </button>
-            )}
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+          {activeSubTab === 'tasks' && (
+            <button
+              onClick={() => setIsWhatsAppModalOpen(true)}
+              className="btn btn-secondary btn-sm"
+              style={{ gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
+              title="Salin dan bagikan rekap tugas aktif ke WhatsApp"
+            >
+              <MessageCircle size={15} />
+              <span>Bagikan ke WA</span>
+            </button>
+          )}
+
+          {isAdmin && (
+            <div>
+              {activeSubTab === 'tasks' ? (
+                <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
+                  <Plus size={15} />
+                  <span>+ Tambah Tugas</span>
+                </button>
+              ) : (
+                <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
+                  <Plus size={15} />
+                  <span>+ Jadwalkan Ujian</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 3. TASKS CONTENT */}
@@ -691,6 +707,15 @@ export default function AcademicView() {
           </div>
         </form>
       </Modal>
+
+      {/* WHATSAPP RECAP MODAL */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        tasks={tasks}
+        classInfo={data.classInfo}
+        currentUser={currentUser}
+      />
     </div>
   );
 }

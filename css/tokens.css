@@ -1,98 +1,151 @@
 /* ==========================================================================
-   DESIGN TOKENS - NOTION / LINEAR ULTRA-CLEAN PALETTE
-   Exact User-Specified Hex Codes
+   DESIGN TOKENS - NOTION-INSPIRED ULTRA-CLEAN WORKSPACE PALETTE
+   Calm, Distraction-Free, High Readability & Authentic Muted Pastels
    ========================================================================== */
 
 :root {
-  /* Core Light Palette */
-  --bg: #F8FAFC;
+  /* Canvas & Surfaces (Notion Warm White & Document Canvas) */
+  --bg: #FFFFFF;
+  --bg-sidebar: #F7F6F3;
   --card: #FFFFFF;
-  --card-hover: #F1F5F9;
-  --border: #E2E8F0;
-  --border-focus: #94A3B8;
+  --card-hover: #F7F6F3;
+  --card-subtle: #F7F6F3;
+  --callout-bg: #F7F6F3;
+  
+  /* Subtle Notion Dividers */
+  --border: #E9E9E7;
+  --border-subtle: #F1F1EF;
+  --border-focus: #C5C4C0;
 
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-soft: #EFF6FF;
-  --primary-border: #BFDBFE;
+  /* Primary Accent - Notion Slate-Black & Subtle Blue */
+  --primary: #2383E2;
+  --primary-hover: #1A6DC0;
+  --primary-soft: #E8F3FA;
+  --primary-border: #D0E6F8;
 
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #94A3B8;
+  /* Authentic Notion Typography Colors (Readable & Non-Fatiguing) */
+  --text-primary: #37352F;     /* Notion charcoal: calm, deep, elegant */
+  --text-secondary: #787774;   /* Notion secondary muted */
+  --text-muted: #9B9A97;       /* Notion caption / hint */
 
-  --success: #16A34A;
-  --success-soft: #F0FDF4;
-  --success-border: #BBF7D0;
+  /* Notion Tag Muted Pastels */
+  --tag-green-bg: #EDF3EC;
+  --tag-green-text: #2E7C57;
+  --tag-blue-bg: #E8F3FA;
+  --tag-blue-text: #2383E2;
+  --tag-red-bg: #FDEBEC;
+  --tag-red-text: #C4554D;
+  --tag-orange-bg: #FBEDD6;
+  --tag-orange-text: #C27429;
+  --tag-purple-bg: #F6F3F9;
+  --tag-purple-text: #6940A5;
+  --tag-gray-bg: #F1F1EF;
+  --tag-gray-text: #5A5A58;
 
-  --warning: #D97706;
-  --warning-soft: #FFFBEB;
-  --warning-border: #FDE68A;
+  /* Semantic Variables Mapped to Pastels */
+  --success: #2E7C57;
+  --success-soft: #EDF3EC;
+  --success-border: #D3E5D2;
+  --warning: #C27429;
+  --warning-soft: #FBEDD6;
+  --warning-border: #F7DCB2;
+  --danger: #C4554D;
+  --danger-soft: #FDEBEC;
+  --danger-border: #F9D5D7;
+  --purple: #6940A5;
+  --purple-soft: #F6F3F9;
+  --purple-border: #E7DDF4;
 
-  --danger: #DC2626;
-  --danger-soft: #FEF2F2;
-  --danger-border: #FECACA;
+  /* Typography Scale */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, 'Plus Jakarta Sans', Arial, sans-serif;
+  --font-size-xs: 0.75rem;     /* 12px */
+  --font-size-sm: 0.8125rem;   /* 13px */
+  --font-size-base: 0.875rem;  /* 14px */
+  --font-size-md: 0.9375rem;   /* 15px */
+  --font-size-lg: 1.0625rem;   /* 17px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
+  --font-size-3xl: 1.875rem;   /* 30px */
 
-  /* Typography */
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Notion Minimal Diffused Shadows (Almost Flat) */
+  --shadow-xs: none;
+  --shadow-sm: 0 1px 2px rgba(15, 15, 15, 0.04);
+  --shadow-md: 0 2px 5px rgba(15, 15, 15, 0.06);
+  --shadow-lg: 0 4px 12px rgba(15, 15, 15, 0.08);
+  --shadow-xl: 0 12px 28px rgba(15, 15, 15, 0.12);
 
-  /* Shadows (Subtle, Linear-style) */
-  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
-  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-
-  /* Border Radii */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Clean Notion Radii */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
   --radius-full: 9999px;
 
   /* Transitions */
-  --transition-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.2s ease;
 
-  /* Layout Dimensions */
-  --sidebar-width: 260px;
-  --header-height: 64px;
+  /* Dimensions */
+  --sidebar-width: 240px;
+  --header-height: 54px;
+  --bottom-nav-height: 56px;
 }
 
 /* ==========================================================================
-   DARK MODE OVERRIDES
+   DARK MODE OVERRIDES - NOTION DARK WORKSPACE
    ========================================================================== */
 [data-theme="dark"] {
-  --bg: #0F172A;
-  --card: #1E293B;
-  --card-hover: #24344D;
-  --border: #334155;
-  --border-focus: #64748B;
+  --bg: #191919;
+  --bg-sidebar: #202020;
+  --card: #202020;
+  --card-hover: #262626;
+  --card-subtle: #242424;
+  --callout-bg: #242424;
+  
+  --border: #2E2E2E;
+  --border-subtle: #242424;
+  --border-focus: #444444;
 
-  --primary: #60A5FA;
-  --primary-hover: #3B82F6;
-  --primary-soft: rgba(96, 165, 250, 0.12);
-  --primary-border: rgba(96, 165, 250, 0.25);
+  --primary: #3E8EDE;
+  --primary-hover: #5DA4E8;
+  --primary-soft: rgba(35, 131, 226, 0.18);
+  --primary-border: rgba(35, 131, 226, 0.35);
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
+  --text-primary: #D4D4D4;
+  --text-secondary: #9B9B9B;
+  --text-muted: #6E6E6E;
 
-  --success: #4ADE80;
-  --success-soft: rgba(74, 222, 128, 0.12);
-  --success-border: rgba(74, 222, 128, 0.25);
+  /* Notion Dark Mode Pastel Tags */
+  --tag-green-bg: rgba(46, 124, 87, 0.25);
+  --tag-green-text: #6BC99C;
+  --tag-blue-bg: rgba(35, 131, 226, 0.25);
+  --tag-blue-text: #6CB2F7;
+  --tag-red-bg: rgba(196, 85, 77, 0.25);
+  --tag-red-text: #F08C85;
+  --tag-orange-bg: rgba(194, 116, 41, 0.25);
+  --tag-orange-text: #F7B36C;
+  --tag-purple-bg: rgba(105, 64, 165, 0.25);
+  --tag-purple-text: #B994F7;
+  --tag-gray-bg: rgba(120, 119, 116, 0.25);
+  --tag-gray-text: #BDBDBD;
 
-  --warning: #FBBF24;
-  --warning-soft: rgba(251, 191, 36, 0.12);
-  --warning-border: rgba(251, 191, 36, 0.25);
+  --success: #6BC99C;
+  --success-soft: rgba(46, 124, 87, 0.25);
+  --success-border: rgba(46, 124, 87, 0.4);
+  --warning: #F7B36C;
+  --warning-soft: rgba(194, 116, 41, 0.25);
+  --warning-border: rgba(194, 116, 41, 0.4);
+  --danger: #F08C85;
+  --danger-soft: rgba(196, 85, 77, 0.25);
+  --danger-border: rgba(196, 85, 77, 0.4);
+  --purple: #B994F7;
+  --purple-soft: rgba(105, 64, 165, 0.25);
+  --purple-border: rgba(105, 64, 165, 0.4);
 
-  --danger: #F87171;
-  --danger-soft: rgba(248, 113, 113, 0.12);
-  --danger-border: rgba(248, 113, 113, 0.25);
-
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.45);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  --shadow-xs: none;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.5);
 }

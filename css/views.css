@@ -18,15 +18,14 @@
 
 .login-gate-card {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   background-color: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
-  padding: 2.25rem 2rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .login-gate-header {
@@ -747,3 +746,24 @@
   font-size: 0.78rem;
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   ZEN MICRO-INTERACTIONS & UTILITIES
+   ========================================================================== */
+.btn-micro-status {
+  transition: all var(--transition-fast);
+}
+
+.btn-micro-status.active {
+  background-color: var(--card) !important;
+  color: var(--primary) !important;
+  font-weight: 700 !important;
+  box-shadow: var(--shadow-xs);
+}
+
+.task-circle-check:hover,
+.task-dash-check:hover {
+  border-color: var(--primary) !important;
+  transform: scale(1.08);
+}
+

@@ -181,8 +181,8 @@ const DEFAULT_SEED_DATA = {
 
 class Store {
   constructor() {
-    this.data = this.loadData();
     this.listeners = [];
+    this.data = this.loadData();
   }
 
   loadData() {

@@ -1,138 +1,207 @@
-# 🚀 Future Plan & Roadmap — ClassHub (XII PPLG 1)
+# 🚀 Future Plan & Roadmap Terfokus — ClassHub (XII PPLG 1)
 
-Dokumen ini merangkum rencana pengembangan fitur masa depan, analisis arsitektur akses pengguna, serta ide-ide inovatif untuk meningkatkan fungsi dan kenyamanan portal web kelas **XII PPLG 1**.
-
----
-
-## 📌 Daftar Isi
-1. [Fitur Utama 1: Ringkasan Cerdas & Generator Pesan WhatsApp](#1-fitur-utama-1-ringkasan-cerdas--generator-pesan-whatsapp)
-2. [Fitur Utama 2: Pertimbangan Model Akses (Public Read-Only vs Login Admin)](#2-fitur-utama-2-pertimbangan-model-akses-public-read-only-vs-login-admin)
-3. [Ide-Ide Inovatif Tambahan (Khusus Kelas PPLG)](#3-ide-ide-inovatif-tambahan-khusus-kelas-pplg)
-4. [Tabel Prioritas & Tahapan Rilis (Roadmap)](#4-tabel-prioritas--tahapan-rilis-roadmap)
+Dokumen ini merangkum **rencana pengembangan terarah**, hasil evaluasi kebutuhan nyata kelas, serta **desain mendalam untuk sistem login siswa yang paling mudah dan nyaman** pada aplikasi PWA (Progressive Web App) ClassHub XII PPLG 1.
 
 ---
 
-## 1. Fitur Utama 1: Ringkasan Cerdas & Generator Pesan WhatsApp
+## 📊 1. Status Audit Proyek Terkini (Capaian v2.0)
 
-### 💡 Konsep
-Seringkali siswa enggan membuka web setiap hari, namun **WhatsApp grup kelas** dibuka setiap saat. Fitur ini berfungsi sebagai **jembatan informasi otomatis**: merangkum data penting dari web menjadi format teks WhatsApp yang rapi, padat, dan langsung bisa dibagikan dengan **satu klik**.
+Berikut adalah status modul dan fitur yang telah berhasil diimplementasikan pada proyek saat ini:
 
-### 🛠️ Fitur & Mekanisme
-1. **Tombol "Bagikan ke WhatsApp" (One-Click Share)**:
-   - Menggunakan API URL WhatsApp: `https://wa.me/?text={pesan_terenkripsi}`.
-   - Tombol alternatif: **"Salin Ringkasan (Copy to Clipboard)"** dengan notifikasi toast berhasil.
-2. **Pilihan Template Ringkasan**:
-   - 🌅 **Briefing Harian (Pagi/Malam)**: Jadwal pelajaran besok, guru pengampu, daftar petugas piket, tugas deadline besok.
-   - 📅 **Digest Mingguan**: Rekap tugas deadline minggu ini, pengumuman penting, dan agenda kelas.
-   - 💰 **Pengingat Kas Khusus**: Total kas terkumpul dan daftar siswa yang belum lunas iuran minggu ini.
+| Fitur / Modul | Status | Keterangan |
+| :--- | :---: | :--- |
+| **PWA (Progressive Web App)** | ✅ **Selesai** | Dikonfigurasi via `vite-plugin-pwa`, manifest offline, service worker, & prompt install di HP (`InstallBanner.jsx`). |
+| **Generator Pesan WhatsApp (Smart Share)** | ✅ **Selesai** | Modal generator pesan WA (Daily Briefing, Weekly Digest, Kas) via `WhatsAppShareModal.jsx`. |
+| **Live Class Tracker & Countdown** | ✅ **Selesai** | Pelacakan jam pelajaran aktif real-time, waktu sisa, & status jam istirahat (`LiveClassTracker.jsx`). |
+| **Akademik & Tracking Tugas Per Siswa** | ✅ **Selesai** | Status Todo / Doing / Done per siswa dengan animasi selebrasi konfeti saat tugas selesai. |
+| **Buku Kas & Matriks Iuran** | ✅ **Selesai** | Pembukuan pemasukan/pengeluaran, filter iuran pribadi, & matriks lunas per siswa. |
+| **Notion-Style UI & Mobile Nav Dock** | ✅ **Selesai** | Antarmuka bersih bernuansa Notion, typography *Plus Jakarta Sans*, dan dock navigasi bawah untuk HP. |
 
-### 📋 Contoh Format Output Pesan WhatsApp
-```text
-📢 *DAILY BRIEFING XII PPLG 1* 📢
-📅 *Hari/Tanggal:* Rabu, 10 September 2026
+---
 
-━━━━━━━━━━━━━━━━━━━━
-📚 *JADWAL PELAJARAN HARI INI:*
-1. Pemrograman Web & Perangkat Bergerak (Pak Budi) | 07.15 - 09.30
-2. Basis Data (Bu Siti) | 09.45 - 11.45
-3. Bahasa Inggris (Mr. John) | 12.30 - 14.30
+## 🔑 2. Fokus Utama: Redesain Sistem Login Siswa yang Paling Mudah (PWA-Optimized)
 
-🧹 *PETUGAS PIKET:*
-• Fauzan, Budi, Siti, Kevin, Rina (Harap datang 15 menit lebih awal!)
+### 🧐 Masalah pada Login Saat Ini
+Pada versi saat ini, siswa harus:
+1. Membuka dropdown panjang berisi seluruh siswa kelas.
+2. Mencari namanya satu per satu.
+3. Mengetikkan PIN `1234`.
+4. Menekan tombol "Masuk Sekarang".
 
-⚠️ *DEADLINE TUGAS TERDEKAT:*
-• [PWPB] Project Web Portfolio (Deadline: Besok, 23:59 WIB)
-• [Basis Data] Laporan ERD Toko Online (Deadline: Jumat)
+Karena aplikasi **ClassHub berjalan sebagai PWA di smartphone pribadi masing-masing siswa**, proses ini terasa kaku dan berulang jika harus dilakukan terus-menerus.
 
-📢 *PENGUMUMAN TERBARU:*
-• Ujian Praktik Kejuruan dimulai tgl 20 September. Persiapkan repository GitHub masing-masing!
+---
 
-💰 *KAS KELAS:*
-• Saldo Saat Ini: Rp 450.000
-• Yang belum bayar kas minggu ini harap hubungi Bendahara ya! 🙏
+### 💡 Konsep & Mekanisme Login Termudah (Zero Friction)
 
-━━━━━━━━━━━━━━━━━━━━
-🌐 *Detail lengkap & cek tugas:*
-https://web-kelas-pplg.vercel.app
+Untuk membuat pengalaman login secepat kilat tanpa menghilangkan privasi akun masing-masing siswa, berikut rancangan arsitektur login baru:
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   ALUR LOGIN PWA TERMUDAH              │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│  [Instalasi Pertama di HP Siswa]                       │
+│     │                                                  │
+│     ▼                                                  │
+│  [Pilih Kartu Profil / Cari Nama Cepat]                │
+│     │                                                  │
+│     ▼                                                  │
+│  [Input PIN 4 Digit — Auto Submit tanpa klik tombol]   │
+│     │                                                  │
+│     ▼                                                  │
+│  [Toggle: "Ingat Perangkat Ini" AKTIF SECARA OTOMATIS] │
+│     │                                                  │
+│     ▼                                                  │
+│  [Selesai! Sesi Login Tersimpan Permanen di HP]        │
+│                                                        │
+│  ────────────────────────────────────────────────────  │
+│  [Setiap Kali Membuka Aplikasi PWA di Masa Depan]      │
+│     │                                                  │
+│     ▼                                                  │
+│  ⚡ LANGSUNG MASUK KE DASHBOARD DALAM 0 DETIK!        │
+│     (Tanpa layar login, tanpa ketik PIN lagi)          │
+│                                                        │
+└────────────────────────────────────────────────────────┘
 ```
 
----
+### 🛠️ Rincian Fitur Login Siswa Termudah:
 
-## 2. Fitur Utama 2: Pertimbangan Model Akses (Public Read-Only vs Login Admin)
+#### A. Sesi Permanen PWA (*Persistent Device Session / Auto-Login*)
+- Begitu siswa berhasil login satu kali di HP mereka, token sesi disimpan di `localStorage` perangkat secara aman dan permanen.
+- Ketika siswa membuka ikon ClassHub dari home screen HP (PWA mode), aplikasi **langsung melompat ke Dashboard** tanpa menampilkan layar login sama sekali.
+- Siswa hanya perlu login **sekali saja seumur hidup** selama cache browser tidak dibersihkan manual.
 
-### 🧐 Latar Belakang & Analisis Masalah
-Saat ini, setiap siswa harus melewati layar **Login Gate** dengan memilih nama dan memasukkan PIN `1234`. Dalam kenyataan penggunaan di kelas:
-- Siswa merasa malas membuka web jika ada hambatan (*friction*) login setiap kali buka browser / berganti tab.
-- Data informasi kelas (jadwal pelajaran, tugas, piket) sebenarnya bukan rahasia negara, melainkan informasi yang seharusnya **secepat mungkin dibaca**.
+#### B. Quick Visual Profile Picker (Bukan Dropdown Membosankan)
+- Menggantikan elemen `<select>` dropdown standar dengan:
+  - **Grid Kartu Avatar / Nomor Absen**: Siswa cukup mengetuk kartu foto/inisial namanya.
+  - **Quick Search Instant Filter**: Kolom pencarian responsif. Mengetik 2 huruf (misal: `"Fa"`) langsung memfilter nama *"Fauzan"* secara instan.
+  - **Daftar "Terakhir Masuk di Perangkat Ini"**: Jika siswa pernah login di HP tersebut, nama mereka langsung disematkan paling atas sebagai rekomendasi satu-klik.
 
-### ⚖️ Perbandingan Mode
+#### C. Input PIN 4 Digit Auto-Advance
+- Input 4 kotak kecil (`[ ][ ][ ][ ]`).
+- Saat siswa mengetik angka ke-4, form **otomatis memvalidasi dan login seketika** (*auto-submit*) tanpa perlu menggeser layar dan menekan tombol *"Submit"*.
+- Dilengkapi opsi *"Tampilkan / Sembunyikan PIN"*.
 
-| Kriteria | Mode Sekarang (Semua Wajib Login) | Mode Rekomendasi (Public Read-Only + Login Admin) |
-| :--- | :--- | :--- |
-| **Kecepatan Akses Siswa** | ⏱️ Lambat (harus pilih nama + isi PIN) | ⚡ **Instan** (buka link langsung muncul jadwal & tugas) |
-| **Kemudahan Pengurus** | Biasa saja | **Aman & Terkontrol** (tombol edit hanya ada di Admin) |
-| **Pelacakan Tugas Pribadi** | Terikat akun sesi | Menggunakan `localStorage` di HP masing-masing siswa |
-| **Keamanan Data** | Sedang | **Tinggi** untuk data sensitif kas & manajemen jadwal |
+#### D. Opsi "Beralih Akun / Ganti Pengguna" yang Bersih
+- Jika HP dipinjam teman sekelas untuk memeriksa tugasnya, siswa cukup menekan profil di pojok kanan atas -> *"Ganti Akun"*.
+- Terdapat tombol *"Keluar dari Perangkat Ini"* yang jelas dan aman.
 
-### 🎯 Solusi Terbaik yang Direkomendasikan: *Hybrid Guest & Admin Bar*
-1. **Siswa / Publik (Guest Mode)**:
-   - Langsung masuk ke Dashboard tanpa form login.
-   - Hanya memiliki izin membaca (*Read-Only*).
-   - Fitur personalisasi: Siswa cukup memilih nama mereka sekali di pojok profil untuk menandai checklist tugas pribadi di HP mereka (disimpan di `localStorage` lokal HP).
-2. **Pengurus / Admin (Protected Mode)**:
-   - Terdapat tombol kecil di header: **"Mode Pengurus 🔐"**.
-   - Saat diklik, muncul modal popup PIN Admin (misal `admin123`).
-   - Setelah PIN valid, antarmuka berubah menjadi **Admin Mode** (muncul tombol `+ Tambah Tugas`, `+ Catat Kas`, `Edit Jadwal`, `Hapus Pengumuman`).
-   - Terdapat tombol **"Keluar Mode Pengurus"** untuk kembali ke tampilan baca biasa.
+#### E. Pemisahan Tegas: Akun Siswa vs Akun Pengurus/Admin
+- **Siswa Biasa**: Fokus pada kemudahan akses, centang tugas pribadi, dan cek jadwal.
+- **Admin / Pengurus**: Memiliki toggle terpisah dengan proteksi PIN khusus (`admin123`) untuk mengedit jadwal, mencatat uang kas, dan mengumumkan pengumuman kelas.
 
 ---
 
-## 3. Ide-Ide Inovatif Tambahan (Khusus Kelas PPLG)
+### 🛡️ Mekanisme Keamanan Pasca-Deploy: Mencegah Siswa Saling Membajak / Login Akun Teman
 
-Sebagai kelas jurusan **Pengembangan Perangkat Lunak dan Gim (PPLG / Rekayasa Perangkat Lunak)**, web kelas ini bisa menjadi etalase kebanggaan sekaligus sarana belajar bersama:
+Saat web di-deploy secara publik (misal di Vercel atau Netlify), penggunaan satu PIN default (`1234`) tentu berisiko menimbulkan keisengan teman sekelas (mencentang tugas orang lain atau mengacak data). 
 
-### 💻 3.1. Showcase & Portofolio Karya Coding Siswa PPLG
-- **Tab khusus: "Karya Kami / Hall of Fame"**:
-  - Menampilkan kartu proyek aplikasi/web/game buatan siswa kelas.
-  - Berisi: Judul proyek, nama pembuat, screenshot, teknologi yang dipakai (React, Flutter, Laravel, Unity), serta tombol link ke **Demo Live** dan **Repository GitHub**.
-  - Bisa dijadikan portofolio kolektif saat ada pameran sekolah, promosi jurusan, atau kunjungan industri.
+Untuk mengatasi hal ini, berikut mekanisme keamanan yang akan diterapkan:
 
-### 📱 3.2. PWA (Progressive Web App) & Dukungan Offline
-- Menambahkan Web App Manifest & Service Worker.
-- Siswa bisa menekan tombol **"Install App"** di Chrome/Safari Android & iOS agar muncul ikon aplikasi di home screen HP layaknya aplikasi Play Store.
-- Jadwal pelajaran dan daftar piket tetap bisa dibuka meski kuota internet habis atau sinyal di kelas terganggu (*offline-ready*).
+#### 1. Alur Aktivasi Mandiri Pertama Kali (*First-Time PIN Setup / Claim Account*)
+- **Kondisi Awal (Fresh Deploy)**: Seluruh akun siswa berstatus `pin: null` atau `isActivated: false`.
+- **Saat Siswa Membuka PWA di HP-nya Pertama Kali**:
+  1. Siswa memilih namanya sendiri (misal: *Fauzan*).
+  2. Sistem mendeteksi bahwa akun *Fauzan* belum diaktivasi.
+  3. Muncul modal aktivasi:
+     > *"Halo Fauzan! Ini perangkat barumu? Buat PIN 4-digit rahasiamu untuk mengamankan akun ini."*
+  4. Siswa mengetikkan 4 digit PIN baru pilihannya sendiri + konfirmasi ulang.
+  5. Akun statusnya berubah menjadi `isActivated: true` dengan PIN rahasia tersimpan aman.
+- **Dampaknya**: 
+  - HP siswa langsung menyimpan token sesi permanen (*Remember Me*), jadi pemilik asli **tidak perlu memasukkan PIN lagi** di kemudian hari.
+  - Teman lain di HP berbeda **tidak akan bisa masuk** sebagai *Fauzan* karena tidak mengetahui PIN rahasia yang baru saja dibuat.
 
-### ☁️ 3.3. Database Online & Real-time Sync (Supabase / Firebase Free Tier)
-- *Masalah saat ini*: Data masih tersimpan di `localStorage` per browser. Jika bendahara menginput kas di laptopnya, siswa di HP belum otomatis melihat update tersebut.
-- *Solusi*: Integrasi backend gratis tanpa server (seperti **Supabase** atau **Firebase Firestore**).
-  - Setiap bendahara mencatat uang kas masuk, saldo di HP seluruh siswa otomatis ter-update secara real-time.
+#### 2. Kredensial Fallback (Opsi Verifikasi NISN / Tanggal Lahir)
+- Sebagai lapisan verifikasi awal saat aktivasi akun pertama kali (untuk memastikan yang mengklaim adalah siswa yang bersangkutan):
+  - Sistem meminta verifikasi **4 Digit Terakhir NISN** atau **Tanggal Lahir (Format DDMM)** sebelum mengizinkan siswa membuat PIN baru.
 
-### 📄 3.4. Ekspor Laporan Kas & Jadwal ke PDF / Excel
-- Tombol **"Unduh Laporan Kas (.PDF / .Excel)"** untuk Bendahara.
-- Menghasilkan berkas cetak siap print bertanda tangan Wali Kelas & Bendahara untuk laporan bulanan resmi ke pihak sekolah/wali murid.
+#### 3. Fitur "Reset PIN oleh Admin / Pengurus" *(Proteksi Anti-Jahiliyah & Lupa PIN)*
+- **Masalah yang Diantisipasi**:
+  - Ada teman yang iseng mendaftarkan/mengklaim nama temannya lebih dulu sebelum pemilik aslinya membuka web.
+  - Siswa lupa PIN 4-digit yang pernah dibuatnya.
+- **Solusi**:
+  - Admin/Pengurus Kelas (pemegang PIN Master `admin123` / Wali Kelas) memiliki tombol di menu Daftar Anggota: **"Reset PIN Siswa" 🔄**.
+  - Begitu ditekan oleh Admin, PIN akun tersebut kembali kosong (`isActivated: false`), dan pemilik asli dapat membuat PIN baru dari HP-nya.
 
-### ⏱️ 3.5. Pomodoro Focus Timer & Uji Kompetensi Kejuruan (UKK) Countdown
-- Timer khusus di menu Akademik untuk latihan *Speed Coding* atau fokus ngerjain tugas bareng di lab komputer.
-- Hitung mundur khusus menuju simulasi UKK (Uji Kompetensi Kejuruan) dan Ujian Sekolah.
-
-### 🗳️ 3.6. Kotak Suara & Aspirasi Anonim Kelas
-- Form singkat bagi siswa untuk mengirim pesan, kritik, saran, atau usulan kegiatan kelas ke pengurus secara anonim (bisa diteruskan via webhook Discord / Telegram pengurus kelas).
-
-### 🏆 3.7. Badge Apresiasi & Gamifikasi Piket/Kas
-- Penanda sederhana: *"Kas Terdisiplin Bulan Ini"* atau *"Regu Piket Paling Bersih"*.
-- Memberikan apresiasi visual sederhana untuk meningkatkan kebersamaan dan kekompakan kelas.
-
----
-
-## 4. Tabel Prioritas & Tahapan Rilis (Roadmap)
-
-| Fase | Fitur | Tingkat Kesulitan | Estimasi Waktu |
-| :--- | :--- | :--- | :--- |
-| **Fase 1 (Segera)** | • **Generator Ringkasan WhatsApp** (Tombol share & salin teks)<br>• **Sistem Akses Baru**: Bebas login untuk siswa, PIN modal untuk Admin | Rendah | 1 - 2 Hari |
-| **Fase 2 (Jangka Pendek)** | • **PWA Support** (Bisa diinstall di HP)<br>• **Showcase Projek Siswa PPLG** (Galeri karya & link github)<br>• **Ekspor Laporan Kas ke PDF/Cetak** | Sedang | 3 - 5 Hari |
-| **Fase 3 (Jangka Menengah)** | • **Cloud Database Real-time** (Supabase / Firebase)<br>• Sinkronisasi otomatis data antar perangkat | Sedang - Tinggi | 1 Minggu |
-| **Fase 4 (Penyempurnaan)** | • Kotak aspirasi anonim<br>• Pomodoro timer & Gamifikasi | Rendah | Fleksibel |
+#### 4. Menu "Ubah PIN Saya" di Profil Siswa
+- Di pojok kanan atas profil siswa, disediakan opsi mudah: **"Ganti PIN Saya"** (dengan memverifikasi PIN lama terlebih dahulu).
 
 ---
 
-> 📝 *Dokumen ini dibuat untuk memandu pengembangan proyek web kelas XII PPLG 1 agar semakin fungsional, praktis, dan membanggakan.*
+## 📑 3. Fitur Tambahan Prioritas: Ekspor Laporan Kas Resmi (PDF Siap Cetak & Excel)
+
+### 💡 Konsep
+Kebutuhan penting bagi Bendahara Kelas XII PPLG 1 untuk menyetorkan laporan pertanggungjawaban uang kas kepada Wali Kelas dan orang tua murid secara berkala.
+
+### 🛠️ Spesifikasi:
+1. **Format Cetak Standar Kertas A4**:
+   - Kop resmi: Nama Sekolah, Jurusan PPLG, Kelas XII PPLG 1, dan Bulan Transaksi.
+   - Tabel ringkasan keuangan: Total Pemasukan, Total Pengeluaran, dan Saldo Akhir saat ini.
+   - Tabel rincian pengeluaran lengkap dengan tanggal, kategori, dan keterangan.
+   - Matriks status kepatuhan bayar uang kas per siswa.
+2. **Kolom Tanda Tangan Resmi**:
+   - Kolom tanda tangan digital/cetak untuk:
+     - **Ketua Kelas**
+     - **Bendahara Kelas**
+     - **Wali Kelas**
+3. **Pilihan Format Unduhan**:
+   - Tombol **"Cetak / Simpan PDF"** (menggunakan styling cetak browser `@media print` atau `html2pdf`).
+   - Tombol **"Unduh Excel / CSV"** untuk arsip berkas bendahara.
+
+---
+
+## ⏳ 4. Fitur yang Ditunda (*On-Hold / Backlog*)
+
+Fitur-fitur berikut diakui memiliki nilai tambah, namun **ditunda pelaksanaannya** untuk saat ini agar tim dapat berfokus pada kestabilan PWA dan kemudahan akses harian siswa:
+
+### 4.1. Cloud Database Sync Real-time (Supabase / Firebase) — *DITUNDA*
+- **Status**: Ditunda untuk saat ini.
+- **Pertimbangan**: Saat ini penyimpanan lokal `localStorage` sudah mencukupi untuk operasional dasar. Migrasi backend cloud (Supabase PostgreSQL / Firestore) akan dipertimbangkan pada fase berikutnya jika seluruh data kas dan jadwal resmi sudah difinalisasi oleh pengurus kelas.
+
+### 4.2. Bot Pengingat Tugas Otomatis (Discord / Telegram Webhook) — *DITUNDA*
+- **Status**: Ditunda untuk saat ini.
+- **Pertimbangan**: Fitur *Generator Ringkasan WhatsApp* yang sudah ada saat ini telah memenuhi 95% kebutuhan distribusi informasi harian di grup kelas. Bot otomatis akan disinkronkan setelah database cloud siap.
+
+---
+
+## 🚫 5. Daftar Fitur yang Dibatalkan (*Cancelled*)
+
+Berdasarkan tinjauan kebutuhan nyata dan efisiensi aplikasi, ide-ide berikut **resmi dibatalkan** dan tidak akan dikembangkan:
+
+| Ide yang Dibatalkan | Alasan Pembatalan |
+| :--- | :--- |
+| **Model Akses Terbuka (Guest Read-Only Tanpa Login)** | Dibatalkan karena aplikasi berbasis PWA yang dipasang di HP masing-masing siswa. Login tetap dipertahankan dengan solusi *Auto-Login / Persistent Session*. |
+| **Showcase Portofolio Karya Siswa PPLG** | Dibatalkan agar portal tetap fokus sebagai alat manajemen operasional & utilitas kelas, bukan etalase web terpisah. |
+| **Lab Snippet Hub & Git Cheatsheet PPLG** | Dibatalkan karena referensi koding sudah banyak tersedia di dokumentasi resmi, GitHub, dan catatan pelajaran masing-masing. |
+| **Smart QR Attendance & Verifikasi Piket** | Dibatalkan karena operasional piket di kelas lebih praktis dipantau langsung oleh seksi kebersihan secara fisik. |
+| **Soundboard & SFX Presentasi Kelas** | Dibatalkan karena berada di luar fungsi esensial portal kelas. |
+| **Lo-Fi Coding Radio & Spotify Player** | Dibatalkan untuk menghemat kuota internet siswa dan menjaga performa ringan aplikasi PWA. |
+| **Mini-Game Syntax Typer / Quiz** | Dibatalkan agar siswa fokus pada pencatatan tugas dan jadwal belajar. |
+| **Memory Capsule & Buku Kenangan Digital** | Dibatalkan untuk menjaga kesederhanaan dan fokus fitur utama portal. |
+| **Polling & Voting Kilat** | Dibatalkan karena pemungutan suara lebih efektif menggunakan polling bawaan WhatsApp grup kelas. |
+
+---
+
+## 🗓️ 6. Roadmap Pengerjaan Terfokus
+
+```mermaid
+graph TD
+    A[Fase 1: Redesain Login PWA Termudah] --> B[Fase 2: Ekspor Laporan Kas PDF & Excel]
+    B --> C[Fase 3: Pemeliharaan & Stabilisasi PWA]
+    C -. Ditunda .-> D[Fase 4: Integrasi Cloud & Bot Discord]
+```
+
+### 📋 Tabel Rencana Pelaksanaan
+
+| Tahap | Fitur / Rincian Pekerjaan | Estimasi | Prioritas |
+| :--- | :--- | :---: | :---: |
+| **Fase 1** | **Redesain Total Pengalaman Login Siswa**: <br>• Auto-login permanen pada perangkat PWA (*Remember Me*).<br>• Alur Aktivasi PIN mandiri pertama kali & proteksi anti-bajak akun.<br>• Visual card picker & filter pencarian nama siswa instan.<br>• Input PIN 4-digit auto-submit & tombol Reset PIN oleh Admin. | 1 - 2 Hari | 🔴 **Sangat Tinggi (Prioritas Utama)** |
+| **Fase 2** | **Ekspor Laporan Kas (Cetak PDF & CSV)**: <br>• Template cetak A4 ber-kop surat resmi.<br>• Kolom ttd Ketua Kelas, Bendahara, Wali Kelas.<br>• Rekap transaksi bulanan & matriks pembayaran. | 2 - 3 Hari | 🟡 **Tinggi** |
+| **Fase 3** | **Optimalisasi & Uji Coba PWA Siswa**: <br>• Verifikasi performa offline cache service worker.<br>• Uji coba kenyamanan input tugas di berbagai merk HP siswa. | 2 Hari | 🟢 **Sedang** |
+| **Backlog** | **Cloud Database & Discord Webhook**: <br>• Sinkronisasi online multi-perangkat (Supabase/Firebase).<br>• Notifikasi bot Discord terjadwal. | Ditunda | ⚪ *Menunggu Kebutuhan Lanjutan* |
+
+---
+
+> 🎯 **Komitmen Pengembangan**:  
+> ClassHub XII PPLG 1 berfokus pada **kemudahan akses instan bagi seluruh siswa**, **ketertiban manajemen tugas & kas**, serta performa aplikasi yang ringan dan andal di smartphone siswa.

@@ -3,6 +3,7 @@ import { ShieldCheck, User, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
+import { InstallBanner } from '../components/InstallBanner';
 
 export default function LoginGate() {
   const { data } = useStore();
@@ -51,17 +52,23 @@ export default function LoginGate() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1.5rem',
+      flexDirection: 'column',
       backgroundColor: 'var(--bg)'
     }}>
-      <div className="card" style={{
-        width: '100%',
-        maxWidth: '420px',
-        padding: '2.25rem 2rem',
-        boxShadow: 'var(--shadow-md)'
+      <InstallBanner />
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem'
       }}>
+        <div className="card" style={{
+          width: '100%',
+          maxWidth: '420px',
+          padding: '2rem 1.35rem',
+          boxShadow: 'var(--shadow-md)'
+        }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <div style={{ fontSize: '2.25rem', lineHeight: 1, marginBottom: '0.5rem' }}>🏫</div>
@@ -195,6 +202,7 @@ export default function LoginGate() {
         }}>
           Wali Kelas: <strong style={{ color: 'var(--text-primary)' }}>{data.classInfo.homeroomTeacher}</strong>
         </div>
+      </div>
       </div>
     </div>
   );

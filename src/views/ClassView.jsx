@@ -85,7 +85,7 @@ export default function ClassView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
           <button
             onClick={() => setActiveTab('announcements')}
             className={`btn ${activeTab === 'announcements' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
@@ -124,7 +124,7 @@ export default function ClassView() {
             gap: '0.75rem',
             marginBottom: '1.25rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+            <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
               <button
                 onClick={() => setCurrentCategory('all')}
                 className={`btn ${currentCategory === 'all' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
@@ -163,7 +163,7 @@ export default function ClassView() {
               placeholder="Cari pengumuman..."
               value={annSearch}
               onChange={(e) => setAnnSearch(e.target.value)}
-              style={{ width: '240px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
+              style={{ minWidth: '180px', flex: 1, maxWidth: '280px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
             />
           </div>
 
@@ -265,14 +265,17 @@ export default function ClassView() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+              Menampilkan {filteredMembers.length} siswa
+            </span>
             <input
               type="text"
               className="form-input"
-              placeholder="Cari siswa atau absen..."
+              placeholder="Cari nama, absen, atau peran..."
               value={memberSearch}
               onChange={(e) => setMemberSearch(e.target.value)}
-              style={{ width: '250px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
+              style={{ minWidth: '180px', flex: 1, maxWidth: '280px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
             />
           </div>
 

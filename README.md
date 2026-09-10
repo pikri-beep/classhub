@@ -1,140 +1,174 @@
-# 🎓 ClassHub — Portal Manajemen Kelas Terpadu
+# 🎓 ClassHub — Portal Manajemen Kelas Terpadu (v2.0)
 
 > **"Satu tempat untuk mengatur seluruh urusan kelas."**  
-> Web aplikasi modern, bersih (*clean*), minimalis, dan responsif untuk mengelola kegiatan akademik, tugas harian, jadwal piket, serta transparansi kas kelas **XII PPLG 1 (SMKN 1)**.
+> Web aplikasi modern, ultra-clean, minimalis, dan responsif untuk mengelola kegiatan akademik, tugas harian, jadwal pelajaran real-time, serta transparansi kas kelas **XII PPLG 1 (SMKN 1)**.
 
 ---
 
-## 🌟 Fitur Utama
+## 🌟 Fitur Unggulan
 
-1. **🔒 Gerbang Akses Terproteksi (*Login Gatekeeper*)**
-   - Mencegah data kelas diakses oleh pihak luar secara publik.
-   - Pilihan masuk sebagai **Siswa** (dengan memilih nama & PIN) atau sebagai **Pengurus/Admin** (dengan Master PIN).
-2. **📊 Dashboard Fokus Harian (*Daily Focus*)**
-   - Salam pembuka dinamis dan tanggal hari ini.
-   - 3 Blok Metrik Utama: Status tugas pribadi, hitung mundur ujian terdekat, serta saldo kas & status piket hari ini.
-   - Checklist tugas harian yang dapat langsung dicentang selesai.
-3. **📢 Papan Pengumuman (*Announcements*)**
-   - Informasi resmi kelas terpusat (Penting, Akademik, Kegiatan, Keuangan).
-   - Fitur *Pin to Top* untuk menyematkan warta penting di bagian atas.
-4. **📝 Manajemen Tugas & Progres Kelas (*Tasks & Progress*)**
-   - Status 3 tahap pribadi untuk setiap siswa: **Belum Mulai** (🔴), **Dikerjakan** (🟡), **Selesai** (🟢).
-   - *Progress Bar* otomatis untuk melihat persentase penyelesaian tugas seluruh kelas.
-   - Filter berdasarkan status pengerjaan dan mata pelajaran.
-5. **⏳ Countdown & Jadwal Ujian (*Exams*)**
-   - Hitung mundur *real-time* (hari, jam, menit, detik) menuju PTS, PAS, dan Ujian Praktik.
-   - Rangkuman kisi-kisi dan ruang lingkup materi ujian.
-6. **📅 Jadwal Pelajaran & Regu Piket (*Schedules & Pickets*)**
-   - Timeline jam mata pelajaran per hari (Senin - Jumat) beserta nama guru pengampu.
-   - Pembagian regu piket kebersihan harian dan pengingat otomatis jika hari ini giliran Anda bertugas.
-7. **🗓️ Kalender & Agenda Kelas (*Calendar*)**
-   - Kalender visual interaktif yang menggabungkan jadwal kegiatan, deadline tugas, dan ujian dalam satu tampilan.
-8. **💰 Kas & Matrix Iuran Kelas (*Cash & Dues*)**
-   - **Matrix Iuran Siswa**: Tabel transparansi status pembayaran kas per anggota (Lunas / Belum).
-   - **Buku Kas Digital**: Pencatatan riwayat arus pemasukan dan pengeluaran secara transparan dengan saldo otomatis.
-9. **👥 Direktori Anggota (*Members*)**
-   - Struktur pengurus kelas (Ketua, Wakil, Sekretaris, Bendahara) dan daftar seluruh siswa lengkap dengan nomor absen serta NISN.
-10. **🌓 Mode Terang & Gelap (*Light & Dark Mode*)**
-    - Dukungan tema gelap (*Dark Mode*) dengan palet warna elegan yang nyaman di mata.
-11. **📱 100% Responsif (Desktop, Tablet, Android & iOS)**
-    - Navigasi laci (*drawer sidebar*) pada ponsel, *smooth touch scroll* untuk tabel dan filter, serta input ramah layar sentuh tanpa *auto-zoom*.
+### 1. ⚡ Live Class Status & Tracker Real-Time (P1)
+- **Status KBM Aktif**: Menampilkan nama mata pelajaran yang sedang berlangsung, guru pengampu, dan ruang/lab komputer.
+- **Hitung Mundur Presisi**: Jam digital WIB terintegrasi dengan progress bar durasi KBM dan countdown sisa menit secara real-time.
+- **Deteksi Cerdas Jeda & Jam Kosong**:
+  - ☕ **Waktu Istirahat & Ishoma**: Otomatis mendeteksi waktu istirahat (jam 10:00 dan 12:30) serta menghitung mundur waktu istirahat berakhir.
+  - 📖 **Jam Kosong Kondisional**: Mendeteksi jeda waktu bebas/mandiri antar jam pelajaran.
+  - 🌅 **Sebelum KBM** & 🎒 **KBM Selesai**: Menampilkan salam pembuka pagi atau ucapan selesai KBM serta preview jadwal pelajaran esok hari.
+  - 🏖️ **Akhir Pekan**: Mode santai akhir pekan dengan ringkasan jadwal hari Senin.
+
+### 2. 📲 Generator Rekap Tugas ke WhatsApp (P1)
+- **1-Klik Salin Format WA**: Sekretaris atau siswa dapat mengekspor seluruh tugas aktif ke format pesan WhatsApp yang rapi, lengkap dengan emoji, tebal (*bold*), tenggat waktu, dan link tugas.
+- **Cakupan Fleksibel**: Pilihan ekspor *"Semua Tugas Kelas"* (cocok untuk broadcast grup kelas) atau *"Tugas Belum Selesai (Saya)"*.
+- **Direct WhatsApp Share**: Tombol langsung untuk membuka WhatsApp (`api.whatsapp.com`) di smartphone atau WhatsApp Web di desktop.
+
+### 3. 📝 Manajemen Tugas & Progres Siswa
+- **Status 3 Tahap**: Tandai progres tugas pribadi: **Belum Mulai** (🔴), **Dikerjakan** (🟡), **Selesai** (🟢).
+- **Efek Selebrasi (Confetti)**: Animasi kembang api visual saat seluruh tugas harian tuntas diselesaikan.
+- **Progress Bar Kelas**: Melihat persentase penyelesaian tugas oleh seluruh siswa di kelas.
+
+### 4. 📅 Jadwal Pelajaran & Regu Piket Harian
+- Jadwal lengkap mata pelajaran Senin s.d. Jumat lengkap dengan jam, guru, dan ruangan.
+- Pembagian regu piket harian dengan badge khusus pengingat jika hari ini giliran Anda bertugas.
+
+### 5. 💰 Transparansi Kas & Matrix Iuran
+- **Matrix Iuran Siswa**: Tabel transparansi status pembayaran kas per anggota per pekan (Lunas / Belum).
+- **Buku Kas Digital**: Pencatatan riwayat arus pemasukan dan pengeluaran secara transparan dengan kalkulasi saldo otomatis.
+
+### 6. ⏳ Countdown & Jadwal Ujian
+- Hitung mundur *real-time* menuju PTS, PAS, dan Ujian Sertifikasi Kompetensi (BNSP/Ujikom).
+- Rangkuman kisi-kisi dan ruang lingkup materi ujian.
+
+### 7. 🗓️ Kalender & Agenda Terpadu
+- Kalender visual bulanan interaktif yang menggabungkan agenda kegiatan, deadline tugas, dan jadwal ujian dalam satu tampilan.
+
+### 8. 👥 Direktori Anggota Kelas
+- Struktur pengurus kelas (Ketua, Wakil, Sekretaris, Bendahara, Seksi-seksi) dan direktori siswa lengkap dengan nomor absen serta NISN.
+
+### 9. 🌓 Tema Gelap & Terang (*Dark & Light Mode*)
+- Palet warna hangat minimalis bergaya Notion/Linear yang nyaman di mata untuk penggunaan jangka panjang.
+
+### 10. 📱 PWA & 100% Responsif di HP
+- Dapat diinstal langsung ke Layar Utama (*Add to Home Screen*) pada Android & iOS seperti aplikasi native.
 
 ---
 
-## 🔑 Akun & Kredensial Bawaan (*Default Credentials*)
+## 🔑 Akun & Kredensial Pengujian (*Default Credentials*)
 
-Aplikasi dilengkapi dengan data *seed* pengujian yang siap digunakan:
+Aplikasi dilengkapi data bawaan (*seed data*) yang siap langsung digunakan:
 
 | Tipe Akun | Cara Masuk | PIN Default | Hak Akses |
 | :--- | :--- | :--- | :--- |
-| **Siswa (Member)** | Pilih nama Anda dari dropdown siswa | `1234` | Melihat seluruh info kelas & mengatur status tugas pribadi miliknya |
-| **Pengurus (Admin)** | Masuk melalui tab Admin / Pengurus | `admin123` | Hak akses penuh: membuat/mengedit/menghapus tugas, pengumuman, ujian, jadwal, dan transaksi kas |
+| **Siswa (Member)** | Pilih nama dari dropdown siswa (cth: *Ahmad Fauzan*) | `1234` | Akses penuh informasi kelas & kelola checklist tugas pribadi |
+| **Pengurus (Admin)** | Masuk melalui tab Admin / Pengurus | `admin123` | Hak kelola: buat/edit/hapus tugas, pengumuman, ujian, jadwal, dan kas |
 
-> **Catatan:** Anda dapat beralih akun kapan saja melalui tombol **"Ganti Akun"** di header atas atau pada kartu nama di footer sidebar.
-
----
-
-## 🖼️ Panduan Kustomisasi Foto / Logo Kelas
-
-Aplikasi sudah memiliki slot khusus untuk logo atau foto kelas:
-
-1. Masuk ke folder **`assets/`**.
-2. Masukkan file foto atau logo kelas Anda dengan nama **`logo.svg`** atau **`logo.png`**.
-3. Muat ulang (*refresh*) halaman peramban. Logo baru akan otomatis muncul di:
-   - Pojok kiri atas **Sidebar Navigation**.
-   - Kartu identitas pada **Layar Login**.
-   - Header kartu profil pada halaman **Daftar Anggota**.
-
-*Jika file gambar belum ada atau terjadi kesalahan memuat, aplikasi otomatis menampilkan emblem fallback `"CH"` yang rapi.*
+> **Catatan:** Anda dapat beralih akun kapan saja melalui tombol **"Ganti Akun"** di header atas atau menu di mobile.
 
 ---
 
-## 💻 Cara Menjalankan Aplikasi Secara Lokal
+## 💻 Panduan Menjalankan Proyek Secara Lokal
 
-Aplikasi ini dibuat menggunakan standar web murni (*Vanilla JavaScript, HTML5, CSS3*) tanpa perlu instalasi build tool yang rumit:
+Proyek ini dibangun menggunakan **React 18**, **Vite**, dan **PWA**:
 
-### Opsi 1: Menggunakan Python (Direkomendasikan)
-Buka terminal / PowerShell di folder proyek dan jalankan:
+### 1. Prasyarat
+Pastikan komputer Anda sudah terpasang [Node.js](https://nodejs.org/) (versi 18 ke atas disarankan).
+
+### 2. Langkah Instalasi & Menjalankan Dev Server
+
 ```bash
-python -m http.server 8080
+# 1. Masuk ke folder proyek
+cd glitchless
+
+# 2. Install dependencies (hanya perlu sekali di awal)
+npm install
+
+# 3. Jalankan server pengembangan lokal
+npm run dev
 ```
-Buka peramban dan akses: **`http://localhost:8080`**
 
-### Opsi 2: Menggunakan VS Code Live Server
-1. Buka folder proyek di Visual Studio Code.
-2. Klik kanan pada file `index.html` dan pilih **"Open with Live Server"**.
-
-### Opsi 3: Membuka Langsung di Peramban
-Anda juga dapat langsung membuka file `index.html` menggunakan browser pilihan Anda (Google Chrome, Microsoft Edge, Safari, Firefox).
+Buka peramban di: **`http://localhost:5173`**
 
 ---
 
-## 📁 Struktur Folder Proyek
+### 🌐 Berbagi Tampilan ke Teman Sekelas (WiFi / Hotspot yang Sama)
 
+Jika Anda ingin teman di kelas atau lab bisa langsung membuka dan mencoba web ini dari HP atau laptop mereka tanpa perlu clone Git:
+
+```bash
+npm run dev -- --host
 ```
-Web-kelas/
-├── index.html               # Halaman utama SPA & container layout
-├── README.md                # Dokumentasi lengkap proyek
-├── assets/
-│   └── logo.svg             # File foto / logo kelas
-├── css/
-│   ├── tokens.css           # Variabel token warna (Light & Dark Mode)
-│   ├── main.css             # Tata letak utama, sidebar, header & responsivitas
-│   ├── components.css       # Komponen UI (Buttons, Badges, Modals, Forms, Pills)
-│   └── views.css            # Desain spesifik per halaman / modul aplikasi
-└── js/
-    ├── app.js               # Router SPA, Controller Modal, Toast, & Auth Gate
-    ├── auth.js              # Manajemen session & autentikasi pengguna
-    ├── store.js             # State management reaktif (Local Storage & Seed Data)
-    └── views/
-        ├── loginGate.js     # Tampilan halaman gerbang login
-        ├── dashboard.js     # Tampilan ringkasan dashboard fokus harian
-        ├── announcements.js # Tampilan papan pengumuman kelas
-        ├── tasks.js         # Tampilan daftar tugas & progres siswa
-        ├── exams.js         # Tampilan hitung mundur ujian
-        ├── schedules.js     # Tampilan jadwal mapel & regu piket
-        ├── calendar.js      # Tampilan kalender & agenda terpadu
-        ├── cash.js          # Tampilan kas, iuran, & buku transaksi
-        └── members.js       # Tampilan struktur pengurus & direktori anggota
+
+Vite akan menampilkan alamat IP lokal jaringan Anda, misalnya:
+`➜ Network: http://192.168.1.45:5173/`
+
+Teman Anda cukup mengetikkan alamat tersebut di peramban mereka!
+
+---
+
+### 📦 Perintah Build & Preview Produksi
+
+```bash
+# Melakukan build bundle produksi yang dioptimalkan
+npm run build
+
+# Menjalankan preview lokal dari hasil build dist/
+npm run preview
 ```
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## 📁 Struktur Folder Proyek (v2.0)
 
-- **Struktur**: Semantic HTML5
-- **Gaya Tampilan**: Pure Vanilla CSS3 dengan arsitektur Design Tokens (Notion / Linear Style)
-- **Logika & State**: Modular JavaScript (ES6 Modules) dengan Reactive LocalStorage Store
-- **Ikonografi**: [Lucide Icons](https://lucide.dev/)
+```
+glitchless/
+├── index.html               # Halaman utama aplikasi (SPA root & PWA meta)
+├── package.json             # Konfigurasi dependensi & skrip Vite
+├── vite.config.js           # Konfigurasi bundler Vite & plugin PWA
+├── public/                  # Aset statis & manifest PWA
+├── src/
+│   ├── main.jsx             # Entry point React
+│   ├── App.jsx              # Komponen root & routing tampilan
+│   ├── index.css            # Desain sistem, token warna, & animasi
+│   ├── components/
+│   │   ├── Header.jsx            # Bar navigasi atas & switcher akun
+│   │   ├── Sidebar.jsx           # Navigasi desktop bergaya Notion
+│   │   ├── MobileNav.jsx         # Bottom nav & drawer mobile
+│   │   ├── Modal.jsx             # Komponen modal dialog serbaguna
+│   │   ├── InstallBanner.jsx     # Banner ajakan instalasi PWA
+│   │   ├── LiveClassTracker.jsx  # Widget jam KBM real-time & jeda istirahat
+│   │   └── WhatsAppShareModal.jsx# Generator & pratinjau rekap tugas WhatsApp
+│   ├── context/
+│   │   ├── AuthContext.jsx       # State manajemen sesi & login pengguna
+│   │   ├── StoreContext.jsx      # State manajemen data kelas (tugas, kas, dll.)
+│   │   ├── ThemeContext.jsx      # Pengatur tema (Dark / Light mode)
+│   │   └── ToastContext.jsx      # Sistem notifikasi toast
+│   └── views/
+│       ├── LoginGate.jsx         # Layar gerbang masuk siswa / admin
+│       ├── DashboardView.jsx     # Halaman ringkasan fokus harian
+│       ├── AcademicView.jsx      # Halaman tugas & jadwal ujian
+│       ├── ScheduleView.jsx      # Halaman jadwal pelajaran & kalender
+│       ├── CashView.jsx          # Halaman matrix kas & riwayat transaksi
+│       └── ClassView.jsx         # Halaman pengumuman & direktori siswa
+└── dist/                    # Output build produksi siap deploy
+```
+
+---
+
+## 🛠️ Tumpukan Teknologi (*Tech Stack*)
+
+- **Frontend Core**: [React 18](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Styling**: Pure CSS3 dengan Arsitektur Design Tokens (Notion & Linear UI Style)
+- **PWA**: `vite-plugin-pwa` (Mendukung instalasi di Android/iOS)
+- **Ikon**: [Lucide React](https://lucide.dev/)
+- **Efek Mikro**: `canvas-confetti`
 - **Tipografi**: [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) (Google Fonts)
 
 ---
 
-## 🔄 Reset Data Testing
-Untuk mengembalikan seluruh data simulasi ke kondisi awal:
+## 🔄 Reset Data Testing / Demo
+Jika data lokal ingin dikembalikan ke kondisi awal pengujian:
 1. Klik tombol **"Ganti Akun"** di header atas.
-2. Klik tombol merah **"Reset Data Testing / Demo"**.
-3. Data akan langsung di-reset ke nilai default bawaan.
+2. Klik tombol merah **"Reset Data Testing"**.
+3. Seluruh data tugas, kas, dan pengumuman akan kembali ke data bawaan awal.
 
 ---
-*Dibuat untuk mempermudah koordinasi dan transparansi kelas XII PPLG 1.* 🚀
+*Dibuat dengan ❤️ untuk kemudahan koordinasi dan transparansi kelas XII PPLG 1.* 🚀

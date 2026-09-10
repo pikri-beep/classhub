@@ -1,35 +1,26 @@
 import React from 'react';
 import { Sparkles, BookOpen, CalendarDays, Wallet, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 
 export default function MobileNav({ activeView, setActiveView }) {
+  const { currentUser } = useAuth();
+  const { data } = useStore();
+
+  const myPendingTasks = (data.tasks || []).filter(
+    t => !(t.completedStudentIds || []).includes(currentUser?.id)
+  );
+
   const items = [
     { id: 'dashboard', label: 'Hari Ini', icon: Sparkles },
-    { id: 'academic', label: 'Akademik', icon: BookOpen },
+    { id: 'academic', label: 'Akademik', icon: BookOpen, badge: myPendingTasks.length > 0 ? myPendingTasks.length : null },
     { id: 'schedule', label: 'Jadwal', icon: CalendarDays },
     { id: 'cash', label: 'Kas', icon: Wallet },
     { id: 'class', label: 'Kelas', icon: Users }
   ];
 
   return (
-    <nav style={{
-      display: 'none',
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      height: 'var(--bottom-nav-height)',
-      backgroundColor: 'var(--bg-surface)',
-      borderTop: '1px solid var(--border)',
-      zIndex: 100,
-      alignItems: 'center',
-      justifyContent: 'space-around',
-      padding: '0 0.5rem'
-    }} className="mobile-only-dock">
-      <style>{`
-        @media (max-width: 768px) {
-          .mobile-only-dock { display: flex !important; }
-        }
-      `}</style>
+    <nav className="mobile-nav-dock" aria-label="Navigasi Bawah">
       {items.map(item => {
         const Icon = item.icon;
         const isActive = activeView === item.id;
@@ -38,23 +29,17 @@ export default function MobileNav({ activeView, setActiveView }) {
           <button
             key={item.id}
             onClick={() => setActiveView(item.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.15rem',
-              color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-              fontSize: '0.7rem',
-              fontWeight: isActive ? 700 : 500,
-              padding: '0.35rem 0',
-              flex: 1,
-              cursor: 'pointer'
-            }}
+            className={`mobile-nav-item ${isActive ? 'active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
           >
-            <Icon size={18} />
+            <div className="mobile-nav-icon-wrap">
+              <Icon size={18} strokeWidth={isActive ? 2.3 : 1.8} />
+              {item.badge && (
+                <span className="mobile-nav-badge">
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
+            </div>
             <span>{item.label}</span>
           </button>
         );

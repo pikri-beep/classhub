@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Check, ArrowRight, Sparkles, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { Check, ArrowRight, Sparkles, Clock, Calendar, AlertCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
+import LiveClassTracker from '../components/LiveClassTracker';
+import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function DashboardView({ onNavigate }) {
   const { currentUser } = useAuth();
   const { data, updateTaskStatus } = useStore();
   const { showToast } = useToast();
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   const now = new Date();
   const hours = now.getHours();
@@ -81,7 +84,7 @@ export default function DashboardView({ onNavigate }) {
       </div>
 
       {/* 3. INLINE PROPERTIES STRIP */}
-      <div className="notion-properties-bar">
+      <div className="notion-properties-bar" style={{ marginBottom: '1.25rem' }}>
         <div className="notion-prop-item">
           <span style={{ color: 'var(--text-muted)' }}>Status Tugas:</span>
           <span className={`notion-tag ${myPendingTasks.length === 0 ? 'notion-tag-green' : 'notion-tag-orange'}`}>
@@ -106,13 +109,27 @@ export default function DashboardView({ onNavigate }) {
         )}
       </div>
 
-      {/* 4. TO-DO & DAILY FOCUS */}
+      {/* 4. LIVE CLASS TRACKER (P1 KEY FEATURE) */}
+      <LiveClassTracker schedules={data.schedules} onNavigate={onNavigate} />
+
+      {/* 5. TO-DO & DAILY FOCUS */}
       <div className="notion-section-title">
         <span>To-Do & Daftar Tugas Harian</span>
-        <button onClick={() => onNavigate('academic')} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
-          <span>Lihat Semua ({tasks.length})</span>
-          <ArrowRight size={14} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <button
+            onClick={() => setIsWhatsAppModalOpen(true)}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: '0.35rem', fontSize: '0.78rem', color: '#16A34A', fontWeight: 600 }}
+            title="Bagikan format rekap tugas ke grup WhatsApp"
+          >
+            <MessageCircle size={14} />
+            <span>Rekap WA</span>
+          </button>
+          <button onClick={() => onNavigate('academic')} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
+            <span>Lihat Semua ({tasks.length})</span>
+            <ArrowRight size={14} />
+          </button>
+        </div>
       </div>
       <p className="notion-section-desc">Klik kotak centang untuk menandai tugas yang sudah kamu selesaikan.</p>
 
@@ -147,7 +164,7 @@ export default function DashboardView({ onNavigate }) {
         )}
       </div>
 
-      {/* 5. TODAY'S LESSONS TABLE */}
+      {/* 5. TODAY'S LESSONS */}
       <div className="notion-section-title">
         <span>Jadwal Pelajaran Hari {currentDayName}</span>
         <button onClick={() => onNavigate('schedule')} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
@@ -156,7 +173,8 @@ export default function DashboardView({ onNavigate }) {
         </button>
       </div>
 
-      <div className="notion-table-wrapper">
+      {/* Desktop Table View */}
+      <div className="notion-table-wrapper desktop-only-table">
         <table className="notion-table">
           <thead>
             <tr>
@@ -189,6 +207,32 @@ export default function DashboardView({ onNavigate }) {
         </table>
       </div>
 
+      {/* Mobile Card List View */}
+      <div className="mobile-only-cards" style={{ marginBottom: '1.5rem' }}>
+        {(todaySchedule.subjects || []).length === 0 ? (
+          <div className="card" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            Tidak ada jam pelajaran hari ini (Libur / Kegiatan Sekolah).
+          </div>
+        ) : (
+          todaySchedule.subjects.map((sub, idx) => (
+            <div key={idx} className="card" style={{ padding: '0.85rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>#{idx + 1}</span>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>{sub.subject}</strong>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  {sub.teacher || 'Guru Pengampu'} • <span style={{ color: 'var(--text-muted)' }}>{sub.room || 'Ruang Kelas'}</span>
+                </div>
+              </div>
+              <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
+                {sub.timeStart} - {sub.timeEnd}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* 6. LATEST ANNOUNCEMENT */}
       {latestAnnouncement && (
         <div style={{ marginTop: '2rem' }}>
@@ -218,6 +262,15 @@ export default function DashboardView({ onNavigate }) {
           </div>
         </div>
       )}
+
+      {/* WHATSAPP RECAP MODAL */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        tasks={tasks}
+        classInfo={data.classInfo}
+        currentUser={currentUser}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import MobileNav from './components/MobileNav';
 import Modal from './components/Modal';
+import { InstallBanner } from './components/InstallBanner';
 
 import LoginGate from './views/LoginGate';
 import DashboardView from './views/DashboardView';
@@ -73,6 +74,7 @@ export default function App() {
 
       {/* Main Content Area */}
       <div className="main-content-wrapper">
+        <InstallBanner />
         <Header
           activeView={activeView}
           onOpenSwitchUser={() => setIsSwitchUserOpen(true)}

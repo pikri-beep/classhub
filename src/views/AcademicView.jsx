@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap } from 'lucide-react';
+import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function AcademicView() {
   const { currentUser, isAdmin } = useAuth();
@@ -17,6 +18,7 @@ export default function AcademicView() {
   // Modals
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isAddExamOpen, setIsAddExamOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // New task form state
   const [taskSubject, setTaskSubject] = useState('');
@@ -143,21 +145,35 @@ export default function AcademicView() {
           </button>
         </div>
 
-        {isAdmin && (
-          <div>
-            {activeSubTab === 'tasks' ? (
-              <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
-                <Plus size={15} />
-                <span>+ Tambah Tugas</span>
-              </button>
-            ) : (
-              <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
-                <Plus size={15} />
-                <span>+ Jadwalkan Ujian</span>
-              </button>
-            )}
-          </div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+          {activeSubTab === 'tasks' && (
+            <button
+              onClick={() => setIsWhatsAppModalOpen(true)}
+              className="btn btn-secondary btn-sm"
+              style={{ gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
+              title="Salin dan bagikan rekap tugas aktif ke WhatsApp"
+            >
+              <MessageCircle size={15} />
+              <span>Bagikan ke WA</span>
+            </button>
+          )}
+
+          {isAdmin && (
+            <div>
+              {activeSubTab === 'tasks' ? (
+                <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
+                  <Plus size={15} />
+                  <span>+ Tambah Tugas</span>
+                </button>
+              ) : (
+                <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
+                  <Plus size={15} />
+                  <span>+ Jadwalkan Ujian</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 3. TASKS CONTENT */}
@@ -172,7 +188,7 @@ export default function AcademicView() {
             gap: '0.75rem',
             marginBottom: '1rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+            <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
               <button
                 onClick={() => setStatusFilter('all')}
                 className={`btn ${statusFilter === 'all' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
@@ -203,7 +219,7 @@ export default function AcademicView() {
               className="form-select"
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              style={{ width: 'auto', minWidth: '180px', padding: '0.4rem 0.65rem', fontSize: '0.8125rem' }}
+              style={{ width: 'auto', minWidth: '160px', padding: '0.4rem 0.65rem', fontSize: '0.8125rem' }}
             >
               <option value="all">Semua Mata Pelajaran</option>
               {subjects.filter(s => s !== 'all').map(s => (
@@ -212,7 +228,7 @@ export default function AcademicView() {
             </select>
           </div>
 
-          {/* Tasks Database Table */}
+          {/* Tasks Database Table (Desktop) & Cards (Mobile) */}
           {filteredTasks.length === 0 ? (
             <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
               <p style={{ fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Tidak ada tugas ditemukan</p>
@@ -221,61 +237,182 @@ export default function AcademicView() {
               </p>
             </div>
           ) : (
-            <div className="notion-table-wrapper">
-              <table className="notion-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '45px', textAlign: 'center' }}>✓</th>
-                    <th>Tugas & Deskripsi</th>
-                    <th style={{ width: '150px' }}>Mata Pelajaran</th>
-                    <th style={{ width: '130px' }}>Tenggat</th>
-                    <th style={{ width: '140px' }}>Status Saya</th>
-                    <th style={{ width: '110px' }}>Progres Kelas</th>
-                    {isAdmin && <th style={{ width: '50px', textAlign: 'center' }}>Aksi</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTasks.map(task => {
-                    const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-                    const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
+            <>
+              {/* Desktop Database Table */}
+              <div className="notion-table-wrapper desktop-only-table">
+                <table className="notion-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '45px', textAlign: 'center' }}>✓</th>
+                      <th>Tugas & Deskripsi</th>
+                      <th style={{ width: '150px' }}>Mata Pelajaran</th>
+                      <th style={{ width: '130px' }}>Tenggat</th>
+                      <th style={{ width: '140px' }}>Status Saya</th>
+                      <th style={{ width: '110px' }}>Progres Kelas</th>
+                      {isAdmin && <th style={{ width: '50px', textAlign: 'center' }}>Aksi</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTasks.map(task => {
+                      const isDone = (task.completedStudentIds || []).includes(currentUser.id);
+                      const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
 
-                    const doneCount = (task.completedStudentIds || []).length;
-                    const donePercent = Math.round((doneCount / totalStudents) * 100);
+                      const doneCount = (task.completedStudentIds || []).length;
+                      const donePercent = Math.round((doneCount / totalStudents) * 100);
 
-                    const dObj = new Date(task.deadline);
-                    const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
-                    const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
+                      const dObj = new Date(task.deadline);
+                      const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
+                      const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
 
-                    return (
-                      <tr key={task.id}>
-                        {/* Checkbox */}
-                        <td style={{ textAlign: 'center' }}>
-                          <div
-                            className="notion-todo-checkbox"
-                            onClick={() => handleCycleStatus(task)}
-                            style={{
-                              margin: '0 auto',
-                              backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
-                              borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
-                              color: '#fff'
-                            }}
-                            title="Klik untuk mengubah status"
-                          >
-                            {isDone && <Check size={12} strokeWidth={3} />}
-                          </div>
-                        </td>
+                      return (
+                        <tr key={task.id}>
+                          {/* Checkbox */}
+                          <td style={{ textAlign: 'center' }}>
+                            <div
+                              className="notion-todo-checkbox"
+                              onClick={() => handleCycleStatus(task)}
+                              style={{
+                                margin: '0 auto',
+                                backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
+                                borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
+                                color: '#fff'
+                              }}
+                              title="Klik untuk mengubah status"
+                            >
+                              {isDone && <Check size={12} strokeWidth={3} />}
+                            </div>
+                          </td>
 
-                        {/* Title & Desc */}
-                        <td>
+                          {/* Title & Desc */}
+                          <td>
+                            <div style={{
+                              fontWeight: 600,
+                              color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
+                              textDecoration: isDone ? 'line-through' : 'none'
+                            }}>
+                              {task.title}
+                            </div>
+                            {task.description && (
+                              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                                {task.description}
+                              </div>
+                            )}
+                            {task.link && (
+                              <a
+                                href={task.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: '0.78rem',
+                                  color: 'var(--primary)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  marginTop: '0.25rem'
+                                }}
+                              >
+                                <ExternalLink size={12} />
+                                <span>Tautan Pengumpulan</span>
+                              </a>
+                            )}
+                          </td>
+
+                          {/* Subject */}
+                          <td>
+                            <span className="notion-tag notion-tag-gray">{task.subject}</span>
+                          </td>
+
+                          {/* Deadline */}
+                          <td>
+                            <span style={{
+                              color: isNear ? 'var(--danger)' : 'var(--text-secondary)',
+                              fontWeight: isNear ? 700 : 'normal'
+                            }}>
+                              {dateStr}
+                            </span>
+                          </td>
+
+                          {/* Status Button */}
+                          <td>
+                            <button
+                              onClick={() => handleCycleStatus(task)}
+                              className={`notion-tag ${isDone ? 'notion-tag-green' : isDoing ? 'notion-tag-blue' : 'notion-tag-gray'}`}
+                              style={{ border: 'none', cursor: 'pointer' }}
+                              title="Klik untuk mengganti status"
+                            >
+                              {isDone ? '✓ Selesai' : isDoing ? '⋯ Dikerjakan' : '○ Belum'}
+                            </button>
+                          </td>
+
+                          {/* Class Progress */}
+                          <td style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                            {doneCount}/{totalStudents} ({donePercent}%)
+                          </td>
+
+                          {/* Admin Action */}
+                          {isAdmin && (
+                            <td style={{ textAlign: 'center' }}>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Hapus tugas ini?')) {
+                                    deleteTask(task.id);
+                                    showToast('Tugas berhasil dihapus', 'info');
+                                  }
+                                }}
+                                className="btn-ghost"
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                                title="Hapus Tugas"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className="mobile-only-cards" style={{ marginBottom: '1.5rem' }}>
+                {filteredTasks.map(task => {
+                  const isDone = (task.completedStudentIds || []).includes(currentUser.id);
+                  const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
+                  const doneCount = (task.completedStudentIds || []).length;
+                  const donePercent = Math.round((doneCount / totalStudents) * 100);
+
+                  const dObj = new Date(task.deadline);
+                  const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
+                  const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
+
+                  return (
+                    <div key={task.id} className={`mobile-task-card ${isDone ? 'completed' : ''}`}>
+                      <div className="mobile-task-top">
+                        <div
+                          className="notion-todo-checkbox"
+                          onClick={() => handleCycleStatus(task)}
+                          style={{
+                            marginTop: '2px',
+                            backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
+                            borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
+                            color: '#fff'
+                          }}
+                          title="Klik untuk mengubah status"
+                        >
+                          {isDone && <Check size={12} strokeWidth={3} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            fontWeight: 600,
+                            fontWeight: 700,
+                            fontSize: '0.95rem',
                             color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
                             textDecoration: isDone ? 'line-through' : 'none'
                           }}>
                             {task.title}
                           </div>
                           {task.description && (
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
                               {task.description}
                             </div>
                           )}
@@ -290,50 +427,36 @@ export default function AcademicView() {
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '0.25rem',
-                                marginTop: '0.25rem'
+                                marginTop: '0.35rem'
                               }}
                             >
                               <ExternalLink size={12} />
                               <span>Tautan Pengumpulan</span>
                             </a>
                           )}
-                        </td>
+                        </div>
+                      </div>
 
-                        {/* Subject */}
-                        <td>
+                      <div className="mobile-task-footer">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                           <span className="notion-tag notion-tag-gray">{task.subject}</span>
-                        </td>
-
-                        {/* Deadline */}
-                        <td>
                           <span style={{
-                            color: isNear ? 'var(--danger)' : 'var(--text-secondary)',
+                            fontSize: '0.75rem',
+                            color: isNear ? 'var(--danger)' : 'var(--text-muted)',
                             fontWeight: isNear ? 700 : 'normal'
                           }}>
-                            {dateStr}
+                            ⏳ {dateStr}
                           </span>
-                        </td>
-
-                        {/* Status Button */}
-                        <td>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                           <button
                             onClick={() => handleCycleStatus(task)}
                             className={`notion-tag ${isDone ? 'notion-tag-green' : isDoing ? 'notion-tag-blue' : 'notion-tag-gray'}`}
-                            style={{ border: 'none', cursor: 'pointer' }}
-                            title="Klik untuk mengganti status"
+                            style={{ border: 'none', cursor: 'pointer', padding: '0.25rem 0.6rem' }}
                           >
                             {isDone ? '✓ Selesai' : isDoing ? '⋯ Dikerjakan' : '○ Belum'}
                           </button>
-                        </td>
-
-                        {/* Class Progress */}
-                        <td style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                          {doneCount}/{totalStudents} ({donePercent}%)
-                        </td>
-
-                        {/* Admin Action */}
-                        {isAdmin && (
-                          <td style={{ textAlign: 'center' }}>
+                          {isAdmin && (
                             <button
                               onClick={() => {
                                 if (confirm('Hapus tugas ini?')) {
@@ -347,14 +470,18 @@ export default function AcademicView() {
                             >
                               <Trash2 size={15} />
                             </button>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingTop: '0.2rem' }}>
+                        <span>Progres Kelas: {doneCount}/{totalStudents} siswa ({donePercent}%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -580,6 +707,15 @@ export default function AcademicView() {
           </div>
         </form>
       </Modal>
+
+      {/* WHATSAPP RECAP MODAL */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        tasks={tasks}
+        classInfo={data.classInfo}
+        currentUser={currentUser}
+      />
     </div>
   );
 }

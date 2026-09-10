@@ -101,7 +101,7 @@ export default function CashView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
           <button
             onClick={() => setActiveTab('matrix')}
             className={`btn ${activeTab === 'matrix' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
@@ -144,10 +144,42 @@ export default function CashView() {
       {/* 4. MATRIX TAB */}
       {activeTab === 'matrix' && (
         <div>
-          <div className="notion-section-desc">
-            {isAdmin
-              ? 'Klik tombol status tag pada kolom pekan untuk mengubah status Lunas / Belum.'
-              : 'Daftar transparansi pembayaran kas mingguan untuk seluruh siswa.'}
+          {/* Personal Dues Quick Summary Card */}
+          <div className="card" style={{ padding: '1rem 1.15rem', marginBottom: '1.25rem', backgroundColor: 'var(--bg-surface)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <span style={{ fontSize: '1rem' }}>👤</span>
+                <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>Status Iuran Saya ({currentUser.name.split(' ')[0]})</strong>
+              </div>
+              <span className="notion-tag notion-tag-green">
+                {duesPeriods.filter(p => (p.paidStudentIds || []).includes(currentUser.id)).length} / {duesPeriods.length} Pekan Lunas
+              </span>
+            </div>
+            <div className="scrollable-tabs" style={{ gap: '0.5rem', paddingBottom: '0.25rem' }}>
+              {duesPeriods.map(p => {
+                const isPaid = (p.paidStudentIds || []).includes(currentUser.id);
+                return (
+                  <div key={p.id} className="card" style={{ padding: '0.55rem 0.75rem', minWidth: '125px', flexShrink: 0, backgroundColor: 'var(--bg)' }}>
+                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Rp {Number(p.amount).toLocaleString('id-ID')}</div>
+                    <div style={{ marginTop: '0.4rem' }}>
+                      <span className={`notion-tag ${isPaid ? 'notion-tag-green' : 'notion-tag-red'}`} style={{ fontSize: '0.72rem' }}>
+                        {isPaid ? '✓ Lunas' : '○ Belum'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.35rem' }}>
+            <span className="notion-section-desc" style={{ margin: 0 }}>
+              {isAdmin
+                ? 'Klik tombol status tag pada kolom pekan untuk mengubah status Lunas / Belum.'
+                : 'Daftar transparansi pembayaran kas mingguan untuk seluruh siswa.'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>👉 Geser tabel ke samping</span>
           </div>
 
           <div className="notion-table-wrapper">

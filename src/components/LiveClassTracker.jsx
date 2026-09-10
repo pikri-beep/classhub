@@ -215,29 +215,24 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'break' && (
-          <div className="live-state-message">
+          <div className="live-state-message clean-state">
             <div className="live-state-icon-box amber">
-              <Coffee size={24} />
+              <Coffee size={20} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem 0' }}>
-                  {gapType === 'istirahat' ? 'Waktu Istirahat & Ishoma ☕' : 'Waktu Bebas / Jam Mandiri 📖'}
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  {gapType === 'istirahat' ? 'Waktu Istirahat' : 'Jam Kosong / Mandiri'}
                 </h4>
                 {timeRemaining > 0 && (
-                  <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.75rem' }}>
+                  <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
                     Selesai dlm {formatRemaining(timeRemaining)}
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.45 }}>
-                {gapType === 'istirahat'
-                  ? 'Gunakan waktu istirahat untuk makan siang, sholat, dan menyegarkan pikiran.'
-                  : 'Sesi saat ini sedang bebas/kosong kondisional. Manfaatkan untuk diskusi atau belajar mandiri.'}
-              </p>
               {nextSubject && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                  Jam berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> pukul {nextSubject.timeStart} • {nextSubject.room || 'Kelas'}
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                  Berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> pukul {nextSubject.timeStart} • {nextSubject.room || 'Ruang Kelas'}
                 </div>
               )}
             </div>
@@ -245,26 +240,23 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'before-school' && (
-          <div className="live-state-message">
+          <div className="live-state-message clean-state">
             <div className="live-state-icon-box blue">
-              <Sun size={24} />
+              <Sun size={20} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem 0' }}>
-                  Selamat Pagi! Persiapan KBM Hari Ini 🌅
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  KBM Belum Dimulai
                 </h4>
                 {timeRemaining > 0 && (
-                  <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.75rem' }}>
-                    Dimulai {formatRemaining(timeRemaining)} lagi
+                  <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                    Mulai dlm {formatRemaining(timeRemaining)}
                   </span>
                 )}
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.45 }}>
-                Siapkan perlengkapan belajar, cek tugas harian, dan pastikan sudah sarapan sebelum kelas dimulai.
-              </p>
               {nextSubject && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
                   Pelajaran pertama: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart}) • {nextSubject.teacher || 'Guru Pengampu'}
                 </div>
               )}
@@ -273,20 +265,22 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'after-school' && (
-          <div className="live-state-message">
+          <div className="live-state-message clean-state">
             <div className="live-state-icon-box gray">
-              <Moon size={24} />
+              <Moon size={20} />
             </div>
             <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem 0' }}>
-                Jam KBM Hari Ini Telah Selesai 🎒
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.45 }}>
-                Kerja bagus hari ini! Istirahatlah dengan cukup dan cek tugas yang harus diselesaikan untuk esok hari.
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  KBM Hari Ini Selesai
+                </h4>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.78rem' }}>
+                  Waktu Bebas
+                </span>
+              </div>
               {nextSubject && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Calendar size={13} />
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Calendar size={13} style={{ opacity: 0.7 }} />
                   <span>Mapel pertama hari {getNextSchoolDay()}: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
                 </div>
               )}
@@ -295,21 +289,23 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'weekend' && (
-          <div className="live-state-message">
+          <div className="live-state-message clean-state">
             <div className="live-state-icon-box purple">
-              <Sparkles size={24} />
+              <Sparkles size={20} />
             </div>
             <div style={{ flex: 1 }}>
-              <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem 0' }}>
-                Selamat Berakhir Pekan! 🏖️
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 0.4rem 0', lineHeight: 1.45 }}>
-                Tidak ada jadwal KBM hari ini. Nikmati akhir pekanmu untuk recharge energi dan eksplorasi minatmu.
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  Akhir Pekan (Libur KBM)
+                </h4>
+                <span className="notion-tag notion-tag-purple" style={{ fontSize: '0.78rem' }}>
+                  Libur
+                </span>
+              </div>
               {nextSubject && (
-                <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Calendar size={13} />
-                  <span>Jadwal Senin pagi: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart}) • {nextSubject.room || 'Kelas'}</span>
+                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Calendar size={13} style={{ opacity: 0.7 }} />
+                  <span>Jadwal Senin: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart}) • {nextSubject.room || 'Kelas'}</span>
                 </div>
               )}
             </div>

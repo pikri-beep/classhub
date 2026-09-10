@@ -70,13 +70,6 @@ export default function Header({ activeView, onOpenSwitchUser }) {
           overflow: 'hidden',
           textOverflow: 'ellipsis'
         }}>
-          <span style={{ color: 'var(--text-muted)', display: 'none' }} className="desktop-breadcrumb">
-            ClassHub /
-          </span>
-          <span style={{ color: 'var(--text-muted)' }}>
-            {data.classInfo.name}
-          </span>
-          <span style={{ color: 'var(--text-muted)' }}>/</span>
           <strong style={{ color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {viewTitles[activeView] || 'Hari Ini'}
           </strong>

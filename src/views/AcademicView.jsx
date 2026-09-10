@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, MessageCircle } from 'lucide-react';
+import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +14,7 @@ export default function AcademicView() {
   const [activeSubTab, setActiveSubTab] = useState('tasks');
   const [statusFilter, setStatusFilter] = useState('all');
   const [subjectFilter, setSubjectFilter] = useState('all');
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
 
   // Modals
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
@@ -43,11 +44,9 @@ export default function AcademicView() {
     if (subjectFilter !== 'all' && task.subject !== subjectFilter) return false;
 
     const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
-    const isTodo = !isDone && !isDoing;
+    const isTodo = !isDone;
 
     if (statusFilter === 'todo' && !isTodo) return false;
-    if (statusFilter === 'doing' && !isDoing) return false;
     if (statusFilter === 'done' && !isDone) return false;
 
     return true;
@@ -55,17 +54,16 @@ export default function AcademicView() {
 
   const monthsMap = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-  const handleCycleStatus = (task) => {
+  const handleToggleTaskDone = (task) => {
     const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
-
-    let next = 'doing';
-    if (isDoing) next = 'done';
-    else if (isDone) next = 'todo';
+    const next = isDone ? 'todo' : 'done';
 
     updateTaskStatus(task.id, currentUser.id, next);
-    const label = next === 'done' ? 'Selesai 🎉' : (next === 'doing' ? 'Sedang Dikerjakan ⋯' : 'Belum Selesai ○');
-    showToast(`Status tugas diubah: ${label}`, 'info');
+    if (!isDone) {
+      showToast('Tugas diselesaikan! 🎉', 'success');
+    } else {
+      showToast('Tugas ditandai belum selesai', 'info');
+    }
   };
 
   const handleCreateTask = (e) => {
@@ -106,14 +104,6 @@ export default function AcademicView() {
 
   return (
     <div>
-      {/* 1. NOTION PAGE HEADER */}
-      <div className="notion-header">
-        <span className="notion-header-icon">📚</span>
-        <h1 className="notion-header-title">Akademik</h1>
-        <p className="notion-header-desc">
-          Daftar tugas terstruktur & jadwal evaluasi ujian kelas {data.classInfo.name}
-        </p>
-      </div>
 
       {/* 2. SUB-TAB BAR & ACTIONS */}
       <div style={{
@@ -146,12 +136,12 @@ export default function AcademicView() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-          {activeSubTab === 'tasks' && (
+          {activeSubTab === 'tasks' && isAdmin && (
             <button
               onClick={() => setIsWhatsAppModalOpen(true)}
               className="btn btn-secondary btn-sm"
               style={{ gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
-              title="Salin dan bagikan rekap tugas aktif ke WhatsApp"
+              title="Salin dan bagikan rekap tugas aktif ke WhatsApp (Khusus Pengurus)"
             >
               <MessageCircle size={15} />
               <span>Bagikan ke WA</span>
@@ -188,30 +178,24 @@ export default function AcademicView() {
             gap: '0.75rem',
             marginBottom: '1rem'
           }}>
-            <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
+            <div className="clean-filter-chips">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`btn ${statusFilter === 'all' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${statusFilter === 'all' ? 'active' : ''}`}
               >
-                Semua
+                Semua ({tasks.length})
               </button>
               <button
                 onClick={() => setStatusFilter('todo')}
-                className={`btn ${statusFilter === 'todo' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${statusFilter === 'todo' ? 'active' : ''}`}
               >
-                Belum Selesai
-              </button>
-              <button
-                onClick={() => setStatusFilter('doing')}
-                className={`btn ${statusFilter === 'doing' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-              >
-                Sedang Dikerjakan
+                Belum Selesai ({tasks.filter(t => !(t.completedStudentIds || []).includes(currentUser.id)).length})
               </button>
               <button
                 onClick={() => setStatusFilter('done')}
-                className={`btn ${statusFilter === 'done' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${statusFilter === 'done' ? 'active' : ''}`}
               >
-                Selesai
+                Selesai ({tasks.filter(t => (t.completedStudentIds || []).includes(currentUser.id)).length})
               </button>
             </div>
 
@@ -255,8 +239,6 @@ export default function AcademicView() {
                   <tbody>
                     {filteredTasks.map(task => {
                       const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-                      const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
-
                       const doneCount = (task.completedStudentIds || []).length;
                       const donePercent = Math.round((doneCount / totalStudents) * 100);
 
@@ -270,14 +252,15 @@ export default function AcademicView() {
                           <td style={{ textAlign: 'center' }}>
                             <div
                               className="notion-todo-checkbox"
-                              onClick={() => handleCycleStatus(task)}
+                              onClick={() => handleToggleTaskDone(task)}
                               style={{
                                 margin: '0 auto',
                                 backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
                                 borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
-                                color: '#fff'
+                                color: '#fff',
+                                cursor: 'pointer'
                               }}
-                              title="Klik untuk mengubah status"
+                              title="Klik untuk menandai selesai/belum"
                             >
                               {isDone && <Check size={12} strokeWidth={3} />}
                             </div>
@@ -332,15 +315,15 @@ export default function AcademicView() {
                             </span>
                           </td>
 
-                          {/* Status Button */}
+                          {/* Status Button (Binary) */}
                           <td>
                             <button
-                              onClick={() => handleCycleStatus(task)}
-                              className={`notion-tag ${isDone ? 'notion-tag-green' : isDoing ? 'notion-tag-blue' : 'notion-tag-gray'}`}
+                              onClick={() => handleToggleTaskDone(task)}
+                              className={`notion-tag ${isDone ? 'notion-tag-green' : 'notion-tag-gray'}`}
                               style={{ border: 'none', cursor: 'pointer' }}
                               title="Klik untuk mengganti status"
                             >
-                              {isDone ? '✓ Selesai' : isDoing ? '⋯ Dikerjakan' : '○ Belum'}
+                              {isDone ? '✓ Selesai' : '○ Belum'}
                             </button>
                           </td>
 
@@ -374,88 +357,59 @@ export default function AcademicView() {
                 </table>
               </div>
 
-              {/* Mobile Card List View */}
+              {/* Mobile Card List View (Clean with Progressive Disclosure Accordion) */}
               <div className="mobile-only-cards" style={{ marginBottom: '1.5rem' }}>
                 {filteredTasks.map(task => {
                   const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-                  const isDoing = (task.inProgressStudentIds || []).includes(currentUser.id);
                   const doneCount = (task.completedStudentIds || []).length;
                   const donePercent = Math.round((doneCount / totalStudents) * 100);
 
                   const dObj = new Date(task.deadline);
                   const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
                   const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
+                  const isExpanded = expandedTaskId === task.id;
+                  const hasDetails = Boolean(task.description || task.link);
 
                   return (
-                    <div key={task.id} className={`mobile-task-card ${isDone ? 'completed' : ''}`}>
-                      <div className="mobile-task-top">
+                    <div key={task.id} className={`clean-task-card ${isDone ? 'completed' : ''}`}>
+                      <div className="clean-task-main">
+                        {/* Checkbox */}
                         <div
-                          className="notion-todo-checkbox"
-                          onClick={() => handleCycleStatus(task)}
-                          style={{
-                            marginTop: '2px',
-                            backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
-                            borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
-                            color: '#fff'
-                          }}
-                          title="Klik untuk mengubah status"
+                          className="clean-todo-checkbox"
+                          onClick={() => handleToggleTaskDone(task)}
+                          title="Tandai selesai"
                         >
                           {isDone && <Check size={12} strokeWidth={3} />}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{
-                            fontWeight: 700,
-                            fontSize: '0.95rem',
-                            color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
-                            textDecoration: isDone ? 'line-through' : 'none'
-                          }}>
+
+                        {/* Title & Tags */}
+                        <div
+                          style={{ flex: 1, minWidth: 0, cursor: hasDetails ? 'pointer' : 'default' }}
+                          onClick={() => hasDetails && setExpandedTaskId(isExpanded ? null : task.id)}
+                        >
+                          <div className={`clean-task-title ${isDone ? 'completed' : ''}`}>
                             {task.title}
                           </div>
-                          {task.description && (
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem', lineHeight: 1.4 }}>
-                              {task.description}
-                            </div>
-                          )}
-                          {task.link && (
-                            <a
-                              href={task.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                fontSize: '0.78rem',
-                                color: 'var(--primary)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                marginTop: '0.35rem'
-                              }}
-                            >
-                              <ExternalLink size={12} />
-                              <span>Tautan Pengumpulan</span>
-                            </a>
-                          )}
+                          <div className="clean-task-tags">
+                            <span className="clean-tag-subject">{task.subject}</span>
+                            <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
+                              {dateStr}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="mobile-task-footer">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                          <span className="notion-tag notion-tag-gray">{task.subject}</span>
-                          <span style={{
-                            fontSize: '0.75rem',
-                            color: isNear ? 'var(--danger)' : 'var(--text-muted)',
-                            fontWeight: isNear ? 700 : 'normal'
-                          }}>
-                            ⏳ {dateStr}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                          <button
-                            onClick={() => handleCycleStatus(task)}
-                            className={`notion-tag ${isDone ? 'notion-tag-green' : isDoing ? 'notion-tag-blue' : 'notion-tag-gray'}`}
-                            style={{ border: 'none', cursor: 'pointer', padding: '0.25rem 0.6rem' }}
-                          >
-                            {isDone ? '✓ Selesai' : isDoing ? '⋯ Dikerjakan' : '○ Belum'}
-                          </button>
+                        {/* Quick actions (Expand toggle & delete) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          {hasDetails && (
+                            <button
+                              onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                              className="btn btn-ghost btn-xs"
+                              style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                              title={isExpanded ? 'Tutup rincian' : 'Lihat rincian'}
+                            >
+                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
+                          )}
                           {isAdmin && (
                             <button
                               onClick={() => {
@@ -464,19 +418,38 @@ export default function AcademicView() {
                                   showToast('Tugas berhasil dihapus', 'info');
                                 }
                               }}
-                              className="btn-ghost"
-                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
+                              className="btn-ghost btn-xs"
+                              style={{ color: 'var(--danger)', padding: '0.25rem' }}
                               title="Hapus Tugas"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={14} />
                             </button>
                           )}
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', paddingTop: '0.2rem' }}>
-                        <span>Progres Kelas: {doneCount}/{totalStudents} siswa ({donePercent}%)</span>
-                      </div>
+                      {/* Progressive Disclosure Body (Accordion) */}
+                      {isExpanded && hasDetails && (
+                        <div className="clean-task-details">
+                          {task.description && (
+                            <p className="clean-task-desc">{task.description}</p>
+                          )}
+                          {task.link && (
+                            <a
+                              href={task.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="clean-task-link"
+                            >
+                              <ExternalLink size={12} />
+                              <span>Buka Tautan Pengumpulan</span>
+                            </a>
+                          )}
+                          <div className="clean-task-progress-note">
+                            Progres kelas: {doneCount}/{totalStudents} ({donePercent}% siswa sudah selesai)
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

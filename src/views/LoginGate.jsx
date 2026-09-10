@@ -71,16 +71,9 @@ export default function LoginGate() {
         }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <div style={{ fontSize: '2.25rem', lineHeight: 1, marginBottom: '0.5rem' }}>🏫</div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
             ClassHub
           </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-            Portal Terpadu Kelas <strong>{data.classInfo.name}</strong> • {data.classInfo.school}
-          </p>
-          <div style={{ marginTop: '0.65rem' }}>
-            <span className="notion-tag notion-tag-gray">Akses Terproteksi Anggota Kelas</span>
-          </div>
         </div>
 
         {/* Tab Switcher */}
@@ -97,8 +90,8 @@ export default function LoginGate() {
             className={`btn ${activeTab === 'student' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
             style={{ flex: 1, fontWeight: activeTab === 'student' ? 700 : 500 }}
           >
-            <User size={15} />
-            <span>Masuk Siswa</span>
+            <User size={14} />
+            <span>Siswa</span>
           </button>
           <button
             type="button"
@@ -106,8 +99,8 @@ export default function LoginGate() {
             className={`btn ${activeTab === 'admin' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
             style={{ flex: 1, fontWeight: activeTab === 'admin' ? 700 : 500 }}
           >
-            <ShieldCheck size={15} />
-            <span>Pengurus / Admin</span>
+            <ShieldCheck size={14} />
+            <span>Admin</span>
           </button>
         </div>
 
@@ -115,7 +108,7 @@ export default function LoginGate() {
         {activeTab === 'student' ? (
           <form onSubmit={handleStudentSubmit}>
             <div className="form-group">
-              <label className="form-label">Pilih Nama Anda</label>
+              <label className="form-label">Nama</label>
               <select
                 className="form-select"
                 value={selectedStudentId}
@@ -124,30 +117,27 @@ export default function LoginGate() {
               >
                 {data.members.map(m => (
                   <option key={m.id} value={m.id}>
-                    Absen {m.absentNo}. {m.name} ({m.roleTitle || 'Siswa'})
+                    #{m.absentNo} · {m.name}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                <label className="form-label" style={{ margin: 0 }}>PIN Siswa</label>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Bawaan: 1234</span>
-              </div>
+              <label className="form-label">PIN</label>
               <input
                 type="password"
                 className="form-input"
-                placeholder="4 digit PIN"
+                placeholder="1234"
                 value={studentPin}
                 onChange={(e) => setStudentPin(e.target.value)}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.65rem', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              <span>Masuk ke Kelas Saya</span>
-              <ArrowRight size={16} />
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.88rem', marginTop: '0.4rem' }}>
+              <span>Masuk</span>
+              <ArrowRight size={15} />
             </button>
 
             <button
@@ -157,51 +147,36 @@ export default function LoginGate() {
               style={{
                 width: '100%',
                 marginTop: '0.65rem',
-                fontSize: '0.8125rem',
+                fontSize: '0.8rem',
                 border: '1px dashed var(--border)',
-                color: 'var(--text-primary)'
+                color: 'var(--text-secondary)'
               }}
             >
-              <Zap size={14} color="var(--primary)" />
-              <span>Masuk Instan (Ahmad Fauzan - Demo)</span>
+              <Zap size={13} color="var(--primary)" />
+              <span>Masuk Demo (Ahmad Fauzan)</span>
             </button>
           </form>
         ) : (
           /* Admin Form */
           <form onSubmit={handleAdminSubmit}>
             <div className="form-group">
-              <label className="form-label">Master PIN Pengurus / Wali Kelas</label>
+              <label className="form-label">PIN Admin</label>
               <input
                 type="password"
                 className="form-input"
-                placeholder="Masukkan Master PIN"
+                placeholder="admin123"
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.target.value)}
                 required
               />
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-                Master PIN Bawaan: <strong>admin123</strong>
-              </span>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.65rem', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              <span>Buka Akses Pengurus</span>
-              <ShieldCheck size={16} />
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.88rem', marginTop: '0.4rem' }}>
+              <span>Masuk Admin</span>
+              <ShieldCheck size={15} />
             </button>
           </form>
         )}
-
-        {/* Homeroom teacher footer */}
-        <div style={{
-          marginTop: '1.5rem',
-          paddingTop: '1rem',
-          borderTop: '1px solid var(--border)',
-          textAlign: 'center',
-          fontSize: '0.8125rem',
-          color: 'var(--text-muted)'
-        }}>
-          Wali Kelas: <strong style={{ color: 'var(--text-primary)' }}>{data.classInfo.homeroomTeacher}</strong>
-        </div>
       </div>
       </div>
     </div>

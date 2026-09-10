@@ -44,8 +44,7 @@ export default function ClassView() {
   const filteredMembers = members.filter(m => {
     return memberSearch === '' ||
       m.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
-      (m.roleTitle && m.roleTitle.toLowerCase().includes(memberSearch.toLowerCase())) ||
-      (m.nisn && m.nisn.includes(memberSearch));
+      String(m.absentNo).includes(memberSearch);
   });
   filteredMembers.sort((a, b) => (a.absentNo || 0) - (b.absentNo || 0));
 
@@ -55,7 +54,7 @@ export default function ClassView() {
       category: annCat,
       title: annTitle.trim(),
       content: annContent.trim(),
-      author: `${currentUser.name} (${currentUser.roleTitle || 'Pengurus'})`
+      author: currentUser.name
     });
     setIsAddAnnOpen(false);
     setAnnTitle('');
@@ -65,14 +64,6 @@ export default function ClassView() {
 
   return (
     <div>
-      {/* 1. NOTION PAGE HEADER */}
-      <div className="notion-header">
-        <span className="notion-header-icon">🏛️</span>
-        <h1 className="notion-header-title">Ruang Kelas</h1>
-        <p className="notion-header-desc">
-          Papan warta pengumuman resmi & direktori siswa {classInfo.name} • {classInfo.school}
-        </p>
-      </div>
 
       {/* 2. SUB-TABS & ACTIONS */}
       <div style={{
@@ -85,22 +76,20 @@ export default function ClassView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
+        <div className="clean-filter-chips">
           <button
             onClick={() => setActiveTab('announcements')}
-            className={`btn ${activeTab === 'announcements' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeTab === 'announcements' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeTab === 'announcements' ? 'active' : ''}`}
           >
-            <Megaphone size={15} />
-            <span>Papan Pengumuman ({announcements.length})</span>
+            <Megaphone size={14} />
+            <span>Pengumuman ({announcements.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('members')}
-            className={`btn ${activeTab === 'members' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeTab === 'members' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeTab === 'members' ? 'active' : ''}`}
           >
-            <Users size={15} />
-            <span>Direktori Siswa ({members.length})</span>
+            <Users size={14} />
+            <span>Teman Sekelas ({members.length})</span>
           </button>
         </div>
 
@@ -115,45 +104,45 @@ export default function ClassView() {
       {/* 3. ANNOUNCEMENTS CONTENT */}
       {activeTab === 'announcements' && (
         <div>
-          {/* Filter Bar & Search */}
+          {/* Category Pills & Search */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '0.75rem',
-            marginBottom: '1.25rem'
+            marginBottom: '1rem'
           }}>
-            <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
+            <div className="clean-filter-chips">
               <button
                 onClick={() => setCurrentCategory('all')}
-                className={`btn ${currentCategory === 'all' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${currentCategory === 'all' ? 'active' : ''}`}
               >
                 Semua
               </button>
               <button
                 onClick={() => setCurrentCategory('penting')}
-                className={`btn ${currentCategory === 'penting' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${currentCategory === 'penting' ? 'active' : ''}`}
               >
                 Penting
               </button>
               <button
                 onClick={() => setCurrentCategory('akademik')}
-                className={`btn ${currentCategory === 'akademik' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${currentCategory === 'akademik' ? 'active' : ''}`}
               >
                 Akademik
               </button>
               <button
                 onClick={() => setCurrentCategory('kegiatan')}
-                className={`btn ${currentCategory === 'kegiatan' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${currentCategory === 'kegiatan' ? 'active' : ''}`}
               >
                 Kegiatan
               </button>
               <button
                 onClick={() => setCurrentCategory('keuangan')}
-                className={`btn ${currentCategory === 'keuangan' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
+                className={`clean-filter-chip ${currentCategory === 'keuangan' ? 'active' : ''}`}
               >
-                Keuangan
+                Kas
               </button>
             </div>
 
@@ -163,23 +152,17 @@ export default function ClassView() {
               placeholder="Cari pengumuman..."
               value={annSearch}
               onChange={(e) => setAnnSearch(e.target.value)}
-              style={{ minWidth: '180px', flex: 1, maxWidth: '280px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
+              style={{ width: 'auto', minWidth: '180px', padding: '0.4rem 0.65rem', fontSize: '0.8125rem' }}
             />
           </div>
 
           {filteredAnnouncements.length === 0 ? (
-            <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
-              <p style={{ fontWeight: 700, margin: 0 }}>Tidak ada pengumuman ditemukan</p>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                Belum ada warta untuk filter pencarian ini.
-              </p>
+            <div className="clean-empty-state">
+              Tidak ada pengumuman yang sesuai.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {filteredAnnouncements.map(ann => {
-                const dateObj = new Date(ann.createdAt);
-                const dateStr = !isNaN(dateObj) ? `${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}` : '';
-
                 return (
                   <div
                     key={ann.id}
@@ -189,17 +172,23 @@ export default function ClassView() {
                       borderLeft: ann.isPinned ? '3px solid var(--primary)' : '1px solid var(--border)'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-                          {ann.isPinned && <span className="notion-tag notion-tag-orange">📌 Disematkan</span>}
-                          <span className="notion-tag notion-tag-gray" style={{ textTransform: 'uppercase' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                          <span className={`notion-tag ${ann.category === 'penting' ? 'notion-tag-red' : 'notion-tag-gray'}`} style={{ textTransform: 'uppercase', fontSize: '0.72rem' }}>
                             {ann.category}
                           </span>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{dateStr}</span>
+                          {ann.isPinned && (
+                            <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem' }}>
+                              📌 Disematkan
+                            </span>
+                          )}
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {new Date(ann.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                          </span>
                         </div>
 
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.4rem 0' }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.4rem 0', color: 'var(--text-primary)' }}>
                           {ann.title}
                         </h3>
 
@@ -246,89 +235,62 @@ export default function ClassView() {
         </div>
       )}
 
-      {/* 4. MEMBERS CONTENT */}
+      {/* 4. ENGAGING CLASSMATES ROSTER */}
       {activeTab === 'members' && (
         <div>
-          {/* Properties bar */}
-          <div className="notion-properties-bar">
-            <div className="notion-prop-item">
-              <span style={{ color: 'var(--text-muted)' }}>Wali Kelas:</span>
-              <strong>{classInfo.homeroomTeacher}</strong>
-            </div>
-            <div className="notion-prop-item">
-              <span style={{ color: 'var(--text-muted)' }}>Tahun Ajaran:</span>
-              <span>{classInfo.academicYear}</span>
-            </div>
-            <div className="notion-prop-item">
-              <span style={{ color: 'var(--text-muted)' }}>Total Siswa:</span>
-              <span className="notion-tag notion-tag-gray">{members.length} Siswa</span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-              Menampilkan {filteredMembers.length} siswa
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             <input
               type="text"
               className="form-input"
-              placeholder="Cari nama, absen, atau peran..."
+              placeholder="Cari nama teman atau nomor absen..."
               value={memberSearch}
               onChange={(e) => setMemberSearch(e.target.value)}
-              style={{ minWidth: '180px', flex: 1, maxWidth: '280px', padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}
+              style={{ flex: 1, minWidth: '180px', maxWidth: '320px', padding: '0.45rem 0.8rem', fontSize: '0.85rem' }}
             />
+            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+              {filteredMembers.length} Siswa
+            </span>
           </div>
 
-          <div className="notion-table-wrapper">
-            <table className="notion-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '50px' }}>Absen</th>
-                  <th>Nama Lengkap</th>
-                  <th style={{ width: '130px' }}>NISN</th>
-                  <th style={{ width: '170px' }}>Jabatan / Peran</th>
-                  <th style={{ width: '90px', textAlign: 'center' }}>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMembers.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                      Tidak ada siswa ditemukan.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredMembers.map(m => {
-                    const isMe = m.id === currentUser.id;
-                    const isOfficer = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
+          {filteredMembers.length === 0 ? (
+            <div className="clean-empty-state">
+              Tidak ada siswa yang cocok dengan pencarian.
+            </div>
+          ) : (
+            <div className="clean-members-grid">
+              {filteredMembers.map((m, idx) => {
+                const isMe = m.id === currentUser.id;
+                const initials = m.avatarText || m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+                const hue = ((m.absentNo || idx) * 43) % 360;
 
-                    return (
-                      <tr key={m.id} style={{ backgroundColor: isMe ? 'var(--bg-hover)' : 'transparent' }}>
-                        <td style={{ color: 'var(--text-muted)', fontWeight: 600 }}>#{m.absentNo}</td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: isMe ? 700 : 'normal' }}>{m.name}</span>
-                            {isMe && <span className="notion-tag notion-tag-green">Saya</span>}
-                          </div>
-                        </td>
-                        <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.8125rem' }}>
-                          {m.nisn}
-                        </td>
-                        <td>
-                          <span className={`notion-tag ${isOfficer ? 'notion-tag-orange' : 'notion-tag-gray'}`}>
-                            {m.roleTitle || 'Siswa'}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Aktif</span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                return (
+                  <div key={m.id} className={`clean-member-card ${isMe ? 'is-me' : ''}`}>
+                    <div className="member-card-top">
+                      <div
+                        className="member-avatar-circle"
+                        style={{
+                          backgroundColor: `hsl(${hue}, 55%, 92%)`,
+                          color: `hsl(${hue}, 70%, 35%)`,
+                        }}
+                      >
+                        {initials}
+                      </div>
+                      <span className="member-absent-badge">
+                        #{String(m.absentNo || idx + 1).padStart(2, '0')}
+                      </span>
+                    </div>
+
+                    <div className="member-info">
+                      <div className="member-name-row">
+                        <strong className="member-name">{m.name}</strong>
+                        {isMe && <span className="clean-chip chip-green" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>Saya</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

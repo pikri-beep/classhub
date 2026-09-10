@@ -51,9 +51,6 @@ export default function Sidebar({ activeView, setActiveView, onOpenSwitchUser })
           <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
             ClassHub
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            {data.classInfo.name}
-          </div>
         </div>
       </div>
 

@@ -8,18 +8,12 @@ import LiveClassTracker from '../components/LiveClassTracker';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
 export default function DashboardView({ onNavigate }) {
-  const { currentUser } = useAuth();
+  const { currentUser, isAdmin } = useAuth();
   const { data, updateTaskStatus } = useStore();
   const { showToast } = useToast();
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   const now = new Date();
-  const hours = now.getHours();
-  let greeting = 'Selamat Pagi';
-  if (hours >= 11 && hours < 15) greeting = 'Selamat Siang';
-  else if (hours >= 15 && hours < 18) greeting = 'Selamat Sore';
-  else if (hours >= 18 || hours < 5) greeting = 'Selamat Malam';
-
   const daysMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const currentDayName = daysMap[now.getDay()];
@@ -58,105 +52,82 @@ export default function DashboardView({ onNavigate }) {
 
   return (
     <div>
-      {/* 1. NOTION PAGE HEADER */}
-      <div className="notion-header">
-        <span className="notion-header-icon">⚡</span>
-        <h1 className="notion-header-title">Hari Ini</h1>
-        <p className="notion-header-desc">
-          {formattedDate} • Ruang Kelas <strong>{data.classInfo.name}</strong> • {data.classInfo.school}
-        </p>
-      </div>
-
-      {/* 2. CALLOUT BANNER */}
-      <div className="notion-callout">
-        <span className="notion-callout-icon">💡</span>
-        <div className="notion-callout-content">
-          <strong>{greeting}, {currentUser.name.split(' ')[0]}!</strong>{' '}
-          {myPendingTasks.length > 0 ? (
-            <span>Kamu memiliki <strong>{myPendingTasks.length} tugas</strong> yang belum selesai. Semangat belajarnya!</span>
-          ) : (
-            <span>Semua tugas kelasmu sudah tuntas diselesaikan! Luar biasa 🎉</span>
-          )}
-          {isPiketToday && (
-            <span> Hari ini giliranmu bertugas <strong>Piket Kebersihan</strong> bersama tim piket {currentDayName}.</span>
-          )}
+      {/* TOP DATE & STATUS BAR */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
+        marginBottom: '1rem'
+      }}>
+        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+          {formattedDate}
         </div>
-      </div>
-
-      {/* 3. INLINE PROPERTIES STRIP */}
-      <div className="notion-properties-bar" style={{ marginBottom: '1.25rem' }}>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Status Tugas:</span>
-          <span className={`notion-tag ${myPendingTasks.length === 0 ? 'notion-tag-green' : 'notion-tag-orange'}`}>
-            {myPendingTasks.length === 0 ? '✓ Tuntas Semua' : `${myPendingTasks.length} Belum Selesai`}
+        <div className="clean-status-chips">
+          <span className={`clean-chip ${isPiketToday ? 'chip-amber' : 'chip-neutral'}`}>
+            {isPiketToday ? '⚡ Piket Hari Ini' : 'Bebas Piket'}
+          </span>
+          <span className="clean-chip chip-neutral">
+            Kas: Rp {Number(data.cash.balance || 0).toLocaleString('id-ID')}
           </span>
         </div>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Piket Hari Ini:</span>
-          <span className={`notion-tag ${isPiketToday ? 'notion-tag-orange' : 'notion-tag-gray'}`}>
-            {isPiketToday ? '⚡ Bertugas' : 'Bebas Piket'}
-          </span>
-        </div>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Saldo Kas:</span>
-          <strong>Rp {Number(data.cash.balance || 0).toLocaleString('id-ID')}</strong>
-        </div>
-        {nearestExam && (
-          <div className="notion-prop-item">
-            <span style={{ color: 'var(--text-muted)' }}>Ujian Terdekat:</span>
-            <span className="notion-tag notion-tag-blue">{nearestExam.subject}</span>
-          </div>
-        )}
       </div>
 
-      {/* 4. LIVE CLASS TRACKER (P1 KEY FEATURE) */}
+      {/* 2. COMPACT LIVE CLASS TRACKER */}
       <LiveClassTracker schedules={data.schedules} onNavigate={onNavigate} />
 
-      {/* 5. TO-DO & DAILY FOCUS */}
-      <div className="notion-section-title">
-        <span>To-Do & Daftar Tugas Harian</span>
+      {/* 3. TO-DO FOCUS (MAX 3 ITEMS, ZERO FLUFF) */}
+      <div className="notion-section-title" style={{ marginTop: '1.5rem' }}>
+        <span>Tugas Mendesak</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <button
-            onClick={() => setIsWhatsAppModalOpen(true)}
-            className="btn btn-secondary btn-sm"
-            style={{ gap: '0.35rem', fontSize: '0.78rem', color: '#16A34A', fontWeight: 600 }}
-            title="Bagikan format rekap tugas ke grup WhatsApp"
-          >
-            <MessageCircle size={14} />
-            <span>Rekap WA</span>
-          </button>
-          <button onClick={() => onNavigate('academic')} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
-            <span>Lihat Semua ({tasks.length})</span>
-            <ArrowRight size={14} />
+          {isAdmin && (
+            <button
+              onClick={() => setIsWhatsAppModalOpen(true)}
+              className="btn btn-secondary btn-xs"
+              style={{ gap: '0.3rem', fontSize: '0.75rem', color: '#16A34A', fontWeight: 600 }}
+              title="Bagikan rekap tugas ke WhatsApp (Khusus Pengurus)"
+            >
+              <MessageCircle size={13} />
+              <span>Rekap WA</span>
+            </button>
+          )}
+          <button onClick={() => onNavigate('academic')} className="btn btn-ghost btn-xs" style={{ gap: '0.2rem', fontSize: '0.75rem' }}>
+            <span>Semua ({tasks.length})</span>
+            <ArrowRight size={13} />
           </button>
         </div>
       </div>
-      <p className="notion-section-desc">Klik kotak centang untuk menandai tugas yang sudah kamu selesaikan.</p>
 
-      <div className="notion-todo-list">
+      <div className="clean-todo-list">
         {tasks.length === 0 ? (
-          <div className="card" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            Belum ada tugas yang ditugaskan di kelas ini.
+          <div className="clean-empty-state">
+            Tidak ada tugas aktif di kelas ini.
           </div>
         ) : (
-          tasks.slice(0, 5).map(task => {
+          tasks.slice(0, 3).map(task => {
             const isDone = (task.completedStudentIds || []).includes(currentUser.id);
             const dObj = new Date(task.deadline);
             const deadlineFormatted = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
+            const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 2;
 
             return (
               <div
                 key={task.id}
-                className={`notion-todo-item ${isDone ? 'completed' : ''}`}
+                className={`clean-todo-item ${isDone ? 'completed' : ''}`}
                 onClick={() => handleToggleTask(task)}
               >
-                <div className="notion-todo-checkbox">
+                <div className="clean-todo-checkbox">
                   {isDone && <Check size={12} strokeWidth={3} />}
                 </div>
-                <span className="notion-todo-text">{task.title}</span>
-                <div className="notion-todo-meta">
-                  <span className="notion-tag notion-tag-gray">{task.subject}</span>
-                  <span>tenggat {deadlineFormatted}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="clean-todo-text">{task.title}</div>
+                </div>
+                <div className="clean-todo-meta">
+                  <span className="clean-tag-subject">{task.subject}</span>
+                  <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
+                    {deadlineFormatted}
+                  </span>
                 </div>
               </div>
             );

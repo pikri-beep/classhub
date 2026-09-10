@@ -26,6 +26,11 @@ export default function CashView() {
   const duesPeriods = data.cash.duesPeriods || [];
   const transactions = data.cash.transactions || [];
 
+  const myPaidPeriods = duesPeriods.filter(p => (p.paidStudentIds || []).includes(currentUser.id));
+  const myUnpaidPeriods = duesPeriods.filter(p => !(p.paidStudentIds || []).includes(currentUser.id));
+  const myUnpaidAmount = myUnpaidPeriods.reduce((sum, p) => sum + (Number(p.amount) || Number(data.cash.duesAmount || 10000)), 0);
+  const isAllPaid = myUnpaidPeriods.length === 0 && duesPeriods.length > 0;
+
   const studentsToDisplay = showOnlyMyDues
     ? members.filter(m => m.id === currentUser.id)
     : members;
@@ -55,42 +60,36 @@ export default function CashView() {
 
   return (
     <div>
-      {/* 1. NOTION PAGE HEADER */}
-      <div className="notion-header">
-        <span className="notion-header-icon">💳</span>
-        <h1 className="notion-header-title">Kas & Iuran</h1>
-        <p className="notion-header-desc">
-          Transparansi keuangan kelas, buku arus kas & rekapitulasi iuran mingguan
-        </p>
-      </div>
 
-      {/* 2. INLINE PROPERTIES STRIP */}
-      <div className="notion-properties-bar">
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Saldo Tersedia:</span>
-          <strong style={{ fontSize: '1.15rem', color: 'var(--text-primary)' }}>
-            Rp {Number(cashStats.balance).toLocaleString('id-ID')}
-          </strong>
+      {/* 2. CASH SUMMARY STATS */}
+      <div className="clean-cash-summary">
+        <div>
+          <span className="clean-cash-label">Total Saldo Kas</span>
+          <h2 className="clean-cash-amount">Rp {Number(cashStats.balance).toLocaleString('id-ID')}</h2>
         </div>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Pemasukan:</span>
-          <span className="notion-tag notion-tag-green">
-            + Rp {Number(cashStats.income).toLocaleString('id-ID')}
-          </span>
-        </div>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Pengeluaran:</span>
-          <span className="notion-tag notion-tag-red">
-            - Rp {Number(cashStats.expense).toLocaleString('id-ID')}
-          </span>
-        </div>
-        <div className="notion-prop-item">
-          <span style={{ color: 'var(--text-muted)' }}>Iuran Wajib:</span>
-          <span>Rp {Number(data.cash.duesAmount || 10000).toLocaleString('id-ID')} / pekan</span>
+        <div className="clean-cash-substats">
+          <div className="clean-cash-stat">
+            <span className="stat-label">Pemasukan</span>
+            <span className="stat-val positive">+Rp {Number(cashStats.income).toLocaleString('id-ID')}</span>
+          </div>
+          <div className="clean-cash-stat">
+            <span className="stat-label">Pengeluaran</span>
+            <span className="stat-val negative">-Rp {Number(cashStats.expense).toLocaleString('id-ID')}</span>
+          </div>
+          <div className="clean-cash-stat">
+            <span className="stat-label">Iuran Wajib</span>
+            <span className="stat-val">Rp {Number(data.cash.duesAmount || 10000).toLocaleString('id-ID')}/pekan</span>
+          </div>
+          <div className="clean-cash-stat">
+            <span className="stat-label">Tunggakan Saya</span>
+            <span className={`stat-val ${myUnpaidAmount > 0 ? 'negative' : 'positive'}`}>
+              {myUnpaidAmount > 0 ? `Rp ${Number(myUnpaidAmount).toLocaleString('id-ID')}` : 'Lunas ✓'}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* 3. SUB-TABS & ACTIONS */}
+      {/* 4. SUB-TABS & ACTIONS */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -101,21 +100,19 @@ export default function CashView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
+        <div className="clean-filter-chips">
           <button
             onClick={() => setActiveTab('matrix')}
-            className={`btn ${activeTab === 'matrix' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeTab === 'matrix' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeTab === 'matrix' ? 'active' : ''}`}
           >
-            <Table size={15} />
-            <span>Matriks Iuran Siswa</span>
+            <Table size={14} />
+            <span>Matriks Iuran</span>
           </button>
           <button
             onClick={() => setActiveTab('transactions')}
-            className={`btn ${activeTab === 'transactions' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeTab === 'transactions' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeTab === 'transactions' ? 'active' : ''}`}
           >
-            <Receipt size={15} />
+            <Receipt size={14} />
             <span>Buku Kas ({transactions.length})</span>
           </button>
         </div>
@@ -125,10 +122,10 @@ export default function CashView() {
             <button
               onClick={() => setShowOnlyMyDues(!showOnlyMyDues)}
               className="btn btn-ghost btn-sm"
-              style={{ gap: '0.35rem' }}
+              style={{ gap: '0.35rem', fontSize: '0.78rem' }}
             >
               {showOnlyMyDues ? <Users size={14} /> : <User size={14} />}
-              <span>{showOnlyMyDues ? 'Tampilkan Semua' : 'Tagihan Saya Saja'}</span>
+              <span>{showOnlyMyDues ? 'Lihat Seluruh Siswa' : 'Hanya Saya'}</span>
             </button>
           ) : (
             isAdmin && (
@@ -141,46 +138,9 @@ export default function CashView() {
         </div>
       </div>
 
-      {/* 4. MATRIX TAB */}
+      {/* 5. MATRIX TAB */}
       {activeTab === 'matrix' && (
         <div>
-          {/* Personal Dues Quick Summary Card */}
-          <div className="card" style={{ padding: '1rem 1.15rem', marginBottom: '1.25rem', backgroundColor: 'var(--bg-surface)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <span style={{ fontSize: '1rem' }}>👤</span>
-                <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>Status Iuran Saya ({currentUser.name.split(' ')[0]})</strong>
-              </div>
-              <span className="notion-tag notion-tag-green">
-                {duesPeriods.filter(p => (p.paidStudentIds || []).includes(currentUser.id)).length} / {duesPeriods.length} Pekan Lunas
-              </span>
-            </div>
-            <div className="scrollable-tabs" style={{ gap: '0.5rem', paddingBottom: '0.25rem' }}>
-              {duesPeriods.map(p => {
-                const isPaid = (p.paidStudentIds || []).includes(currentUser.id);
-                return (
-                  <div key={p.id} className="card" style={{ padding: '0.55rem 0.75rem', minWidth: '125px', flexShrink: 0, backgroundColor: 'var(--bg)' }}>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Rp {Number(p.amount).toLocaleString('id-ID')}</div>
-                    <div style={{ marginTop: '0.4rem' }}>
-                      <span className={`notion-tag ${isPaid ? 'notion-tag-green' : 'notion-tag-red'}`} style={{ fontSize: '0.72rem' }}>
-                        {isPaid ? '✓ Lunas' : '○ Belum'}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.35rem' }}>
-            <span className="notion-section-desc" style={{ margin: 0 }}>
-              {isAdmin
-                ? 'Klik tombol status tag pada kolom pekan untuk mengubah status Lunas / Belum.'
-                : 'Daftar transparansi pembayaran kas mingguan untuk seluruh siswa.'}
-            </span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>👉 Geser tabel ke samping</span>
-          </div>
 
           <div className="notion-table-wrapper">
             <table className="notion-table">
@@ -252,10 +212,6 @@ export default function CashView() {
       {/* 5. TRANSACTIONS TAB */}
       {activeTab === 'transactions' && (
         <div>
-          <div className="notion-section-desc">
-            Buku catatan keluar-masuk dana kas kelas yang dikelola oleh bendahara secara terbuka.
-          </div>
-
           <div className="notion-table-wrapper">
             <table className="notion-table">
               <thead>

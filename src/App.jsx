@@ -93,14 +93,14 @@ export default function App() {
       <MobileNav activeView={activeView} setActiveView={setActiveView} />
 
       {/* SWITCH USER MODAL */}
-      <Modal isOpen={isSwitchUserOpen} onClose={() => setIsSwitchUserOpen(false)} title="Pengaturan Akun & Beralih Siswa">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <Modal isOpen={isSwitchUserOpen} onClose={() => setIsSwitchUserOpen(false)} title="Ganti Akun">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           
           {/* Switch Student */}
           <form onSubmit={handleSwitchStudent} className="card" style={{ padding: '1rem 1.15rem' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '0.5rem' }}>Beralih ke Akun Siswa Lain</h4>
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.5rem' }}>Akun Siswa</h4>
             <div className="form-group">
-              <label className="form-label">Pilih Siswa</label>
+              <label className="form-label">Nama</label>
               <select
                 className="form-select"
                 value={switchStudentId}
@@ -108,48 +108,50 @@ export default function App() {
               >
                 {data.members.map(m => (
                   <option key={m.id} value={m.id}>
-                    Absen {m.absentNo}. {m.name} ({m.roleTitle || 'Siswa'})
+                    #{m.absentNo} · {m.name}
                   </option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">PIN (Default: 1234)</label>
+              <label className="form-label">PIN</label>
               <input
                 type="password"
                 className="form-input"
+                placeholder="1234"
                 value={switchPin}
                 onChange={(e) => setSwitchPin(e.target.value)}
                 required
               />
             </div>
             <button type="submit" className="btn btn-secondary btn-sm" style={{ width: '100%' }}>
-              Beralih ke Akun Terpilih
+              Pilih Akun
             </button>
           </form>
 
           {/* Switch Admin */}
           <form onSubmit={handleSwitchAdmin} className="card" style={{ padding: '1rem 1.15rem' }}>
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '0.5rem' }}>Masuk Mode Master Pengurus / Admin</h4>
+            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.5rem' }}>Admin / Pengurus</h4>
             <div className="form-group">
-              <label className="form-label">Master PIN (Default: admin123)</label>
+              <label className="form-label">PIN Admin</label>
               <input
                 type="password"
                 className="form-input"
+                placeholder="admin123"
                 value={switchAdminPin}
                 onChange={(e) => setSwitchAdminPin(e.target.value)}
                 required
               />
             </div>
             <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }}>
-              Masuk sebagai Master Admin
+              Masuk Admin
             </button>
           </form>
 
           {/* Reset Demo Data */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>Reset semua data demo ke awal:</span>
-            <button onClick={handleResetData} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Reset data demo:</span>
+            <button onClick={handleResetData} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.78rem' }}>
               Reset Data
             </button>
           </div>

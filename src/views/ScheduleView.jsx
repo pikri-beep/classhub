@@ -115,14 +115,6 @@ export default function ScheduleView() {
 
   return (
     <div>
-      {/* 1. NOTION PAGE HEADER */}
-      <div className="notion-header">
-        <span className="notion-header-icon">📅</span>
-        <h1 className="notion-header-title">Jadwal & Agenda</h1>
-        <p className="notion-header-desc">
-          Jadwal pelajaran mingguan, regu piket kelas & kalender agenda terpadu
-        </p>
-      </div>
 
       {/* 2. SUB-TAB SWITCHER */}
       <div style={{
@@ -135,22 +127,20 @@ export default function ScheduleView() {
         borderBottom: '1px solid var(--border)',
         paddingBottom: '0.65rem'
       }}>
-        <div className="scrollable-tabs" style={{ flex: 1, minWidth: '240px' }}>
+        <div className="clean-filter-chips">
           <button
             onClick={() => setActiveSubTab('lessons')}
-            className={`btn ${activeSubTab === 'lessons' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeSubTab === 'lessons' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeSubTab === 'lessons' ? 'active' : ''}`}
           >
-            <CalendarClock size={15} />
-            <span>Jadwal Pelajaran & Piket</span>
+            <CalendarClock size={14} />
+            <span>Pelajaran & Piket</span>
           </button>
           <button
             onClick={() => setActiveSubTab('calendar')}
-            className={`btn ${activeSubTab === 'calendar' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ fontWeight: activeSubTab === 'calendar' ? 700 : 500 }}
+            className={`clean-filter-chip ${activeSubTab === 'calendar' ? 'active' : ''}`}
           >
-            <CalendarDays size={15} />
-            <span>Kalender Agenda Kelas</span>
+            <CalendarDays size={14} />
+            <span>Kalender Agenda</span>
           </button>
         </div>
       </div>

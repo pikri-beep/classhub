@@ -1,225 +1,431 @@
-import React, { useState } from 'react';
-import { Share2, Copy, Check, ExternalLink, MessageCircle, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Share2, 
+  Copy, 
+  Check, 
+  ExternalLink, 
+  MessageCircle, 
+  Calendar, 
+  Sparkles, 
+  Edit3, 
+  Eye, 
+  RotateCcw,
+  Clock,
+  BookOpen,
+  Users,
+  GraduationCap
+} from 'lucide-react';
 import Modal from './Modal';
 import { useToast } from '../context/ToastContext';
+import { useStore } from '../context/StoreContext';
 
-export default function WhatsAppShareModal({ isOpen, onClose, tasks = [], classInfo = {}, currentUser = {} }) {
+export default function WhatsAppShareModal({ 
+  isOpen, 
+  onClose, 
+  tasks: propTasks = [], 
+  classInfo: propClassInfo = {}, 
+  currentUser = {} 
+}) {
   const { showToast } = useToast();
-  const [scope, setScope] = useState('all'); // 'all' or 'my'
-  const [includeLink, setIncludeLink] = useState(true);
-  const [includeGreeting, setIncludeGreeting] = useState(true);
-  const [isCopied, setIsCopied] = useState(false);
+  const { data } = useStore();
 
-  const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const classInfo = propClassInfo?.name ? propClassInfo : (data?.classInfo || {});
+  const tasks = propTasks && propTasks.length > 0 ? propTasks : (data?.tasks || []);
+  const schedules = data?.schedules || {};
+  const exams = data?.exams || [];
+
   const daysMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
+  // Default target date: Tomorrow
   const now = new Date();
-  const todayFormatted = `${daysMap[now.getDay()]}, ${now.getDate()} ${monthsMap[now.getMonth()]} ${now.getFullYear()}`;
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
 
-  // Filter tasks based on scope
-  const targetTasks = tasks.filter(task => {
-    if (scope === 'my') {
-      return !(task.completedStudentIds || []).includes(currentUser?.id);
-    }
-    return true; // All tasks
-  });
-
-  // Calculate days remaining
-  const getRemainingDays = (deadlineStr) => {
-    if (!deadlineStr) return null;
-    const deadlineDate = new Date(deadlineStr);
-    if (isNaN(deadlineDate.getTime())) return null;
-    const diffTime = deadlineDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+  const formatDateYMD = (d) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  // Generate WhatsApp formatted text
-  const generateWhatsAppMessage = () => {
+  const [targetDateStr, setTargetDateStr] = useState(formatDateYMD(tomorrow));
+  const [isEditing, setIsEditing] = useState(false);
+  const [customMessage, setCustomMessage] = useState('');
+  const [hasCustomEdits, setHasCustomEdits] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  // Compute selected Date object
+  const targetDate = new Date(`${targetDateStr}T00:00:00`);
+  const dayIndex = isNaN(targetDate.getTime()) ? 1 : targetDate.getDay();
+  const dayName = daysMap[dayIndex];
+  const dateFormatted = !isNaN(targetDate.getTime())
+    ? `${dayName}, ${targetDate.getDate()} ${monthsMap[targetDate.getMonth()]} ${targetDate.getFullYear()}`
+    : targetDateStr;
+
+  const isTomorrow = targetDateStr === formatDateYMD(tomorrow);
+  const isToday = targetDateStr === formatDateYMD(now);
+
+  // Helper: check same calendar day
+  const isSameCalendarDay = (d1, d2) => {
+    return (
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate()
+    );
+  };
+
+  // 1. Jadwal Pelajaran (Tanpa guru atau ruangan)
+  const daySchedule = schedules[dayName] || { subjects: [], piket: [] };
+  const subjects = daySchedule.subjects || [];
+
+  // 2. Deadline Tugas Besok
+  const dueOnTargetTasks = tasks.filter(task => {
+    if (!task.deadline) return false;
+    const d = new Date(task.deadline);
+    return !isNaN(d.getTime()) && isSameCalendarDay(d, targetDate);
+  });
+
+  // 3. Petugas Piket Besok
+  const piketList = daySchedule.piket || [];
+
+  // 4. Ujian Terdekat (fokus 1 ujian paling dekat dalam 7 hari ke depan)
+  const targetTs = targetDate.getTime();
+  const upcomingExams = exams
+    .filter(ex => {
+      if (!ex.examDate) return false;
+      const d = new Date(ex.examDate);
+      if (isNaN(d.getTime())) return false;
+      const diffTime = d.getTime() - targetTs;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 && diffDays <= 7;
+    })
+    .sort((a, b) => new Date(a.examDate) - new Date(b.examDate));
+
+  const closestExam = upcomingExams[0] || null;
+
+  // Build clean, dynamic WhatsApp Brief
+  const generateAutoBrief = () => {
     const lines = [];
 
-    if (includeGreeting) {
-      lines.push(`Assalamu'alaikum & Semangat Pagi rekan-rekan *${classInfo.name || 'XII PPLG 1'}*! 👋`);
-      lines.push(`Berikut adalah rekap tugas dan tenggat waktu akademik kelas kita:`);
+    // Greeting
+    lines.push(`Assalamu'alaikum & selamat malam rekan-rekan! 👋`);
+    lines.push(``);
+
+    // Title banner
+    const targetLabel = isTomorrow ? 'BESOK' : (isToday ? 'HARI INI' : dayName.toUpperCase());
+    lines.push(`📚 *PERSIAPAN KELAS — ${targetLabel}*`);
+    lines.push(`🗓️ ${dateFormatted}`);
+    lines.push(`━━━━━━━━━━━━━━━━━━`);
+
+    let hasAnyContent = false;
+
+    // 1. Jadwal Pelajaran (Tanpa jam, tanpa guru / ruangan)
+    if (subjects.length > 0) {
+      hasAnyContent = true;
       lines.push(``);
-    }
-
-    lines.push(`📋 *REKAP TUGAS & DEADLINE — ${classInfo.name || 'XII PPLG 1'}*`);
-    lines.push(`📅 _Update: ${todayFormatted}_`);
-    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
-
-    if (targetTasks.length === 0) {
-      lines.push(``);
-      lines.push(`🎉 *Alhamdulillah, belum ada tugas aktif yang menumpuk!*`);
-      lines.push(`Tetap jaga semangat dan manfaatkan waktu untuk belajar mandiri.`);
-    } else {
-      targetTasks.forEach((task, idx) => {
-        const dObj = new Date(task.deadline);
-        const deadlineText = !isNaN(dObj.getTime())
-          ? `${daysMap[dObj.getDay()]}, ${dObj.getDate()} ${monthsMap[dObj.getMonth()]} ${dObj.getFullYear()}`
-          : task.deadline;
-        
-        const remainingDays = getRemainingDays(task.deadline);
-        let urgency = '';
-        if (remainingDays !== null) {
-          if (remainingDays < 0) urgency = '⚠️ _(Sudah lewat tenggat!)_';
-          else if (remainingDays === 0) urgency = '⚡ _(Hari ini deadline!)_';
-          else if (remainingDays === 1) urgency = '⏳ _(Besok deadline!)_';
-          else urgency = `⏳ _(Sisa ${remainingDays} hari)_`;
-        }
-
-        const numberEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
-        const numIcon = numberEmojis[idx] || `${idx + 1}.`;
-
-        lines.push(``);
-        lines.push(`${numIcon} *${task.subject}*`);
-        lines.push(`   📌 *Tugas:* ${task.title}`);
-        lines.push(`   ⏰ *Tenggat:* ${deadlineText} ${urgency}`);
-        if (task.description) {
-          lines.push(`   📝 _Ket: ${task.description}_`);
-        }
-        if (task.link) {
-          lines.push(`   🔗 *Link Tugas:* ${task.link}`);
-        }
+      lines.push(`📅 *JADWAL ${targetLabel}*`);
+      subjects.forEach((sub, idx) => {
+        lines.push(`${idx + 1}. ${sub.subject}`);
       });
     }
 
-    lines.push(``);
-    lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
-    lines.push(`💡 _"Disiplin tugas hari ini adalah langkah awal sukses esok hari!"_`);
-    if (includeLink) {
+    // 2. Deadline Besok (Nomor, tanpa jam)
+    if (dueOnTargetTasks.length > 0) {
+      hasAnyContent = true;
       lines.push(``);
-      lines.push(`🌐 *Pantau status & centang tugasmu di Portal Kelas:*`);
-      lines.push(`${window.location.origin || 'https://classhub.id'}`);
+      lines.push(`📝 *DEADLINE ${targetLabel}*`);
+      dueOnTargetTasks.forEach((task, idx) => {
+        lines.push(`${idx + 1}. ${task.subject} — ${task.title}`);
+      });
     }
+
+    // 3. Piket Besok (Nomor, tanpa note hadir awal)
+    if (piketList.length > 0) {
+      hasAnyContent = true;
+      lines.push(``);
+      lines.push(`🧹 *PIKET ${targetLabel}*`);
+      piketList.forEach((person, idx) => {
+        lines.push(`${idx + 1}. ${person}`);
+      });
+    }
+
+    // 4. Ujian Terdekat (Ringkas nama ujian dan tanggal)
+    if (upcomingExams.length > 0) {
+      hasAnyContent = true;
+      lines.push(``);
+      lines.push(`🎯 *UJIAN TERDEKAT*`);
+      upcomingExams.slice(0, 2).forEach((ex, idx) => {
+        const exDate = new Date(ex.examDate);
+        const exDayName = daysMap[exDate.getDay()];
+        const exFormatted = `${exDayName}, ${exDate.getDate()} ${monthsMap[exDate.getMonth()]}`;
+        lines.push(`${idx + 1}. ${ex.subject} (${exFormatted})`);
+      });
+    }
+
+    // Fallback jika tidak ada konten sama sekali (misal akhir pekan)
+    if (!hasAnyContent) {
+      lines.push(``);
+      lines.push(`🏖️ *AGENDA ${targetLabel}*`);
+      lines.push(`Hari libur / tidak ada jam pembelajaran atau tugas esok hari. Selamat beristirahat!`);
+    }
+
+    // Footer
+    lines.push(``);
+    lines.push(`━━━━━━━━━━━━━━━━━━`);
+    lines.push(`🌐 *Buka ClassHub untuk detail lengkap.*`);
+    lines.push(``);
+    lines.push(`Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨`);
 
     return lines.join('\n');
   };
 
-  const messageText = generateWhatsAppMessage();
+  const autoMessage = generateAutoBrief();
+  const currentMessage = hasCustomEdits ? customMessage : autoMessage;
+
+  // Whenever target date changes, refresh auto text unless user has actively edited
+  useEffect(() => {
+    if (!hasCustomEdits) {
+      setCustomMessage(autoMessage);
+    }
+  }, [targetDateStr, autoMessage, hasCustomEdits]);
+
+  const handleResetToAuto = () => {
+    setHasCustomEdits(false);
+    setCustomMessage(autoMessage);
+    showToast('Teks dikembalikan ke template otomatis.', 'info');
+  };
+
+  const handleTextChange = (e) => {
+    setCustomMessage(e.target.value);
+    setHasCustomEdits(true);
+  };
 
   const handleCopy = async () => {
     try {
+      const textToCopy = currentMessage;
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(messageText);
+        await navigator.clipboard.writeText(textToCopy);
       } else {
         const textarea = document.createElement('textarea');
-        textarea.value = messageText;
+        textarea.value = textToCopy;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
       }
       setIsCopied(true);
-      showToast('Format teks WhatsApp berhasil disalin! 📋', 'success');
+      showToast('Pesan WhatsApp Brief berhasil disalin! 📋', 'success');
       setTimeout(() => setIsCopied(false), 2500);
     } catch (err) {
-      showToast('Gagal menyalin teks', 'error');
+      showToast('Gagal menyalin pesan', 'error');
     }
   };
 
   const handleOpenWhatsApp = () => {
-    const encoded = encodeURIComponent(messageText);
+    const encoded = encodeURIComponent(currentMessage);
     const waUrl = `https://api.whatsapp.com/send?text=${encoded}`;
     window.open(waUrl, '_blank');
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="📲 Salin & Bagikan Rekap Tugas ke WhatsApp" maxWidth="580px">
-      <div>
-        {/* OPTIONS BAR */}
+    <Modal isOpen={isOpen} onClose={onClose} title="📲 WhatsApp Brief Kelas" maxWidth="600px">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        
+        {/* Date Selector & Data Signals */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-          padding: '0.75rem 0.9rem',
+          padding: '0.75rem 0.95rem',
           backgroundColor: 'var(--bg)',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border)',
-          marginBottom: '1rem'
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.65rem'
         }}>
-          {/* Scope selection */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Cakupan:</span>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              Target Tanggal: <span style={{ color: 'var(--primary)' }}>{dateFormatted}</span>
+            </div>
+            
+            {/* Quick Presets */}
+            <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
               <button
                 type="button"
-                className={`btn btn-xs ${scope === 'all' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setScope('all')}
+                onClick={() => {
+                  setTargetDateStr(formatDateYMD(tomorrow));
+                  setHasCustomEdits(false);
+                }}
+                className={`btn btn-xs ${isTomorrow ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: '0.72rem', borderRadius: 'var(--radius-full)' }}
               >
-                Semua Tugas ({tasks.length})
+                Besok
               </button>
               <button
                 type="button"
-                className={`btn btn-xs ${scope === 'my' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setScope('my')}
+                onClick={() => {
+                  setTargetDateStr(formatDateYMD(now));
+                  setHasCustomEdits(false);
+                }}
+                className={`btn btn-xs ${isToday ? 'btn-primary' : 'btn-ghost'}`}
+                style={{ fontSize: '0.72rem', borderRadius: 'var(--radius-full)' }}
               >
-                Belum Selesai ({tasks.filter(t => !(t.completedStudentIds || []).includes(currentUser?.id)).length})
+                Hari Ini
               </button>
+              <input
+                type="date"
+                value={targetDateStr}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setTargetDateStr(e.target.value);
+                    setHasCustomEdits(false);
+                  }
+                }}
+                className="form-input"
+                style={{ padding: '0.15rem 0.45rem', fontSize: '0.72rem', height: '26px' }}
+                title="Pilih tanggal kustom"
+              />
             </div>
           </div>
 
-          {/* Additional toggles */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={includeGreeting}
-                onChange={(e) => setIncludeGreeting(e.target.checked)}
-              />
-              <span>Salam</span>
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={includeLink}
-                onChange={(e) => setIncludeLink(e.target.checked)}
-              />
-              <span>Link Web</span>
-            </label>
+          {/* Data signals used */}
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginRight: '0.2rem' }}>
+              Data termuat:
+            </span>
+            <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+              <BookOpen size={10} style={{ marginRight: '3px' }} />
+              {subjects.length} Mapel
+            </span>
+            {dueOnTargetTasks.length > 0 ? (
+              <span className="notion-tag notion-tag-red" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                <Clock size={10} style={{ marginRight: '3px' }} />
+                {dueOnTargetTasks.length} Deadline
+              </span>
+            ) : (
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                0 Deadline
+              </span>
+            )}
+            {piketList.length > 0 ? (
+              <span className="notion-tag notion-tag-green" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                <Users size={10} style={{ marginRight: '3px' }} />
+                {piketList.length} Petugas Piket
+              </span>
+            ) : (
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                0 Piket
+              </span>
+            )}
+            {upcomingExams.length > 0 ? (
+              <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                <GraduationCap size={10} style={{ marginRight: '3px' }} />
+                {upcomingExams.length} Ujian Terdekat
+              </span>
+            ) : null}
           </div>
         </div>
 
-        {/* PREVIEW CONTAINER */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '0.4rem',
-            fontSize: '0.78rem',
-            fontWeight: 600,
-            color: 'var(--text-muted)'
-          }}>
-            <span>PRATINJAU FORMAT PESAN WHATSAPP</span>
-            <span>{targetTasks.length} Tugas Dimuat</span>
+        {/* View / Edit Mode Tabs & Actions */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.3rem' }}>
+            <button
+              type="button"
+              onClick={() => setIsEditing(false)}
+              className={`btn btn-xs ${!isEditing ? 'btn-secondary' : 'btn-ghost'}`}
+              style={{ gap: '0.3rem', fontSize: '0.75rem', fontWeight: !isEditing ? 700 : 500 }}
+            >
+              <Eye size={12} />
+              <span>Pratinjau Pesan</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className={`btn btn-xs ${isEditing ? 'btn-secondary' : 'btn-ghost'}`}
+              style={{ gap: '0.3rem', fontSize: '0.75rem', fontWeight: isEditing ? 700 : 500 }}
+            >
+              <Edit3 size={12} />
+              <span>Edit Teks {hasCustomEdits && '•'}</span>
+            </button>
           </div>
 
-          <div className="wa-preview-box">
-            <pre style={{
-              margin: 0,
-              fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-              fontSize: '0.8125rem',
-              lineHeight: 1.5,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              color: 'var(--text-primary)'
-            }}>
-              {messageText}
-            </pre>
-          </div>
+          {hasCustomEdits && (
+            <button
+              type="button"
+              onClick={handleResetToAuto}
+              className="btn btn-ghost btn-xs"
+              style={{ fontSize: '0.72rem', color: 'var(--primary)', gap: '0.25rem' }}
+              title="Kembalikan ke susunan otomatis"
+            >
+              <RotateCcw size={11} />
+              <span>Reset Teks Otomatis</span>
+            </button>
+          )}
         </div>
 
-        {/* ACTION BUTTONS */}
+        {/* Message Container: Preview Box OR Editable Textarea */}
+        <div>
+          {!isEditing ? (
+            <div className="wa-preview-box" style={{ maxHeight: '310px', overflowY: 'auto' }}>
+              <pre style={{
+                margin: 0,
+                fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                fontSize: '0.8rem',
+                lineHeight: 1.5,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                color: 'var(--text-primary)'
+              }}>
+                {currentMessage}
+              </pre>
+            </div>
+          ) : (
+            <textarea
+              className="form-input"
+              value={currentMessage}
+              onChange={handleTextChange}
+              rows={13}
+              style={{
+                width: '100%',
+                fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                fontSize: '0.8rem',
+                lineHeight: 1.5,
+                resize: 'vertical',
+                backgroundColor: 'var(--bg-surface)'
+              }}
+              placeholder="Ketik atau sesuaikan pesan WhatsApp di sini..."
+            />
+          )}
+        </div>
+
+        {/* Automatic WhatsApp Brief Roadmap Hook */}
+        <div style={{
+          padding: '0.55rem 0.8rem',
+          backgroundColor: 'var(--hover-bg)',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px dashed var(--border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.4rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.73rem', color: 'var(--text-secondary)' }}>
+            <Sparkles size={13} style={{ color: 'var(--primary)' }} />
+            <span><strong>Automatic WhatsApp Brief:</strong> Status ON • 19.00 WIB (Senin–Jumat)</span>
+          </div>
+          <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.62rem', padding: '0.05rem 0.35rem' }}>
+            Rencana Lanjutan
+          </span>
+        </div>
+
+        {/* Modal Action Buttons */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
-          gap: '0.65rem',
+          gap: '0.6rem',
           flexWrap: 'wrap',
-          paddingTop: '0.85rem',
+          paddingTop: '0.65rem',
           borderTop: '1px solid var(--border)'
         }}>
           <button
@@ -235,8 +441,8 @@ export default function WhatsAppShareModal({ isOpen, onClose, tasks = [], classI
             onClick={handleCopy}
             style={{ gap: '0.35rem' }}
           >
-            {isCopied ? <Check size={15} /> : <Copy size={15} />}
-            <span>{isCopied ? 'Tersalin ke Clipboard!' : 'Salin Format Teks'}</span>
+            {isCopied ? <Check size={14} /> : <Copy size={14} />}
+            <span>{isCopied ? 'Tersalin ke Clipboard!' : 'Copy Message'}</span>
           </button>
           <button
             type="button"
@@ -247,13 +453,14 @@ export default function WhatsAppShareModal({ isOpen, onClose, tasks = [], classI
               backgroundColor: '#25D366',
               color: '#FFFFFF',
               borderColor: '#25D366',
-              fontWeight: 600
+              fontWeight: 700
             }}
           >
-            <MessageCircle size={15} />
-            <span>Kirim ke WhatsApp</span>
+            <MessageCircle size={14} />
+            <span>Share WhatsApp</span>
           </button>
         </div>
+
       </div>
     </Modal>
   );

@@ -144,7 +144,7 @@ export default function AcademicView() {
               title="Salin dan bagikan rekap tugas aktif ke WhatsApp (Khusus Pengurus)"
             >
               <MessageCircle size={15} />
-              <span>Bagikan ke WA</span>
+              <span>WhatsApp Brief</span>
             </button>
           )}
 
@@ -482,14 +482,20 @@ export default function AcademicView() {
               let tagClass = 'notion-tag-blue';
               let urgencyText = `${diffDays} hari lagi`;
               if (diffDays <= 0) {
-                urgencyText = 'Hari Ini / Selesai';
-                tagClass = 'notion-tag-gray';
-              } else if (diffDays <= 3) {
-                urgencyText = `${diffDays} hari lagi (Mendesak)`;
+                urgencyText = 'Hari Ini';
                 tagClass = 'notion-tag-red';
-              } else if (diffDays <= 7) {
+              } else if (diffDays === 1) {
+                urgencyText = 'Besok';
+                tagClass = 'notion-tag-red';
+              } else if (diffDays === 2) {
+                urgencyText = '2 hari lagi';
+                tagClass = 'notion-tag-red';
+              } else if (diffDays <= 5) {
                 urgencyText = `${diffDays} hari lagi`;
                 tagClass = 'notion-tag-orange';
+              } else {
+                urgencyText = `${diffDays} hari lagi`;
+                tagClass = 'notion-tag-blue';
               }
 
               return (
@@ -498,14 +504,13 @@ export default function AcademicView() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
                         <span className="notion-tag notion-tag-gray">{exam.subject}</span>
-                        <span className={`notion-tag ${tagClass}`}>{urgencyText}</span>
+                        <span className={`notion-tag ${tagClass}`} style={{ fontWeight: 700 }}>{urgencyText}</span>
                       </div>
                       <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>
                         {exam.title}
                       </h3>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', gap: '1.25rem', flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
                         <span>📅 {dateFormatted}</span>
-                        <span>📍 {exam.room || 'Ruang Kelas XII PPLG 1'}</span>
                       </div>
                     </div>
 

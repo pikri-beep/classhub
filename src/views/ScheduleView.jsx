@@ -170,35 +170,45 @@ export default function ScheduleView() {
                 <span className="notion-tag notion-tag-gray">{(daySchedule.subjects || []).length} Mapel</span>
               </div>
 
-              <div className="notion-table-wrapper">
-                <table className="notion-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '50px' }}>Jam</th>
-                      <th>Mata Pelajaran</th>
-                      <th>Pengajar</th>
-                      <th style={{ width: '120px' }}>Waktu</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(daySchedule.subjects || []).length === 0 ? (
-                      <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                          Tidak ada jam pelajaran di hari ini (Libur / Hari Bebas).
-                        </td>
-                      </tr>
-                    ) : (
-                      daySchedule.subjects.map((item, idx) => (
-                        <tr key={idx}>
-                          <td style={{ color: 'var(--text-muted)', fontWeight: 600 }}>#{idx + 1}</td>
-                          <td><strong>{item.subject}</strong></td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{item.teacher || '—'}</td>
-                          <td><span className="notion-tag notion-tag-blue">{item.timeStart} - {item.timeEnd}</span></td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                {(daySchedule.subjects || []).length === 0 ? (
+                  <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem', fontSize: '0.85rem' }}>
+                    Tidak ada jam pelajaran di hari ini (Libur).
+                  </div>
+                ) : (
+                  daySchedule.subjects.map((item, idx) => (
+                    <div 
+                      key={idx}
+                      className="card"
+                      style={{
+                        padding: '0.75rem 0.95rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        width: '100%',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', width: '20px' }}>
+                          #{idx + 1}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {item.subject}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            {item.teacher || 'Guru Pengampu'} {item.room && `• ${item.room}`}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
+                        {item.timeStart} - {item.timeEnd}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -211,48 +221,33 @@ export default function ScheduleView() {
                 </span>
               </div>
 
-              {isUserPiketToday && (
-                <div className="notion-callout" style={{ marginBottom: '0.85rem' }}>
-                  <span className="notion-callout-icon">🧹</span>
-                  <div className="notion-callout-content">
-                    <strong>Pengingat Piket:</strong> Kamu bertugas piket kebersihan kelas hari {activeDay}. Harap hadir 15 menit lebih awal.
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1.25rem' }}>
+                {(daySchedule.piket || []).length === 0 ? (
+                  <div className="card" style={{ width: '100%', textAlign: 'center', color: 'var(--text-muted)', padding: '1.25rem', fontSize: '0.85rem' }}>
+                    Belum ada regu piket yang dijadwalkan.
                   </div>
-                </div>
-              )}
-
-              <div className="notion-table-wrapper" style={{ marginBottom: '1.25rem' }}>
-                <table className="notion-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '45px' }}>No</th>
-                      <th>Nama Siswa Piket</th>
-                      <th style={{ width: '90px', textAlign: 'center' }}>Peran</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(daySchedule.piket || []).length === 0 ? (
-                      <tr>
-                        <td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1.5rem' }}>
-                          Belum ada regu piket yang dijadwalkan.
-                        </td>
-                      </tr>
-                    ) : (
-                      daySchedule.piket.map((name, i) => (
-                        <tr key={i}>
-                          <td style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{i + 1}.</td>
-                          <td><strong>{name}</strong></td>
-                          <td style={{ textAlign: 'center' }}>
-                            {name === currentUser.name ? (
-                              <span className="notion-tag notion-tag-green">Saya</span>
-                            ) : (
-                              <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Anggota</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                ) : (
+                  daySchedule.piket.map((name, i) => {
+                    const isMe = name === currentUser.name;
+                    return (
+                      <div
+                        key={i}
+                        className={`clean-chip ${isMe ? 'chip-amber' : 'chip-neutral'}`}
+                        style={{
+                          fontSize: '0.8rem',
+                          fontWeight: isMe ? 700 : 500,
+                          padding: '0.4rem 0.75rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem'
+                        }}
+                      >
+                        <span>{name}</span>
+                        {isMe && <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>★ (Kamu)</span>}
+                      </div>
+                    );
+                  })
+                )}
               </div>
 
               <div className="notion-callout">

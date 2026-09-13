@@ -71,7 +71,23 @@ export default function LoginGate() {
         }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: 'var(--radius-md)',
+            backgroundColor: 'var(--primary-soft)',
+            border: '1px solid var(--primary-border)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--primary)',
+            fontWeight: 800,
+            fontSize: '1.1rem',
+            marginBottom: '0.75rem'
+          }}>
+            CH
+          </div>
+          <h1 style={{ fontSize: '1.45rem', fontWeight: 800, letterSpacing: '-0.02em', margin: 0 }}>
             ClassHub
           </h1>
         </div>
@@ -81,26 +97,47 @@ export default function LoginGate() {
           display: 'flex',
           gap: '0.35rem',
           marginBottom: '1.25rem',
-          borderBottom: '1px solid var(--border)',
-          paddingBottom: '0.5rem'
+          padding: '0.25rem',
+          backgroundColor: 'var(--bg-hover)',
+          borderRadius: 'var(--radius-sm)'
         }}>
           <button
             type="button"
             onClick={() => setActiveTab('student')}
-            className={`btn ${activeTab === 'student' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ flex: 1, fontWeight: activeTab === 'student' ? 700 : 500 }}
+            className="btn btn-sm"
+            style={{
+              flex: 1,
+              fontWeight: activeTab === 'student' ? 700 : 500,
+              backgroundColor: activeTab === 'student' ? 'var(--bg-surface)' : 'transparent',
+              color: activeTab === 'student' ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: activeTab === 'student' ? 'var(--shadow-sm)' : 'none',
+              border: 'none',
+              padding: '0.45rem 0.5rem',
+              fontSize: '0.82rem',
+              gap: '0.4rem'
+            }}
           >
-            <User size={14} />
-            <span>Siswa</span>
+            <User size={15} />
+            <span>Masuk Siswa</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('admin')}
-            className={`btn ${activeTab === 'admin' ? 'btn-secondary' : 'btn-ghost'} btn-sm`}
-            style={{ flex: 1, fontWeight: activeTab === 'admin' ? 700 : 500 }}
+            className="btn btn-sm"
+            style={{
+              flex: 1,
+              fontWeight: activeTab === 'admin' ? 700 : 500,
+              backgroundColor: activeTab === 'admin' ? 'var(--bg-surface)' : 'transparent',
+              color: activeTab === 'admin' ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: activeTab === 'admin' ? 'var(--shadow-sm)' : 'none',
+              border: 'none',
+              padding: '0.45rem 0.5rem',
+              fontSize: '0.82rem',
+              gap: '0.4rem'
+            }}
           >
-            <ShieldCheck size={14} />
-            <span>Admin</span>
+            <ShieldCheck size={15} />
+            <span>Portal Admin</span>
           </button>
         </div>
 
@@ -108,7 +145,7 @@ export default function LoginGate() {
         {activeTab === 'student' ? (
           <form onSubmit={handleStudentSubmit}>
             <div className="form-group">
-              <label className="form-label">Nama</label>
+              <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600 }}>Pilih Nama Siswa</label>
               <select
                 className="form-select"
                 value={selectedStudentId}
@@ -117,26 +154,29 @@ export default function LoginGate() {
               >
                 {data.members.map(m => (
                   <option key={m.id} value={m.id}>
-                    #{m.absentNo} · {m.name}
+                    #{m.absentNo} · {m.name} ({m.roleTitle || 'Siswa'})
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label className="form-label">PIN</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>PIN Siswa</label>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Default: 1234</span>
+              </div>
               <input
                 type="password"
                 className="form-input"
-                placeholder="1234"
+                placeholder="Masukkan PIN 4 angka..."
                 value={studentPin}
                 onChange={(e) => setStudentPin(e.target.value)}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.88rem', marginTop: '0.4rem' }}>
-              <span>Masuk</span>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.65rem', fontSize: '0.88rem', marginTop: '0.5rem' }}>
+              <span>Buka Daily Companion</span>
               <ArrowRight size={15} />
             </button>
 
@@ -146,33 +186,48 @@ export default function LoginGate() {
               className="btn btn-ghost"
               style={{
                 width: '100%',
-                marginTop: '0.65rem',
+                marginTop: '0.75rem',
                 fontSize: '0.8rem',
                 border: '1px dashed var(--border)',
                 color: 'var(--text-secondary)'
               }}
             >
-              <Zap size={13} color="var(--primary)" />
-              <span>Masuk Demo (Ahmad Fauzan)</span>
+              <Zap size={14} color="var(--primary)" />
+              <span>Masuk Cepat Demo (Ahmad Fauzan)</span>
             </button>
           </form>
         ) : (
           /* Admin Form */
           <form onSubmit={handleAdminSubmit}>
+            <div style={{
+              padding: '0.75rem 0.85rem',
+              backgroundColor: 'var(--tag-blue-bg)',
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '1rem',
+              border: '1px solid var(--primary-border)'
+            }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--tag-blue-text)', lineHeight: 1.45 }}>
+                Area khusus Wali Kelas & Pengurus Inti untuk mengelola jadwal, tugas, ujian, buku kas, dan broadcast WA.
+              </div>
+            </div>
+
             <div className="form-group">
-              <label className="form-label">PIN Admin</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, margin: 0 }}>Master PIN Pengurus</label>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Default: admin123</span>
+              </div>
               <input
                 type="password"
                 className="form-input"
-                placeholder="admin123"
+                placeholder="Masukkan PIN Master Admin..."
                 value={adminPin}
                 onChange={(e) => setAdminPin(e.target.value)}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.6rem', fontSize: '0.88rem', marginTop: '0.4rem' }}>
-              <span>Masuk Admin</span>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.65rem', fontSize: '0.88rem', marginTop: '0.5rem' }}>
+              <span>Masuk Admin Dashboard</span>
               <ShieldCheck size={15} />
             </button>
           </form>

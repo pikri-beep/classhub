@@ -19,6 +19,8 @@ export function AuthProvider({ children }) {
     return null;
   });
 
+  const [previewAsStudent, setPreviewAsStudent] = useState(false);
+
   useEffect(() => {
     try {
       if (currentUser) {
@@ -41,10 +43,14 @@ export function AuthProvider({ children }) {
       return { success: false, message: 'PIN Siswa salah! (Default PIN: 1234)' };
     }
 
+    // Regardless of student's class title (Ketua Kelas, Bendahara, etc.),
+    // student login is strictly 'student' authRole with simple daily companion experience.
     const userObj = {
       ...student,
-      isMasterAdmin: student.role === 'admin'
+      authRole: 'student',
+      isMasterAdmin: false
     };
+    setPreviewAsStudent(false);
     setCurrentUser(userObj);
     return { success: true, user: userObj };
   };
@@ -59,26 +65,31 @@ export function AuthProvider({ children }) {
       id: 'master-admin',
       name: 'Administrator Kelas',
       role: 'admin',
-      roleTitle: 'Master Admin / Wali Kelas',
+      roleTitle: 'Pengurus / Wali Kelas',
       avatarText: 'AD',
+      authRole: 'admin',
       isMasterAdmin: true
     };
+    setPreviewAsStudent(false);
     setCurrentUser(adminUser);
     return { success: true, user: adminUser };
   };
 
   const logout = () => {
+    setPreviewAsStudent(false);
     setCurrentUser(null);
   };
 
   const isAuthenticated = !!currentUser;
-  const isAdmin = currentUser?.isMasterAdmin || currentUser?.role === 'admin';
+  const isAdmin = currentUser?.authRole === 'admin';
 
   return (
     <AuthContext.Provider value={{
       currentUser,
       isAuthenticated,
       isAdmin,
+      previewAsStudent,
+      setPreviewAsStudent,
       loginAsStudent,
       loginAsAdmin,
       logout

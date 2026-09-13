@@ -4,7 +4,7 @@ const STORAGE_KEY = 'classhub_data_v1';
 
 const DEFAULT_SEED_DATA = {
   classInfo: {
-    name: 'XII PPLG 1',
+    name: 'Kelas',
     school: 'SMK Negeri 1',
     academicYear: '2026/2027',
     homeroomTeacher: 'Budi Santoso, S.Kom., M.T.',
@@ -98,7 +98,7 @@ const DEFAULT_SEED_DATA = {
       subject: 'Matematika Terapan',
       title: 'PTS Ganjil: Matriks & Program Linear',
       examDate: '2026-09-22T09:30:00',
-      room: 'Ruang Teori XII PPLG 1',
+      room: 'Ruang Kelas',
       scope: 'Determinan matriks 3x3, invers matriks, sistem pertidaksamaan linear dua variabel'
     }
   ],
@@ -374,6 +374,46 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const deleteEvent = (id) => {
+    setData(prev => ({
+      ...prev,
+      events: (prev.events || []).filter(e => e.id !== id)
+    }));
+  };
+
+  const updateSchedule = (day, newScheduleData) => {
+    setData(prev => ({
+      ...prev,
+      schedules: {
+        ...prev.schedules,
+        [day]: newScheduleData
+      }
+    }));
+  };
+
+  const updateMemberPin = (memberId, newPin) => {
+    setData(prev => ({
+      ...prev,
+      members: prev.members.map(m => m.id === memberId ? { ...m, pin: newPin } : m)
+    }));
+  };
+
+  const addDuesPeriod = (name, amount = 10000) => {
+    const newPeriod = {
+      id: `dp-${Date.now()}`,
+      name,
+      amount: Number(amount),
+      paidStudentIds: []
+    };
+    setData(prev => ({
+      ...prev,
+      cash: {
+        ...prev.cash,
+        duesPeriods: [...(prev.cash.duesPeriods || []), newPeriod]
+      }
+    }));
+  };
+
   const resetToDefault = () => {
     setData(DEFAULT_SEED_DATA);
     localStorage.removeItem(STORAGE_KEY);
@@ -406,6 +446,10 @@ export function StoreProvider({ children }) {
       deleteTransaction,
       toggleDuesPaid,
       addEvent,
+      deleteEvent,
+      updateSchedule,
+      updateMemberPin,
+      addDuesPeriod,
       resetToDefault,
       getTotalCashBalance
     }}>

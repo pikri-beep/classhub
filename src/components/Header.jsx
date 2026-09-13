@@ -14,7 +14,8 @@ export default function Header({ activeView, onOpenSwitchUser }) {
     academic: 'Akademik',
     schedule: 'Jadwal & Agenda',
     cash: 'Kas & Iuran',
-    class: 'Ruang Kelas'
+    class: 'Ruang Kelas',
+    admin: 'Pusat Pengelolaan Admin'
   };
 
   return (

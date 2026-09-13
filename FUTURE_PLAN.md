@@ -306,10 +306,10 @@ graph TD
 | Tahap | Fokus Utama | Rincian Pekerjaan | Estimasi | Prioritas |
 | :--- | :--- | :--- | :---: | :---: |
 | **Fase 1** | **Clean UI & Diet Teks (Selesai)** | • Pemangkasan seluruh teks instruksi redundan & teks motivasi di Live Tracker.<br>• Redesain Dashboard menjadi fokus bento (Glanceable UI).<br>• Kembalikan checkbox tugas ke binary (centang = tuntas).<br>• Kartu anggota bersih (tanpa piket/birokrasi).<br>• Hapus judul ganda per halaman & bersihkan halaman login. | Selesai | 🟢 **Tuntas** |
-| **Fase 2** | **Reformasi Akun RBAC & Login Zero-Friction** | • Perbaikan *Privilege Leak*: Isolasi sesi admin & *hard purge* saat ganti akun.<br>• Pemisahan identitas profil vs token elevasi izin pengurus.<br>• Auto-login permanen PWA (*Remember Me*).<br>• PIN 4-digit auto-submit & alur aktivasi PIN mandiri. | 1 - 2 Hari | 🔴 **Sangat Tinggi** |
-| **Fase 3** | **Pusat Broadcast Hub (WA & Discord Bot)** | • Halaman/tab khusus admin untuk manajemen pesan siaran.<br>• Template builder dinamis pratinjau format WhatsApp.<br>• Integrasi Webhook Discord dengan pratinjau Rich Embed tugas.<br>• Riwayat log pengiriman broadcast. | 1 Hari | 🟡 **Tinggi** |
-| **Fase 4** | **Ekspor Laporan Kas** | • Desain template cetak A4 ber-kop resmi kelas.<br>• Kolom tanda tangan Ketua Kelas, Bendahara, & Wali Kelas.<br>• Generator PDF siap cetak dan ekspor CSV. | 1 Hari | 🟡 **Tinggi** |
-| **Fase 5** | **Stabilisasi & Uji HP Siswa** | • Audit performa PWA di layar smartphone kecil.<br>• Uji coba kenyamanan navigasi satu tangan (*one-handed mobile use*). | 1 Hari | 🟢 **Sedang** |
+| **Fase 2** | **Stabilisasi UI Mobile HP & Bottom Nav Dock** | • **Perbaikan Bug Geser Samping**: Kunci `overflow-x` dan ubah `.app-layout` ke `flex-direction: column` di HP.<br>• **Redesain Top Bar**: Bersihkan Top Bar dari tab yang berhimpitan.<br>• **Bottom Navigation Dock**: Pindahkan 4 navigasi utama siswa ke dock bawah layar (ramah jempol).<br>• Perbaikan padding kontainer & tabel responsive wrapper di halaman admin. | 1 Hari | 🔴 **Sangat Tinggi (Mendesak)** |
+| **Fase 3** | **Reformasi Akun RBAC & Login Zero-Friction** | • Perbaikan *Privilege Leak*: Isolasi sesi admin & *hard purge* saat ganti akun.<br>• Pemisahan identitas profil vs token elevasi izin pengurus.<br>• Auto-login permanen PWA (*Remember Me*).<br>• PIN 4-digit auto-submit & alur aktivasi PIN mandiri. | 1 - 2 Hari | 🔴 **Sangat Tinggi** |
+| **Fase 4** | **Pusat Broadcast Hub (WA & Discord Bot)** | • Halaman/tab khusus admin untuk manajemen pesan siaran.<br>• Template builder dinamis pratinjau format WhatsApp.<br>• Integrasi Webhook Discord dengan pratinjau Rich Embed tugas.<br>• Riwayat log pengiriman broadcast. | 1 Hari | 🟡 **Tinggi** |
+| **Fase 5** | **Ekspor Laporan Kas** | • Desain template cetak A4 ber-kop resmi kelas.<br>• Kolom tanda tangan Ketua Kelas, Bendahara, & Wali Kelas.<br>• Generator PDF siap cetak dan ekspor CSV. | 1 Hari | 🟡 **Tinggi** |
 | **Backlog** | **Cloud Backend** | • Sinkronisasi multi-device Supabase / Firebase. | Ditunda | ⚪ *Kebutuhan Lanjutan* |
 
 ---
@@ -457,6 +457,141 @@ Hasil eksplorasi ide dan inovasi masa depan untuk memperkuat utilitas ClassHub t
 | **PWA Web Push Notification** | Otomasi | 🔴 Tinggi | 🟢 Sangat Tinggi | **Fase Lanjutan** |
 | **Automated WhatsApp Cron Bot** | Otomasi | 🔴 Tinggi (Serverless) | 🟢 Sangat Tinggi | **Fase Lanjutan** |
 | **QR Code Check-in Piket** | Administrasi | 🔴 Tinggi | ⚪ Sedang | **Backlog Opsional** |
+
+---
+
+## 🚨 12. Catatan Kritis: Masalah Responsif Mobile (HP) & Solusi Tuntas Arsitektur UI
+
+> [!WARNING]
+> **Temuan & Masalah Kritis Saat Ini**:  
+> Meskipun antarmuka pada layar desktop sudah sangat memuaskan, tampilan pada smartphone (HP) masih mengalami **degradasi pengalaman pengguna yang signifikan**:
+> 1. **Top Bar Berantakan**: Tombol navigasi, logo, profil, dan toggle tema saling bertabrakan atau terhimpit dalam satu baris sempit 60px.
+> 2. **Halaman Admin & Konten "Terlalu Besar / Bisa Digeser" (Horizontal Overflow Leak)**: Halaman meluap ke kanan melebihi lebar layar smartphone sehingga layar bisa digeser ke samping secara tidak sengaja (*horizontal scroll bug*).
+
+---
+
+### 🔍 Diagnosis Mendalam Penyebab Masalah (Root Causes)
+
+#### A. Mengapa Halaman Meluap & Layar HP Bisa Digeser ke Samping (*Horizontal Overflow*)?
+1. **Kegagalan Flexbox pada `.app-layout`**:
+   - Di `src/index.css`, `.app-layout` memiliki properti `display: flex;` (default browser: `flex-direction: row`).
+   - Pada layar mobile (`<= 768px`), meskipun `.desktop-sidebar` disembunyikan dengan `display: none`, elemen navigasi mobile admin (`.admin-mobile-nav`) dan wrapper konten utama (`.main-content-wrapper` dengan `width: 100%`) masih berada di dalam satu baris flex horizontal.
+   - Akibatnya, browser menempatkan elemen tersebut bersebelahan secara mendatar, memicu lebar total **jauh melampaui 100vw** yang membuat seluruh badan web bisa digeser ke samping (*unwanted horizontal scroll*).
+2. **Tidak Adanya Kunci Global `overflow-x: hidden`**:
+   - Tag `html`, `body`, dan root React `#root` belum memiliki pembatas `max-width: 100%; overflow-x: hidden;`. Jika ada satu saja elemen anak yang melebar 5px, seluruh halaman web langsung memunculkan scrollbar horizontal.
+3. **Tabel Data Tanpa Pembatas Lebar Maksimum**:
+   - Matriks iuran kas (`<table className="notion-table" style={{ minWidth: '600px' }}>`) dan tabel data anggota memiliki lebar minimum statis. Tanpa pembungkus yang dikunci dengan `max-width: 100%`, tabel tersebut memaksa kontainer luar ikut melebar ke samping di layar HP.
+4. **Inline Padding Menimpa Media Query**:
+   - Pada `App.jsx`, elemen `<main className="page-container" style={{ padding: '1.25rem 1.75rem' }}>` menggunakan inline style yang menimpa aturan padding responsif `page-container` di CSS.
+
+#### B. Mengapa Top Bar Berantakan di HP (*Top Bar Crowding & Overflow*)?
+1. **Penyatuan Terlalu Banyak Elemen dalam 1 Baris Top Bar (`StudentHeader.jsx`)**:
+   - Dalam satu baris `header` setinggi 60px dijejalkan sekaligus:
+     - Logo & Nama Brand ClassHub (~110px)
+     - 4 tombol navigasi pil dengan teks lengkap: *Hari Ini*, *Jadwal Mingguan*, *Semua Tugas*, *Teman & Kelas* (~360px)
+     - Toggle Tema (~40px)
+     - Avatar & Nama Siswa (~90px)
+     - Tombol Logout (~40px)
+   - Total lebar minimum gabungan adalah **> 640px**, sementara lebar layar smartphone rata-rata hanya **360px – 412px**.
+   - Hal ini membuat tombol tab di tengah terhimpit parah, teks terpotong, atau saling tumpuk secara visual tidak karuan.
+2. **Pola Navigasi Mobile Belum Modern (Belum Menggunakan Bottom Navigation Bar)**:
+   - Standar aplikasi web/PWA mobile modern (seperti Instagram, Notion, Spotify, Youtube) **tidak menaruh 4 tab utama di header atas**.
+   - 4 tab utama wajib dipindahkan ke **Bottom Navigation Dock** di bawah layar yang mudah dijangkau satu tangan (*thumb-friendly*), sedangkan Top Bar hanya menyisakan Logo dan Profil Akun.
+
+---
+
+### 🛠️ Solusi Tuntas & Blueprint Perbaikan Teknis
+
+```
+               ┌──────────────────────────────────────────────────────────┐
+               │         ARSITEKTUR RESPONSIF MOBILE CLASSHUB             │
+               └────────────────────────────┬─────────────────────────────┘
+                                            │
+                    ┌───────────────────────┴───────────────────────┐
+                    ▼                                               ▼
+         [1. FIX HORIZONTAL OVERFLOW]                    [2. REDESAIN TOP & BOTTOM BAR]
+         • html, body: overflow-x: hidden                • Top Bar: Brand + Avatar + Theme
+         • .app-layout: flex-direction: column           • Pindahkan 4 Tab ke Bottom Dock
+         • .main-content-wrapper: width: 100%            • Admin Nav: Horizontal Chip Strip
+         • Table wraps: max-width: 100%                  • Safe-area inset support (iOS)
+```
+
+#### Solusi 1: Pembersihan Total Horizontal Overflow (Zero Side-Scroll)
+1. **Kunci Global di `src/index.css`**:
+   ```css
+   html, body, #root {
+     max-width: 100%;
+     overflow-x: hidden;
+     position: relative;
+   }
+   ```
+2. **Ubah Layout Menjadi Vertikal di HP (`<= 768px`)**:
+   ```css
+   @media (max-width: 768px) {
+     .app-layout {
+       flex-direction: column !important;
+       width: 100% !important;
+       max-width: 100vw !important;
+       overflow-x: hidden !important;
+     }
+
+     .main-content-wrapper {
+       margin-left: 0 !important;
+       width: 100% !important;
+       max-width: 100vw !important;
+       overflow-x: hidden !important;
+     }
+
+     .page-container {
+       padding: 1rem 0.85rem calc(var(--bottom-nav-height) + 1.5rem) 0.85rem !important;
+       width: 100% !important;
+       max-width: 100% !important;
+     }
+   }
+   ```
+3. **Isolasi Scroll Tabel Kas & Siswa**:
+   Pastikan setiap tabel dibungkus kontainer yang tidak memaksakan lebar layar:
+   ```jsx
+   <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+     <table className="notion-table" style={{ minWidth: '600px' }}>
+       ...
+     </table>
+   </div>
+   ```
+
+#### Solusi 2: Restrukturisasi Top Bar & Bottom Navigation Dock (PWA Standard)
+
+1. **Pemisahan Peran Top Bar Siswa (HP)**:
+   - **Kiri**: Logo `[CH]` + Tulisan `ClassHub`.
+   - **Tengah**: Dikosongkan (tidak ada lagi tombol tab yang berdesakan).
+   - **Kanan**: Toggle Tema (Matahari/Bulan) + Tombol Avatar Siswa (klik untuk ganti akun).
+   - Hasil: Header atas bersih, ramping, dan 100% stabil di semua ukuran layar (iPhone SE hingga Samsung Ultra).
+
+2. **Pengaktifan Bottom Navigation Bar (HP)**:
+   - Memindahkan 4 tombol utama ke bar bawah yang menempel di layar HP (*docked bottom bar*):
+     - 🌟 **Hari Ini** (`dashboard`)
+     - 📅 **Jadwal** (`schedule`)
+     - 📖 **Tugas** (`academic`)
+     - 👥 **Kelas** (`class`)
+   - Dilengkapi padding `env(safe-area-inset-bottom)` agar nyaman di iPhone yang memiliki home gesture bar.
+   - Siswa dapat berpindah menu cukup dengan jempol satu tangan tanpa perlu menjangkau bagian atas layar.
+
+3. **Restrukturisasi Navigasi Halaman Admin di HP**:
+   - Header Admin di HP hanya memuat Logo, status Admin, Avatar, dan tombol Logout.
+   - Pilihan modul admin (Overview, Tugas, Ujian, Jadwal, Kas, Pengumuman, Siswa) ditampilkan sebagai **Horizontal Scroll Pill Strip** yang terpasang rapi tepat di bawah header, dengan indikator aktif yang jelas dan sentuhan halus (*touch scroll*).
+
+---
+
+### 📊 Dampak Perbandingan Sebelum vs. Sesudah Perbaikan
+
+| Parameter | Kondisi Saat Ini (Bermasalah) | Sesudah Solusi Diterapkan |
+| :--- | :--- | :--- |
+| **Scroll Horizontal** | Layar HP bisa digeser ke kanan/kiri (rusak & tidak presisi). | Layar terkunci 100% tegak lurus (*zero side-scroll*). |
+| **Top Bar Siswa** | 4 tombol tab, logo, avatar berdesakan & saling tumpuk. | Top bar bersih & lega (hanya logo & tombol profil). |
+| **Ergonomi Navigasi** | Jari harus menjangkau ujung atas layar HP. | Menu utama di dock bawah layar, ramah penggunaan satu tangan. |
+| **Halaman Admin** | Menu samping merusak flexbox & halaman melebar >100vw. | Menu admin vertikal/chip strip yang pas dengan lebar layar HP. |
+| **Tabel Kas & Siswa** | Memaksa seluruh badan website ikut melebar. | Hanya kotak tabel yang bisa digeser, badan web tetap kokoh. |
+
 
 
 

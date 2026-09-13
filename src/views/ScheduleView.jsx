@@ -42,7 +42,7 @@ export default function ScheduleView() {
     const dStr = (ex.examDate || '').split('T')[0];
     if (dStr) {
       if (!unifiedEvents[dStr]) unifiedEvents[dStr] = [];
-      unifiedEvents[dStr].push({ id: ex.id, title: `Ujian: ${ex.title}`, type: 'exam', desc: `${ex.subject} (${ex.room || 'Kelas'})` });
+      unifiedEvents[dStr].push({ id: ex.id, title: `Ujian: ${ex.title}`, type: 'exam', desc: ex.subject });
     }
   });
 
@@ -197,9 +197,6 @@ export default function ScheduleView() {
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {item.subject}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                            {item.teacher || 'Guru Pengampu'} {item.room && `• ${item.room}`}
                           </div>
                         </div>
                       </div>

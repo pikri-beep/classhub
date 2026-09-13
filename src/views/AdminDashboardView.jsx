@@ -117,8 +117,6 @@ export default function AdminDashboardView({
   const [selectedDay, setSelectedDay] = useState('Senin');
   const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
   const [newSubName, setNewSubName] = useState('');
-  const [newSubTeacher, setNewSubTeacher] = useState('');
-  const [newSubRoom, setNewSubRoom] = useState('');
   const [newSubStart, setNewSubStart] = useState('07:00');
   const [newSubEnd, setNewSubEnd] = useState('08:30');
 
@@ -233,8 +231,6 @@ export default function AdminDashboardView({
       ...(currentDaySchedule.subjects || []),
       {
         subject: newSubName.trim(),
-        teacher: newSubTeacher.trim(),
-        room: newSubRoom.trim(),
         timeStart: newSubStart,
         timeEnd: newSubEnd
       }
@@ -246,8 +242,6 @@ export default function AdminDashboardView({
     });
     setIsAddSubjectOpen(false);
     setNewSubName('');
-    setNewSubTeacher('');
-    setNewSubRoom('');
     showToast(`Mata pelajaran ditambahkan ke hari ${selectedDay}!`, 'success');
   };
 
@@ -587,12 +581,7 @@ export default function AdminDashboardView({
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <span style={{ fontWeight: 700, color: 'var(--text-muted)', width: '25px' }}>#{idx + 1}</span>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{sub.subject}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                        {sub.teacher} • Ruang {sub.room}
-                      </div>
-                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{sub.subject}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
@@ -1172,26 +1161,6 @@ export default function AdminDashboardView({
               value={newSubName}
               onChange={(e) => setNewSubName(e.target.value)}
               required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Guru Pengampu</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Pak Aris, S.T."
-              value={newSubTeacher}
-              onChange={(e) => setNewSubTeacher(e.target.value)}
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Ruangan</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Lab 3"
-              value={newSubRoom}
-              onChange={(e) => setNewSubRoom(e.target.value)}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>

@@ -32,7 +32,6 @@ export default function AcademicView() {
   const [examSubject, setExamSubject] = useState('');
   const [examTitle, setExamTitle] = useState('');
   const [examDate, setExamDate] = useState('');
-  const [examRoom, setExamRoom] = useState('');
   const [examScope, setExamScope] = useState('');
 
   const tasks = data.tasks || [];
@@ -90,14 +89,12 @@ export default function AcademicView() {
       subject: examSubject.trim(),
       title: examTitle.trim(),
       examDate: examDate,
-      room: examRoom.trim(),
       scope: examScope.trim()
     });
     setIsAddExamOpen(false);
     setExamSubject('');
     setExamTitle('');
     setExamDate('');
-    setExamRoom('');
     setExamScope('');
     showToast('Jadwal ujian berhasil disimpan!', 'success');
   };
@@ -652,16 +649,6 @@ export default function AcademicView() {
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
               required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Ruang Ujian (Opsional)</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Lab Komputer 3"
-              value={examRoom}
-              onChange={(e) => setExamRoom(e.target.value)}
             />
           </div>
           <div className="form-group">

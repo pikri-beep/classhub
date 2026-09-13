@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, MapPin, User, ArrowRight, Sparkles, Coffee, BookOpen, Sun, Moon, Calendar } from 'lucide-react';
+import { Clock, ArrowRight, Sparkles, Coffee, BookOpen, Sun, Moon, Calendar } from 'lucide-react';
 
 export default function LiveClassTracker({ schedules, onNavigate }) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -194,23 +194,15 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
               <span className="live-progress-text">{progressPercent}% selesai</span>
             </div>
 
-            {/* DETAILS & NEXT */}
-            <div className="live-meta-grid">
-              <div className="live-meta-item">
-                <User size={14} className="live-meta-icon" />
-                <span>{activeSubject.teacher || 'Guru Pengampu'}</span>
-              </div>
-              <div className="live-meta-item">
-                <MapPin size={14} className="live-meta-icon" />
-                <span>{activeSubject.room || 'Ruang Teori'}</span>
-              </div>
-              {nextSubject && (
+            {/* NEXT SUBJECT */}
+            {nextSubject && (
+              <div className="live-meta-grid" style={{ gridTemplateColumns: '1fr' }}>
                 <div className="live-meta-item live-meta-next">
                   <ArrowRight size={14} className="live-meta-icon" />
                   <span>Berikutnya: <strong>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -232,7 +224,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
               </div>
               {nextSubject && (
                 <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                  Berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> pukul {nextSubject.timeStart} • {nextSubject.room || 'Ruang Kelas'}
+                  Berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})
                 </div>
               )}
             </div>
@@ -257,7 +249,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
               </div>
               {nextSubject && (
                 <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                  Pelajaran pertama: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart}) • {nextSubject.teacher || 'Guru Pengampu'}
+                  Pelajaran pertama: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})
                 </div>
               )}
             </div>
@@ -305,7 +297,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
               {nextSubject && (
                 <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <Calendar size={13} style={{ opacity: 0.7 }} />
-                  <span>Jadwal Senin: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart}) • {nextSubject.room || 'Kelas'}</span>
+                  <span>Jadwal Senin: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
                 </div>
               )}
             </div>

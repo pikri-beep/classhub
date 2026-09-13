@@ -197,9 +197,6 @@ export default function DashboardView({ onNavigate }) {
                     <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {sub.subject}
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {sub.teacher || 'Guru Pengampu'} • <span style={{ color: 'var(--text-muted)' }}>{sub.room || 'Kelas'}</span>
-                    </div>
                   </div>
                 </div>
 

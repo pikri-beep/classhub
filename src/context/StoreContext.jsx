@@ -90,7 +90,6 @@ const DEFAULT_SEED_DATA = {
       subject: 'Pemrograman Web & Perangkat Bergerak',
       title: 'Penilaian Harian: Fullstack React & Node.js',
       examDate: '2026-09-15T08:00:00',
-      room: 'Lab Komputer 3',
       scope: 'State management, component lifecycle, API integration, routing, JWT middleware'
     },
     {
@@ -98,45 +97,44 @@ const DEFAULT_SEED_DATA = {
       subject: 'Matematika Terapan',
       title: 'PTS Ganjil: Matriks & Program Linear',
       examDate: '2026-09-22T09:30:00',
-      room: 'Ruang Kelas',
       scope: 'Determinan matriks 3x3, invers matriks, sistem pertidaksamaan linear dua variabel'
     }
   ],
   schedules: {
     Senin: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '08:30', subject: 'Upacara Bendera', teacher: 'Semua Guru', room: 'Lapangan' },
-        { timeStart: '08:30', timeEnd: '11:45', subject: 'Pemrograman Web & Bergerak', teacher: 'Pak Aris, S.T.', room: 'Lab 3' },
-        { timeStart: '12:30', timeEnd: '14:30', subject: 'Pendidikan Pancasila', teacher: 'Ibu Ratna, M.Pd.', room: 'R. 12' }
+        { timeStart: '07:00', timeEnd: '08:30', subject: 'Upacara Bendera' },
+        { timeStart: '08:30', timeEnd: '11:45', subject: 'Pemrograman Web & Bergerak' },
+        { timeStart: '12:30', timeEnd: '14:30', subject: 'Pendidikan Pancasila' }
       ],
       piket: ['Ahmad Fauzan', 'Alya Rahmadani', 'Bagas Pratama']
     },
     Selasa: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '09:15', subject: 'Basis Data Lanjut', teacher: 'Pak Hendra, M.Kom.', room: 'Lab 2' },
-        { timeStart: '09:30', timeEnd: '11:45', subject: 'Bahasa Indonesia', teacher: 'Ibu Sri, S.Pd.', room: 'R. 12' },
-        { timeStart: '12:30', timeEnd: '14:30', subject: 'Matematika Terapan', teacher: 'Pak Joko, M.Si.', room: 'R. 12' }
+        { timeStart: '07:00', timeEnd: '09:15', subject: 'Basis Data Lanjut' },
+        { timeStart: '09:30', timeEnd: '11:45', subject: 'Bahasa Indonesia' },
+        { timeStart: '12:30', timeEnd: '14:30', subject: 'Matematika Terapan' }
       ],
       piket: ['Citra Kirana', 'Dimas Aditya', 'Eka Lestari']
     },
     Rabu: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '11:00', subject: 'Proyek Kreatif & Kewirausahaan', teacher: 'Ibu Dewi, S.E.', room: 'Bengkel Kreatif' },
-        { timeStart: '11:15', timeEnd: '14:00', subject: 'Bahasa Inggris Kejuruan', teacher: 'Mr. David, M.A.', room: 'R. 12' }
+        { timeStart: '07:00', timeEnd: '11:00', subject: 'Proyek Kreatif & Kewirausahaan' },
+        { timeStart: '11:15', timeEnd: '14:00', subject: 'Bahasa Inggris Kejuruan' }
       ],
       piket: ['Fikri Haikal', 'Gita Permata']
     },
     Kamis: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '10:00', subject: 'Pemodelan Perangkat Lunak (UML)', teacher: 'Pak Aris, S.T.', room: 'Lab 3' },
-        { timeStart: '10:15', timeEnd: '12:00', subject: 'Pendidikan Agama & Budi Pekerti', teacher: 'Ust. Mansur, S.Ag.', room: 'Masjid / R. 12' }
+        { timeStart: '07:00', timeEnd: '10:00', subject: 'Pemodelan Perangkat Lunak (UML)' },
+        { timeStart: '10:15', timeEnd: '12:00', subject: 'Pendidikan Agama & Budi Pekerti' }
       ],
       piket: ['Hafiz Prasetyo', 'Indah Cahyani']
     },
     Jumat: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '08:30', subject: 'Senam Pagi & Kebersihan', teacher: 'Pembina OSIS', room: 'Lapangan' },
-        { timeStart: '08:45', timeEnd: '11:00', subject: 'Bimbingan Konseling / Karir', teacher: 'Ibu Maya, S.Psi.', room: 'R. 12' }
+        { timeStart: '07:00', timeEnd: '08:30', subject: 'Senam Pagi & Kebersihan' },
+        { timeStart: '08:45', timeEnd: '11:00', subject: 'Bimbingan Konseling / Karir' }
       ],
       piket: ['Ahmad Fauzan', 'Citra Kirana', 'Eka Lestari']
     }

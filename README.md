@@ -1,65 +1,65 @@
-# 🎓 ClassHub — Portal Manajemen Kelas Terpadu (v2.0)
+# 🎓 ClassHub — Portal Manajemen Kelas Terpadu
 
-> **"Satu tempat untuk mengatur seluruh urusan kelas."**  
-> Web aplikasi modern, ultra-clean, minimalis, dan responsif untuk mengelola kegiatan akademik, tugas harian, jadwal pelajaran real-time, serta transparansi kas kelas **XII PPLG 1 (SMKN 1)**.
-
----
-
-## 🌟 Fitur Unggulan
-
-### 1. ⚡ Live Class Status & Tracker Real-Time (P1)
-- **Status KBM Aktif**: Menampilkan nama mata pelajaran yang sedang berlangsung, guru pengampu, dan ruang/lab komputer.
-- **Hitung Mundur Presisi**: Jam digital WIB terintegrasi dengan progress bar durasi KBM dan countdown sisa menit secara real-time.
-- **Deteksi Cerdas Jeda & Jam Kosong**:
-  - ☕ **Waktu Istirahat & Ishoma**: Otomatis mendeteksi waktu istirahat (jam 10:00 dan 12:30) serta menghitung mundur waktu istirahat berakhir.
-  - 📖 **Jam Kosong Kondisional**: Mendeteksi jeda waktu bebas/mandiri antar jam pelajaran.
-  - 🌅 **Sebelum KBM** & 🎒 **KBM Selesai**: Menampilkan salam pembuka pagi atau ucapan selesai KBM serta preview jadwal pelajaran esok hari.
-  - 🏖️ **Akhir Pekan**: Mode santai akhir pekan dengan ringkasan jadwal hari Senin.
-
-### 2. 📲 Generator Rekap Tugas ke WhatsApp (P1)
-- **1-Klik Salin Format WA**: Sekretaris atau siswa dapat mengekspor seluruh tugas aktif ke format pesan WhatsApp yang rapi, lengkap dengan emoji, tebal (*bold*), tenggat waktu, dan link tugas.
-- **Cakupan Fleksibel**: Pilihan ekspor *"Semua Tugas Kelas"* (cocok untuk broadcast grup kelas) atau *"Tugas Belum Selesai (Saya)"*.
-- **Direct WhatsApp Share**: Tombol langsung untuk membuka WhatsApp (`api.whatsapp.com`) di smartphone atau WhatsApp Web di desktop.
-
-### 3. 📝 Manajemen Tugas & Progres Siswa
-- **Status 3 Tahap**: Tandai progres tugas pribadi: **Belum Mulai** (🔴), **Dikerjakan** (🟡), **Selesai** (🟢).
-- **Efek Selebrasi (Confetti)**: Animasi kembang api visual saat seluruh tugas harian tuntas diselesaikan.
-- **Progress Bar Kelas**: Melihat persentase penyelesaian tugas oleh seluruh siswa di kelas.
-
-### 4. 📅 Jadwal Pelajaran & Regu Piket Harian
-- Jadwal lengkap mata pelajaran Senin s.d. Jumat lengkap dengan jam, guru, dan ruangan.
-- Pembagian regu piket harian dengan badge khusus pengingat jika hari ini giliran Anda bertugas.
-
-### 5. 💰 Transparansi Kas & Matrix Iuran
-- **Matrix Iuran Siswa**: Tabel transparansi status pembayaran kas per anggota per pekan (Lunas / Belum).
-- **Buku Kas Digital**: Pencatatan riwayat arus pemasukan dan pengeluaran secara transparan dengan kalkulasi saldo otomatis.
-
-### 6. ⏳ Countdown & Jadwal Ujian
-- Hitung mundur *real-time* menuju PTS, PAS, dan Ujian Sertifikasi Kompetensi (BNSP/Ujikom).
-- Rangkuman kisi-kisi dan ruang lingkup materi ujian.
-
-### 7. 🗓️ Kalender & Agenda Terpadu
-- Kalender visual bulanan interaktif yang menggabungkan agenda kegiatan, deadline tugas, dan jadwal ujian dalam satu tampilan.
-
-### 8. 👥 Direktori Anggota Kelas
-- Struktur pengurus kelas (Ketua, Wakil, Sekretaris, Bendahara, Seksi-seksi) dan direktori siswa lengkap dengan nomor absen serta NISN.
-
-### 9. 🌓 Tema Gelap & Terang (*Dark & Light Mode*)
-- Palet warna hangat minimalis bergaya Notion/Linear yang nyaman di mata untuk penggunaan jangka panjang.
-
-### 10. 📱 PWA & 100% Responsif di HP
-- Dapat diinstal langsung ke Layar Utama (*Add to Home Screen*) pada Android & iOS seperti aplikasi native.
+> **"Satu tempat untuk mengatur seluruh kebutuhan dan koordinasi kelas."**  
+> Web aplikasi modern, ultra-clean, minimalis, dan responsif dengan konsep **Today First / Daily Companion** untuk siswa, serta **Management Console** terpusat bagi pengurus kelas.
 
 ---
 
-## 🔑 Akun & Kredensial Pengujian (*Default Credentials*)
+## 🌟 Fitur Utama
+
+### 1. 📱 Tampilan Siswa: "Today First" (Daily Companion)
+- **Ringkasan Cepat Hari Ini**: Siswa langsung disambut oleh informasi yang paling relevan saat ini:
+  - **Live Class Tracker**: Pelacakan mata pelajaran aktif *real-time*, waktu sisa menit KBM, serta deteksi pintar jeda istirahat dan jam kosong.
+  - **Tugas Terdekat**: Checklist tugas hari ini atau yang paling mendesak dengan aksi 1-klik tuntas dan selebrasi visual (*confetti*).
+  - **Regu Piket Hari Ini**: Tampilan siapa saja yang bertugas piket hari ini, lengkap dengan penanda lencana khusus `★ (Kamu)` jika giliran Anda bertugas.
+- **Navigasi Mobile Ramah Satu Tangan**: *Student Header* responsif dengan bilah navigasi horizontal (*smooth horizontal scroll*) tanpa menghilangkan akses menu di layar ponsel.
+
+### 2. 📅 Jadwal Mingguan: Bebas Geser Samping (Zero Horizontal Scroll)
+- Tampilan kartu adaptif 100% lebar layar yang rapi di layar HP maupun desktop.
+- Mengurutkan mata pelajaran harian secara vertikal lengkap dengan nomor jam dan tag waktu tanpa menyebabkan *overflow-x* atau scroll samping yang membingungkan.
+
+### 3. 📲 WhatsApp Brief Harian (Ultra-Clean & Dinamis)
+- **Format Pesan Ringkas, Bersih, dan Berbobot**:
+  1. 📅 **Jadwal Besok**: Daftar nomor urut mata pelajaran (`1. Upacara Bendera`, `2. Pemrograman Web`) tanpa jam, nama guru, atau ruangan.
+  2. 📝 **Deadline Besok**: Daftar nomor urut tugas yang jatuh tempo esok hari tanpa jam. *Otomatis disembunyikan jika tidak ada tugas*.
+  3. 🧹 **Piket Besok**: Daftar nomor urut petugas piket tanpa catatan panjang. *Otomatis disembunyikan jika hari libur atau tidak ada piket*.
+  4. 🎯 **Ujian Terdekat**: Daftar ringkas 1–2 ujian paling dekat dalam rentang 7 hari ke depan beserta tanggalnya. *Otomatis disembunyikan jika tidak ada ujian terdekat*.
+- **Emoji Terkendali**: Emoticon hanya disematkan pada subjudul utama (`📅`, `📝`, `🧹`, `🎯`) sehingga isi pesan tampak sangat rapi dan formal.
+- **Mode Pratinjau & Edit Teks Langsung**: Pengurus dapat melihat preview teks atau langsung mengedit isi pesan di textarea jika ingin menambah instruksi khusus sebelum dibagikan.
+- **Pemilih Tanggal Fleksibel**: Pilihan cepat `Besok`, `Hari Ini`, atau pemilih tanggal kustom.
+- **1-Klik Aksi**: Tombol `Copy Message` dan tombol langsung `Share WhatsApp`.
+
+### 4. 🛡️ Admin Management Console (Pusat Kendali Pengurus)
+- **Desain Khusus Admin**: Sidebar navigasi modular desktop & bilah navigasi cepat di mobile.
+- **Kelola Tugas Akademik**: Publikasi tugas baru, pemantauan status pengumpulan siswa secara terperinci, dan hapus tugas.
+- **Jadwal Ujian & Ulangan Harian**: Manajemen jadwal ujian dengan hitung mundur otomatis berdasarkan kedekatan hari H (warna dinamis: Merah untuk H-2 s.d. Hari H, Oranye untuk H-3 s.d. H-5, Biru untuk waktu luang).
+- **Pengelolaan Jadwal & Piket Interaktif**:
+  - Penambahan jam pelajaran harian per hari (Senin–Jumat).
+  - **Piket Bebas Salah Ketik (Typo-Free)**: Memilih anggota piket langsung dari dropdown data siswa terdaftar (`members`) dengan tampilan chip badge dan tombol silang (`✕`) sekali klik.
+- **Buku Kas & Matriks Iuran**:
+  - Saldo kas real-time, pencatatan transaksi pemasukan dan pengeluaran.
+  - Matriks transparansi status pembayaran per siswa per periode iuran.
+- **Pengumuman Tersemat (Pinned Announcements)**: Buat dan sematkan pengumuman prioritas untuk ditampilkan di dashboard.
+
+### 5. 🔒 Keamanan & Privasi PIN Siswa
+- **Perlindungan Akses**: PIN pribadi siswa dilindungi secara rahasia (`•••• Tersimpan Rahasia`).
+- **Tanpa Plaintext di Admin**: Administrator tidak dapat mengintip PIN pribadi milik siswa.
+- **Reset PIN ke Default**: Jika siswa lupa PIN, admin dapat menggunakan opsi **Reset PIN** untuk mengembalikan PIN akun siswa tersebut ke default (`1234`). Siswa dapat login kembali dan mengganti PIN secara mandiri.
+
+### 6. 📱 PWA (Progressive Web App) & Offline Capable
+- Mendukung instalasi langsung ke layar utama (*Add to Home Screen*) di perangkat Android, iOS, Windows, dan macOS.
+- Bekerja secara responsif dan cepat didukung oleh Service Worker dan manifest PWA.
+
+---
+
+## 🔑 Akun & Kredensial Pengujian (Demo)
 
 Aplikasi dilengkapi data bawaan (*seed data*) yang siap langsung digunakan:
 
-| Tipe Akun | Cara Masuk | PIN Default | Hak Akses |
+| Tipe Akun | Cara Masuk | Kredensial Default | Hak Akses |
 | :--- | :--- | :--- | :--- |
-| **Siswa (Member)** | Pilih nama dari dropdown siswa (cth: *Ahmad Fauzan*) | `1234` | Akses penuh informasi kelas & kelola checklist tugas pribadi |
-| **Pengurus (Admin)** | Masuk melalui tab Admin / Pengurus | `admin123` | Hak kelola: buat/edit/hapus tugas, pengumuman, ujian, jadwal, dan kas |
+| **Siswa (Member)** | Pilih nama dari daftar siswa (cth: *Ahmad Fauzan*) | PIN: `1234` | Akses penuh dashboard harian, jadwal mingguan, checklist tugas, dan kas |
+| **Pengurus (Admin)** | Masuk melalui tab Pengurus / Admin | PIN: `admin123` | Akses penuh Management Console untuk mengelola seluruh data kelas |
 
 > **Catatan:** Anda dapat beralih akun kapan saja melalui tombol **"Ganti Akun"** di header atas atau menu di mobile.
 
@@ -67,47 +67,40 @@ Aplikasi dilengkapi data bawaan (*seed data*) yang siap langsung digunakan:
 
 ## 💻 Panduan Menjalankan Proyek Secara Lokal
 
-Proyek ini dibangun menggunakan **React 18**, **Vite**, dan **PWA**:
+Proyek ini dibangun menggunakan **React 18**, **Vite**, dan **Vanilla CSS**:
 
 ### 1. Prasyarat
 Pastikan komputer Anda sudah terpasang [Node.js](https://nodejs.org/) (versi 18 ke atas disarankan).
 
-### 2. Langkah Instalasi & Menjalankan Dev Server
-
+### 2. Langkah Menjalankan Aplikasi
 ```bash
-# 1. Masuk ke folder proyek
-cd glitchless
+# 1. Masuk ke direktori proyek
+cd Web-kelas
 
-# 2. Install dependencies (hanya perlu sekali di awal)
+# 2. Pasang dependensi
 npm install
 
 # 3. Jalankan server pengembangan lokal
 npm run dev
 ```
 
-Buka peramban di: **`http://localhost:5173`**
+Buka peramban di: **`http://localhost:5173`** (atau port yang ditampilkan di terminal Anda).
 
 ---
 
-### 🌐 Berbagi Tampilan ke Teman Sekelas (WiFi / Hotspot yang Sama)
+### 🌐 Berbagi Tampilan ke Jaringan Lokal (HP / Teman Sekelas)
 
-Jika Anda ingin teman di kelas atau lab bisa langsung membuka dan mencoba web ini dari HP atau laptop mereka tanpa perlu clone Git:
-
+Jalankan perintah berikut agar teman yang berada di WiFi/Hotspot yang sama dapat mengakses web dari perangkat mereka:
 ```bash
 npm run dev -- --host
 ```
 
-Vite akan menampilkan alamat IP lokal jaringan Anda, misalnya:
-`➜ Network: http://192.168.1.45:5173/`
-
-Teman Anda cukup mengetikkan alamat tersebut di peramban mereka!
-
 ---
 
-### 📦 Perintah Build & Preview Produksi
+### 📦 Build Bundle Produksi
 
 ```bash
-# Melakukan build bundle produksi yang dioptimalkan
+# Melakukan build bundle produksi
 npm run build
 
 # Menjalankan preview lokal dari hasil build dist/
@@ -116,38 +109,39 @@ npm run preview
 
 ---
 
-## 📁 Struktur Folder Proyek (v2.0)
+## 📁 Struktur Folder Proyek
 
 ```
-glitchless/
+Web-kelas/
 ├── index.html               # Halaman utama aplikasi (SPA root & PWA meta)
 ├── package.json             # Konfigurasi dependensi & skrip Vite
 ├── vite.config.js           # Konfigurasi bundler Vite & plugin PWA
-├── public/                  # Aset statis & manifest PWA
+├── public/                  # Aset statis, ikon, & manifest PWA
 ├── src/
 │   ├── main.jsx             # Entry point React
-│   ├── App.jsx              # Komponen root & routing tampilan
-│   ├── index.css            # Desain sistem, token warna, & animasi
+│   ├── App.jsx              # Komponen root & pemisahan alur Student / Admin
+│   ├── index.css            # Desain sistem, token warna, & utilitas CSS
 │   ├── components/
-│   │   ├── Header.jsx            # Bar navigasi atas & switcher akun
-│   │   ├── Sidebar.jsx           # Navigasi desktop bergaya Notion
-│   │   ├── MobileNav.jsx         # Bottom nav & drawer mobile
+│   │   ├── AdminSidebar.jsx      # Navigasi desktop & mobile bar untuk Admin
+│   │   ├── StudentHeader.jsx     # Navigasi atas minimalis untuk Siswa
+│   │   ├── Header.jsx            # Header utilitas umum & switcher akun
 │   │   ├── Modal.jsx             # Komponen modal dialog serbaguna
 │   │   ├── InstallBanner.jsx     # Banner ajakan instalasi PWA
 │   │   ├── LiveClassTracker.jsx  # Widget jam KBM real-time & jeda istirahat
-│   │   └── WhatsAppShareModal.jsx# Generator & pratinjau rekap tugas WhatsApp
+│   │   └── WhatsAppShareModal.jsx# Fitur WhatsApp Brief (Pratinjau, Edit, & Share)
 │   ├── context/
 │   │   ├── AuthContext.jsx       # State manajemen sesi & login pengguna
-│   │   ├── StoreContext.jsx      # State manajemen data kelas (tugas, kas, dll.)
+│   │   ├── StoreContext.jsx      # State manajemen data kelas (tugas, kas, jadwal)
 │   │   ├── ThemeContext.jsx      # Pengatur tema (Dark / Light mode)
-│   │   └── ToastContext.jsx      # Sistem notifikasi toast
+│   │   └── ToastContext.jsx      # Sistem notifikasi toast interaktif
 │   └── views/
 │       ├── LoginGate.jsx         # Layar gerbang masuk siswa / admin
-│       ├── DashboardView.jsx     # Halaman ringkasan fokus harian
-│       ├── AcademicView.jsx      # Halaman tugas & jadwal ujian
-│       ├── ScheduleView.jsx      # Halaman jadwal pelajaran & kalender
+│       ├── DashboardView.jsx     # Dashboard siswa bertema "Today First"
+│       ├── AdminDashboardView.jsx# Management Console terpadu untuk pengurus
+│       ├── AcademicView.jsx      # Halaman daftar tugas & ujian siswa
+│       ├── ScheduleView.jsx      # Halaman jadwal pelajaran mingguan (Card-based)
 │       ├── CashView.jsx          # Halaman matrix kas & riwayat transaksi
-│       └── ClassView.jsx         # Halaman pengumuman & direktori siswa
+│       └── ClassView.jsx         # Halaman pengumuman & direktori teman sekelas
 └── dist/                    # Output build produksi siap deploy
 ```
 
@@ -156,19 +150,20 @@ glitchless/
 ## 🛠️ Tumpukan Teknologi (*Tech Stack*)
 
 - **Frontend Core**: [React 18](https://react.dev/) + [Vite](https://vitejs.dev/)
-- **Styling**: Pure CSS3 dengan Arsitektur Design Tokens (Notion & Linear UI Style)
-- **PWA**: `vite-plugin-pwa` (Mendukung instalasi di Android/iOS)
+- **Styling**: Vanilla CSS3 dengan Arsitektur Design Tokens (High Signal, Zero Fluff)
+- **PWA**: `vite-plugin-pwa` (Mendukung instalasi di Android, iOS, Windows, macOS)
 - **Ikon**: [Lucide React](https://lucide.dev/)
-- **Efek Mikro**: `canvas-confetti`
+- **Animasi Mikro**: `canvas-confetti`
 - **Tipografi**: [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) (Google Fonts)
 
 ---
 
 ## 🔄 Reset Data Testing / Demo
+
 Jika data lokal ingin dikembalikan ke kondisi awal pengujian:
 1. Klik tombol **"Ganti Akun"** di header atas.
-2. Klik tombol merah **"Reset Data Testing"**.
-3. Seluruh data tugas, kas, dan pengumuman akan kembali ke data bawaan awal.
+2. Klik tombol **"Reset Data"**.
+3. Seluruh data tugas, kas, jadwal, dan pengumuman akan kembali ke data bawaan awal.
 
 ---
-*Dibuat dengan ❤️ untuk kemudahan koordinasi dan transparansi kelas XII PPLG 1.* 🚀
+*Dibuat untuk mempermudah koordinasi, transparansi, dan produktivitas seluruh anggota kelas.* 🚀

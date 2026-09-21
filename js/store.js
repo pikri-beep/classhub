@@ -8,7 +8,7 @@ const STORAGE_KEY = 'classhub_data_v1';
 // SEED INITIAL DATA FOR THE CLASSROOM
 const DEFAULT_SEED_DATA = {
   classInfo: {
-    name: 'XII PPLG 1',
+    name: 'Kelas',
     school: 'SMK Negeri 1',
     academicYear: '2026/2027',
     homeroomTeacher: 'Budi Santoso, S.Kom., M.T.',

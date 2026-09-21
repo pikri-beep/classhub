@@ -192,13 +192,9 @@ export default function ClassView() {
                           {ann.title}
                         </h3>
 
-                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55, whiteSpace: 'pre-line', margin: '0 0 0.65rem 0' }}>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.55, whiteSpace: 'pre-line', margin: 0 }}>
                           {ann.content}
                         </p>
-
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                          Ditulis oleh: <strong style={{ color: 'var(--text-primary)' }}>{ann.author}</strong>
-                        </div>
                       </div>
 
                       {isAdmin && (
@@ -253,39 +249,73 @@ export default function ClassView() {
           </div>
 
           {filteredMembers.length === 0 ? (
-            <div className="clean-empty-state">
+            <div className="clean-empty-state" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               Tidak ada siswa yang cocok dengan pencarian.
             </div>
           ) : (
-            <div className="clean-members-grid">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: '0.65rem'
+            }}>
               {filteredMembers.map((m, idx) => {
-                const isMe = m.id === currentUser.id;
-                const initials = m.avatarText || m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-                const hue = ((m.absentNo || idx) * 43) % 360;
+                const absentNum = String(m.absentNo || idx + 1).padStart(2, '0');
+                const role = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa' ? m.roleTitle : null;
 
                 return (
-                  <div key={m.id} className={`clean-member-card ${isMe ? 'is-me' : ''}`}>
-                    <div className="member-card-top">
-                      <div
-                        className="member-avatar-circle"
-                        style={{
-                          backgroundColor: `hsl(${hue}, 55%, 92%)`,
-                          color: `hsl(${hue}, 70%, 35%)`,
-                        }}
-                      >
-                        {initials}
-                      </div>
-                      <span className="member-absent-badge">
-                        #{String(m.absentNo || idx + 1).padStart(2, '0')}
+                  <div
+                    key={m.id}
+                    className="card"
+                    style={{
+                      padding: '0.75rem 1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      boxShadow: 'none',
+                      border: '1px solid var(--border)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 800,
+                        color: 'var(--text-muted)',
+                        backgroundColor: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        padding: '0.2rem 0.45rem',
+                        borderRadius: 'var(--radius-xs)',
+                        flexShrink: 0
+                      }}>
+                        #{absentNum}
                       </span>
+                      <strong style={{
+                        fontSize: '0.88rem',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {m.name}
+                      </strong>
                     </div>
 
-                    <div className="member-info">
-                      <div className="member-name-row">
-                        <strong className="member-name">{m.name}</strong>
-                        {isMe && <span className="clean-chip chip-green" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>Saya</span>}
-                      </div>
-                    </div>
+                    {role && (
+                      <span
+                        className="notion-tag notion-tag-blue"
+                        style={{
+                          fontSize: '0.7rem',
+                          padding: '0.15rem 0.5rem',
+                          borderRadius: 'var(--radius-full)',
+                          flexShrink: 0,
+                          fontWeight: 600
+                        }}
+                      >
+                        {role}
+                      </span>
+                    )}
                   </div>
                 );
               })}

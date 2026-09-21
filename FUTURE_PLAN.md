@@ -140,59 +140,48 @@ Daftar kata/kalimat yang **DILARANG** digunakan pada rilis berikutnya demi menja
 | Teks Lama yang Dihapus | Alasan | Format Pengganti yang Bersih |
 | :--- | :--- | :--- |
 | *"Klik kotak centang untuk menandai tugas yang sudah kamu selesaikan."* | Menjelaskan hal yang sudah jelas (Redundan). | **Dihapus total**. Tidak perlu teks panduan. |
-| *"Daftar tugas terstruktur & jadwal evaluasi ujian kelas XII PPLG 1"* | Deskripsi formal yang tidak memberi nilai aksi. | **Dihapus total** atau diganti ringkasan dinamis: `3 tugas aktif`. |
+| *"Daftar tugas terstruktur & jadwal evaluasi ujian kelas"* | Deskripsi formal yang tidak memberi nilai aksi. | **Dihapus total** atau diganti ringkasan dinamis: `3 tugas aktif`. |
 | *"Gunakan waktu istirahat untuk makan siang, sholat, dan menyegarkan pikiran."* | Teks basa-basi yang memperpanjang scroll HP. | Cukup status: `Istirahat • Masuk pukul 12:45`. |
 | *"Papan warta pengumuman resmi & direktori siswa..."* | Subjudul klise pengisi ruang. | Cukup judul: `Pengumuman Kelas`. |
 | *"Klik tombol di bawah ini untuk mengunduh laporan..."* | Gaya penulisan era web lama. | Tombol berlabel jelas: `Unduh Rekap (PDF)`. |
 
 ---
 
-## 🔑 5. Fokus Sistem: Redesain Sistem Login Siswa yang Paling Mudah (PWA-Optimized)
+## 🔑 5. Arah Akses Portal: Zero-Login & Client-Side Personal Companion (v2.1)
 
-### 🧐 Masalah pada Login Saat Ini
-Pada versi saat ini, siswa harus membuka dropdown panjang berisi seluruh siswa kelas, mencari namanya satu per satu, mengetikkan PIN `1234`, lalu menekan tombol masuk. Pada PWA di smartphone pribadi, alur ini terasa usang dan tidak praktis.
+### A. Rasionalisasi Pemangkasan Sistem Login
+Pada analisis awal, dirancang sistem login PIN 4-digit dan multi-tier RBAC. Namun, karena aplikasi saat ini beroperasi murni di sisi peramban (*client-side localStorage*) tanpa sinkronisasi cloud database:
+1. **Beban Akses Tidak Perlu (*Friction*)**: Memaksa siswa memilih nama dan mengetik PIN setiap kali membuka web hanya untuk melihat jadwal pelajaran menimbulkan hambatan yang tidak perlu.
+2. **Ilusi Sinkronisasi**: Jika siswa mengedit tugas atau data di HP-nya, perubahan tersebut tetap tidak akan tersinkron ke HP teman sekelasnya.
 
-### 💡 Konsep Login Zero-Friction (Cukup 1 Kali di HP Sendiri)
-
+### B. Keputusan Desain v2.1: Portal Instan 0-Detik
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   ALUR LOGIN PWA TERMUDAH              │
+│             ALUR AKSES ZERO-LOGIN CLASSHUB             │
 ├────────────────────────────────────────────────────────┤
 │                                                        │
-│  [Instalasi Pertama di HP Siswa]                       │
+│  Siswa Klik Link / Buka Aplikasi PWA di HP             │
 │     │                                                  │
 │     ▼                                                  │
-│  [Pilih Kartu Profil / Cari Nama Cepat (Ketik 2 Huruf)]│
-│     │                                                  │
-│     ▼                                                  │
-│  [Input PIN 4 Digit — Auto Submit tanpa klik tombol]   │
-│     │                                                  │
-│     ▼                                                  │
-│  [Toggle: "Ingat Perangkat Ini" AKTIF SECARA OTOMATIS] │
-│     │                                                  │
-│     ▼                                                  │
-│  [Selesai! Sesi Login Tersimpan Permanen di HP]        │
+│  ⚡ LANGSUNG MASUK KE DASHBOARD HARI INI (0 DETIK)     │
+│     (Tanpa layar login, tanpa pilih nama, tanpa PIN)   │
 │                                                        │
-│  ────────────────────────────────────────────────────  │
-│  [Setiap Kali Membuka Aplikasi PWA di Masa Depan]      │
 │     │                                                  │
-│     ▼                                                  │
-│  ⚡ LANGSUNG MASUK KE DASHBOARD DALAM 0 DETIK!        │
-│     (Tanpa layar login, tanpa ketik PIN lagi)          │
+│     ├─► Jadwal Pelajaran Aktif & Sisa Waktu Bel        │
+│     ├─► Daftar Tugas & Checklist Personal di HP        │
+│     ├─► Petugas Piket Hari Ini                         │
+│     └─► Pengumuman Penting Kelas                       │
 │                                                        │
 └────────────────────────────────────────────────────────┘
 ```
 
-### 🛠️ Fitur Utama Login Baru:
-1. **Sesi Permanen PWA (*Auto-Login*)**: Siswa hanya login satu kali saat pertama kali membuka web/PWA di HP. Kunjungan berikutnya langsung membuka dashboard.
-2. **Instant Search Profile Picker**: Mengganti `<select>` jadul dengan kolom cari instan + grid avatar siswa.
-3. **PIN 4-Digit Auto-Advance**: Mengetik digit ke-4 langsung memvalidasi tanpa perlu tombol "Submit".
-4. **Alur Klaim PIN Mandiri (First-Time Setup)**: Siswa membuat PIN rahasia sendiri saat pertama kali mengklaim akun agar tidak dibajak teman sekelas.
-5. **Reset PIN oleh Pengurus**: Tombol reset darurat jika siswa lupa PIN yang dibuatnya.
+* **Checklist Tugas Mandiri**: Siswa tetap dapat mencentang tugas yang sudah selesai (`todo` ↔ `done`). Status centang ini tersimpan secara lokal dan aman di `localStorage` ponsel masing-masing sebagai asisten belajar pribadi.
+* **Mode Pengurus Terlindungi**: Fitur penambahan/pengeditan data utama kelas hanya dapat diakses melalui PIN darurat pengurus atau dikelola langsung pada berkas sumber sebelum dilakukan build produksi.
+* **Catatan Masa Depan**: Sistem autentikasi akun multi-tier dan hak akses per jabatan disimpan di backlog saat integrasi database cloud (Supabase/Firebase) diterapkan.
 
 ---
 
-## 📑 6. Fitur Pendukung Prioritas: Ekspor Laporan Kas Resmi (PDF & Excel)
+## 📑 6. Fitur Pendukung: Ekspor Laporan Kas Resmi (PDF & Cetak)
 
 Kebutuhan bagi Bendahara Kelas untuk mencetak laporan pertanggungjawaban kas:
 - **Format Cetak Standar Kertas A4**: Kop surat resmi sekolah/kelas, ringkasan saldo, rincian pengeluaran, dan matriks pembayaran siswa.
@@ -201,78 +190,70 @@ Kebutuhan bagi Bendahara Kelas untuk mencetak laporan pertanggungjawaban kas:
 
 ---
 
-## 📡 7. Konsep Arsitektur: Pusat Broadcast & Integrasi (Admin Hub - WA & Bot Discord)
+## 📡 7. Pusat Broadcast Hub (WhatsApp & Webhook Discord)
 
-### A. Latar Belakang & Urgensi
-Saat ini tombol "Rekap WA" masih tersebar di beberapa tempat (Dashboard & Akademik). Agar antarmuka siswa tetap berpegang teguh pada prinsip **Clean UI**, seluruh kebutuhan pengiriman pesan, pemformatan teks, dan integrasi bot disatukan ke dalam **satu halaman khusus admin**.
-
-Siswa biasa tidak akan melihat halaman ini, sehingga tampilan publik tetap bersih tanpa distraksi teknis.
-
-### B. Modul & Fitur yang Dipertimbangkan:
+Kebutuhan pengurus untuk menyiarkan informasi kelas secara terpusat:
 1. **WhatsApp Broadcast Center**:
-   - **Template Builder**: Editor template teks dinamis menggunakan placeholder variabel, misalnya: `{hari_ini}`, `{tugas_mendesak}`, `{jadwal_besok}`, `{status_kas}`.
-   - **Mode Pratinjau Monospace**: Pratinjau langsung tampilan teks dalam format pesan WhatsApp (bold `*...*`, italic `_..._`, monospace ````...````).
-   - **Aksi 1-Klik**: Tombol *"Buka WhatsApp Langsung"* (`wa.me/?text=...`) dan tombol *"Salin Teks Bersih"*.
-
-2. **Integrasi Bot / Webhook Discord**:
-   - **Discord Webhook Connector**: Pengurus dapat memasukkan URL Webhook channel Discord kelas (misal: `#pengumuman-tugas` atau `#agenda-kelas`).
-   - **Rich Embed Generator**: Mengirim format pesan Discord Embed yang cantik dan profesional:
-     - Warna embed dinamis (Merah = Deadline H-1, Biru = Info Akademik, Hijau = Kas).
-     - Menampilkan daftar tenggat tugas secara terstruktur.
-     - Pilihan mention otomatis (`@everyone` atau role siswa).
-   - **Tombol *"Uji Coba Webhook"***: Memastikan koneksi webhook berhasil sebelum pesan broadcast sesungguhnya dikirim.
-
-3. **Otomatisasi & Log Riwayat**:
-   - Riwayat pengiriman broadcast (waktu, jenis informasi yang dikirim, dan pengurus yang mengeksekusi).
-   - Opsi penjadwalan berkala di masa depan jika backend serverless sudah aktif.
+   - **Template Builder**: Generator teks dinamis berbasis tanggal (`{hari_ini}`, `{tugas_mendesak}`, `{jadwal_besok}`, `{piket_besok}`).
+   - **Pratinjau Monospace**: Pratinjau format WhatsApp sebelum dikirim.
+   - **Aksi 1-Klik**: Tombol *"Buka WhatsApp"* (`wa.me/?text=...`) dan *"Salin Teks"*.
+2. **Integrasi Webhook Discord**:
+   - Pengiriman Rich Embed otomatis ke channel Discord kelas untuk reminder tugas mendesak.
 
 ---
 
-## 🔐 8. Reformasi Sistem Akun & RBAC (Pencegahan Kebocoran Hak Akses Admin)
+## 📱 8. Arsitektur Antarmuka Ponsel: Anti-Tumpuk & Mobile-First UX
 
-### A. Diagnosa Masalah Saat Ini (*Privilege Leak*)
-Pada arsitektur saat ini:
-1. **Kebocoran Sesi (*Session Bleed*)**: Ketika seseorang masuk ke mode Master Admin lalu menggunakan fitur ganti akun (*Switch User*), status `isAdmin: true` atau `isMasterAdmin: true` tidak ter-reset secara total, sehingga akun siswa biasa yang dipilih setelahnya ikut mewarisi hak akses admin.
-2. **Tercampurnya Identitas dan Otoritas**: Siswa tertentu (seperti Ketua Kelas & Bendahara) memiliki properti statis `role: 'admin'`, padahal ketika mereka menggunakan HP untuk mencatat tugas pribadi, mereka seharusnya berada pada mode siswa, bukan selalu memegang master key.
+Untuk menjamin tampilan di layar smartphone terlihat rapi, modern, dan **bebas dari elemen yang saling bertumpuk atau terpotong**:
 
-### B. Arsitektur Baru: Multi-Tier RBAC & Strict Session Isolation
-
-```mermaid
-graph TD
-    A[Pengguna Buka Aplikasi] --> B{Sesi Tersimpan?}
-    B -- Ya --> C[Identity: Siswa Biasa]
-    B -- Tidak --> D[Pilih Profil & Input PIN Pribadi]
-    D --> C
-    
-    C --> E[Akses Siswa: Tugas, Jadwal, Kas Pribadi]
-    
-    C -- Membutuhkan Hak Kelola --> F[Verifikasi Master PIN / PIN Pengurus]
-    F -- Sukses --> G[Elevated Admin Session Token]
-    G --> H[Akses Admin: Kelola Kas, Broadcast Hub, Edit Data]
-    
-    H -- Switch User / Logout / Timeout --> I[Hard Purge Admin Token]
-    I --> C
+```
+                ARSITEKTUR LAYOUT MOBILE CLASSHUB (ANTI-TUMPUK)
+┌─────────────────────────────────────────────────────────────────────────┐
+│  [ClassHub] Portal Kelas                         🌙 Mode    (KLS)       │ <-- Top Bar Ramping
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ ⚡ CARD 1: HERO TRACKER                                            │  │
+│  │ Pemrograman Web • Lab Komputer 2 (Sisa 25 Menit)                  │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│  ┌─────────────────────────────────┐ ┌───────────────────────────────┐  │
+│  │ 📝 CARD 2: TUGAS HARI INI       │ │ 🧹 CARD 3: PIKET HARI INI     │  │ <-- Bento Grid 2 Kolom
+│  │ 2 Tugas Belum Selesai           │ │ Dimas, Eka, Fikri             │  │
+│  └─────────────────────────────────┘ └───────────────────────────────┘  │
+│                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 📢 CARD 4: PENGUMUMAN TERBARU                                     │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│      🌟               📅                  📝               👥           │ <-- Bottom Dock Bar
+│   Hari Ini          Jadwal              Tugas            Kelas          │     (Ramah Jempol)
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### C. Pilar Perubahan yang Akan Diterapkan:
+### A. Pilar Perbaikan Desain Ponsel:
 
-1. **Pemisahan Total: Identitas Siswa vs Token Sesi Admin**:
-   - `auth_user_identity`: Menyimpan data profil siswa (nama, absen, tugas yang diselesaikan).
-   - `auth_admin_session`: Token otorisasi admin sementara yang terpisah. Token ini memiliki masa kedaluwarsa (*auto-expire* saat browser ditutup atau saat pengguna berpindah akun).
+1. **Pemisahan Navigasi: Top Bar Ramping & Bottom Navigation Dock**:
+   - **Top Bar Atas**: Hanya memuat identitas kelas (`Logo ClassHub`) di kiri, serta toggle tema dan info kelas di kanan. Seluruh tombol tab halaman dibersihkan dari atas!
+   - **Bottom Navigation Dock**: 4 navigasi utama (Hari Ini, Jadwal, Tugas, Kelas) dipindahkan ke bar bawah layar yang menempel (*fixed bottom dock*). Mudah dijangkau satu tangan dengan jempol, serta ramah gesture bar iPhone (`safe-area-inset-bottom`).
 
-2. **Hard Purge saat Beralih Akun (*Switch User*)**:
-   - Setiap kali terjadi pergantian akun, fungsi switch wajib menjalankan **pembersihan mutlak** (`revokeAdminPrivilege()`).
-   - Akun siswa yang baru dibuka **100% dipaksa** memulai sesi sebagai siswa standar (`isAdmin: false`), tanpa peduli akun apa yang digunakan sebelumnya.
+2. **Hierarki Bento Grid di Dashboard (Mencegah Efek Tumpukan Balok)**:
+   - Alih-alih menumpuk 7 kotak panjang dari atas ke bawah, digunakan tata letak modular:
+     - **Hero Widget (Atas)**: *Live Class Tracker* kompak (hanya nama mapel, sisa menit, dan progress bar tipis tanpa teks motivasi panjang).
+     - **2-Column Quick Glance**: Kotak kecil berdampingan di HP untuk *Tugas Mendesak* dan *Piket Hari Ini*.
+     - **Spacing Bernapas**: Jarak antar komponen teratur (`gap: 0.85rem - 1rem`) dengan padding luar yang pas di layar HP.
 
-3. **Hierarki Peran Terstruktur (Granular Roles)**:
-   - **Siswa**: Hak akses dasar melihat informasi & menandai tugas pribadi.
-   - **Bendahara Kelas**: Verifikasi PIN Keuangan untuk mengelola transaksi & iuran kas.
-   - **Sekretaris Kelas**: Verifikasi PIN Akademik untuk menambah/mengedit jadwal dan tugas.
-   - **Ketua Kelas & Wali Kelas (Master Admin)**: Verifikasi Master PIN untuk mengakses seluruh kontrol, termasuk Broadcast Hub dan Reset PIN Siswa.
+3. **Transformasi Tabel Menjadi List Card di Layar Kecil**:
+   - Tabel lebar desktop (seperti jadwal mingguan atau daftar iuran) otomatis berganti menjadi **Kartu Vertikal Minimalis** pada layar ponsel (`< 640px`).
+   - Halaman utama dikunci dengan `max-width: 100%; overflow-x: hidden;` sehingga **100% bebas dari bug geser samping (*zero horizontal scroll*)**.
 
-4. **Tombol "Masuk / Keluar Mode Admin" yang Eksplisit**:
-   - Pengurus yang login sebagai siswa tidak langsung melihat tombol edit. Terdapat tombol *"Buka Akses Pengurus"* di pojok atau menu pengaturan yang meminta PIN verifikasi.
-   - Setelah selesai mengelola data, pengurus dapat mengklik *"Kunci Akses Pengurus"* untuk kembali ke tampilan bersih siswa biasa.
+4. **Standar Ukuran Sentuh Jempol (*Touch Targets Min 44px*)**:
+   - Seluruh elemen yang dapat diklik (checkbox tugas, tombol navigasi, filter) memiliki area sentuh minimal **44px × 44px** dengan jarak aman antar tombol untuk mencegah salah tekan.
+
+5. **Disiplin Warna (Menghilangkan Kebisingan Visual / Pelangi Tag)**:
+   - Menghindari penggunaan 4-5 warna mencolok dalam satu layar.
+   - Warna cerah hanya digunakan untuk status penting: **Merah** untuk deadline hari ini, **Hijau** untuk tugas tuntas. Sisanya menggunakan palet netral yang nyaman di mata.
 
 ---
 
@@ -284,7 +265,7 @@ graph TD
 
 ### B. Fitur yang Dibatalkan (*Cancelled demi Clean UI & Fokus*)
 Agar antarmuka tetap bersih dan tidak bengkak (*bloatware*), fitur-fitur berikut **resmi dibatalkan**:
-- ❌ **Guest Read-Only Tanpa Login**: Dibatalkan karena PWA dipasang di HP pribadi dengan fitur *Auto-Login*.
+- 🔄 **Mode Portal Read-Only (Zero-Login)**: *Diadopsi sebagai Strategi Peluncuran Utama (v2.1)* menggantikan sistem login rumit. Karena aplikasi belum memiliki backend/database cloud (client-side `localStorage`), alur login dihilangkan agar siswa langsung masuk ke dashboard dalam 1 detik tanpa hambatan.
 - ❌ **Portofolio Karya & Snippet Hub**: Dibatalkan agar portal tetap fokus sebagai alat utilitas kelas.
 - ❌ **Lo-Fi Player, Soundboard & Mini-Games**: Dibatalkan untuk menghemat kuota internet dan menjaga performa ringan.
 - ❌ **Buku Kenangan & Polling Kilat**: Dibatalkan karena polling lebih efektif dilakukan di grup WhatsApp.
@@ -295,10 +276,11 @@ Agar antarmuka tetap bersih dan tidak bengkak (*bloatware*), fitur-fitur berikut
 
 ```mermaid
 graph TD
-    A[Fase 1: Clean UI & Pemangkasan Teks] --> B[Fase 2: Reformasi Akun RBAC & Zero-Friction Login]
-    B --> C[Fase 3: Pusat Broadcast & Integrasi WA/Discord]
-    C --> D[Fase 4: Ekspor Laporan Kas PDF & Cetak]
-    D --> E[Fase 5: Stabilisasi PWA & Uji HP Siswa]
+    A[Fase 1: Clean UI & Diet Teks] --> B[Fase 2: Mobile-First Anti-Tumpuk & Bottom Dock]
+    B --> C[Fase 3: Portal Zero-Login & Data Riil Kelas]
+    C --> D[Fase 4: Aset Identitas Kelas: Logo, Badge, Easter Egg]
+    D --> E[Fase 5: Build Produksi & Deploy Hosting Statis]
+    E -.-> F[Backlog: Cloud Database Sync Supabase/Firebase]
 ```
 
 ### 📋 Tabel Rencana Eksekusi
@@ -306,11 +288,11 @@ graph TD
 | Tahap | Fokus Utama | Rincian Pekerjaan | Estimasi | Prioritas |
 | :--- | :--- | :--- | :---: | :---: |
 | **Fase 1** | **Clean UI & Diet Teks (Selesai)** | • Pemangkasan seluruh teks instruksi redundan & teks motivasi di Live Tracker.<br>• Redesain Dashboard menjadi fokus bento (Glanceable UI).<br>• Kembalikan checkbox tugas ke binary (centang = tuntas).<br>• Kartu anggota bersih (tanpa piket/birokrasi).<br>• Hapus judul ganda per halaman & bersihkan halaman login. | Selesai | 🟢 **Tuntas** |
-| **Fase 2** | **Stabilisasi UI Mobile HP & Bottom Nav Dock** | • **Perbaikan Bug Geser Samping**: Kunci `overflow-x` dan ubah `.app-layout` ke `flex-direction: column` di HP.<br>• **Redesain Top Bar**: Bersihkan Top Bar dari tab yang berhimpitan.<br>• **Bottom Navigation Dock**: Pindahkan 4 navigasi utama siswa ke dock bawah layar (ramah jempol).<br>• Perbaikan padding kontainer & tabel responsive wrapper di halaman admin. | 1 Hari | 🔴 **Sangat Tinggi (Mendesak)** |
-| **Fase 3** | **Reformasi Akun RBAC & Login Zero-Friction** | • Perbaikan *Privilege Leak*: Isolasi sesi admin & *hard purge* saat ganti akun.<br>• Pemisahan identitas profil vs token elevasi izin pengurus.<br>• Auto-login permanen PWA (*Remember Me*).<br>• PIN 4-digit auto-submit & alur aktivasi PIN mandiri. | 1 - 2 Hari | 🔴 **Sangat Tinggi** |
-| **Fase 4** | **Pusat Broadcast Hub (WA & Discord Bot)** | • Halaman/tab khusus admin untuk manajemen pesan siaran.<br>• Template builder dinamis pratinjau format WhatsApp.<br>• Integrasi Webhook Discord dengan pratinjau Rich Embed tugas.<br>• Riwayat log pengiriman broadcast. | 1 Hari | 🟡 **Tinggi** |
-| **Fase 5** | **Ekspor Laporan Kas** | • Desain template cetak A4 ber-kop resmi kelas.<br>• Kolom tanda tangan Ketua Kelas, Bendahara, & Wali Kelas.<br>• Generator PDF siap cetak dan ekspor CSV. | 1 Hari | 🟡 **Tinggi** |
-| **Backlog** | **Cloud Backend** | • Sinkronisasi multi-device Supabase / Firebase. | Ditunda | ⚪ *Kebutuhan Lanjutan* |
+| **Fase 2** | **Arsitektur Mobile Anti-Tumpuk & Bottom Dock** | • **Pemisahan Navigasi**: Bersihkan Top Bar dari tab berdesakan; aktifkan Bottom Navigation Dock ramah jembol di HP.<br>• **Perbaikan Bug Geser Samping**: Kunci `max-width: 100%` & `overflow-x: hidden`.<br>• **Bento Card Dashboard**: Tata letak modular 2 kolom (Tugas & Piket) agar tidak menumpuk.<br>• **Transformasi Tabel**: Ubah tabel lebar menjadi kartu vertikal minimalis di ponsel. | 1 Hari | 🔴 **Sangat Tinggi (Mendesak)** |
+| **Fase 3** | **Portal Zero-Login & Data Riil Kelas** | • Bypass layar `LoginGate` langsung ke Dashboard (0 detik).<br>• Input data riil: nama siswa asli, jadwal mapel Senin–Jumat, kalibrasi bel KBM, dan regu piket.<br>• Amankan proteksi menu admin pengurus. | 1 Hari | 🔴 **Sangat Tinggi** |
+| **Fase 4** | **Aset Identitas Kelas** | • Pasang Logo Resmi Kelas pada Header & Ikon PWA (`public/pwa-*.png`).<br>• Sematkan Ikon/Badge visual pada setiap mata pelajaran.<br>• Pasang Easter Egg Developer di footer dan Secret Tap konfeti pada logo kelas. | 1 Hari | 🟡 **Tinggi** |
+| **Fase 5** | **Build Produksi & Hosting Statis** | • Uji coba kompilasi `npm run build` bebas error.<br>• Deploy ke Vercel / Netlify / Cloudflare Pages dengan SSL/HTTPS otomatis.<br>• Uji instalasi PWA di Android dan iOS. | 1 Hari | 🟡 **Tinggi** |
+| **Backlog** | **Cloud Database & Multi-User RBAC** | • Integrasi Supabase / Firebase untuk sinkronisasi realtime multi-device jika sudah dibutuhkan di masa depan. | Ditunda | ⚪ *Kebutuhan Lanjutan* |
 
 ---
 
@@ -460,138 +442,137 @@ Hasil eksplorasi ide dan inovasi masa depan untuk memperkuat utilitas ClassHub t
 
 ---
 
-## 🚨 12. Catatan Kritis: Masalah Responsif Mobile (HP) & Solusi Tuntas Arsitektur UI
 
-> [!WARNING]
-> **Temuan & Masalah Kritis Saat Ini**:  
-> Meskipun antarmuka pada layar desktop sudah sangat memuaskan, tampilan pada smartphone (HP) masih mengalami **degradasi pengalaman pengguna yang signifikan**:
-> 1. **Top Bar Berantakan**: Tombol navigasi, logo, profil, dan toggle tema saling bertabrakan atau terhimpit dalam satu baris sempit 60px.
-> 2. **Halaman Admin & Konten "Terlalu Besar / Bisa Digeser" (Horizontal Overflow Leak)**: Halaman meluap ke kanan melebihi lebar layar smartphone sehingga layar bisa digeser ke samping secara tidak sengaja (*horizontal scroll bug*).
 
----
+## 🏁 12. Strategi Arsitektur Read-Only, Hosting Statis, & Checklist Pra-Peluncuran (Go-Live)
 
-### 🔍 Diagnosis Mendalam Penyebab Masalah (Root Causes)
+### 12.1 Rasionalisasi Transisi ke Model Portal Read-Only (Zero-Login)
 
-#### A. Mengapa Halaman Meluap & Layar HP Bisa Digeser ke Samping (*Horizontal Overflow*)?
-1. **Kegagalan Flexbox pada `.app-layout`**:
-   - Di `src/index.css`, `.app-layout` memiliki properti `display: flex;` (default browser: `flex-direction: row`).
-   - Pada layar mobile (`<= 768px`), meskipun `.desktop-sidebar` disembunyikan dengan `display: none`, elemen navigasi mobile admin (`.admin-mobile-nav`) dan wrapper konten utama (`.main-content-wrapper` dengan `width: 100%`) masih berada di dalam satu baris flex horizontal.
-   - Akibatnya, browser menempatkan elemen tersebut bersebelahan secara mendatar, memicu lebar total **jauh melampaui 100vw** yang membuat seluruh badan web bisa digeser ke samping (*unwanted horizontal scroll*).
-2. **Tidak Adanya Kunci Global `overflow-x: hidden`**:
-   - Tag `html`, `body`, dan root React `#root` belum memiliki pembatas `max-width: 100%; overflow-x: hidden;`. Jika ada satu saja elemen anak yang melebar 5px, seluruh halaman web langsung memunculkan scrollbar horizontal.
-3. **Tabel Data Tanpa Pembatas Lebar Maksimum**:
-   - Matriks iuran kas (`<table className="notion-table" style={{ minWidth: '600px' }}>`) dan tabel data anggota memiliki lebar minimum statis. Tanpa pembungkus yang dikunci dengan `max-width: 100%`, tabel tersebut memaksa kontainer luar ikut melebar ke samping di layar HP.
-4. **Inline Padding Menimpa Media Query**:
-   - Pada `App.jsx`, elemen `<main className="page-container" style={{ padding: '1.25rem 1.75rem' }}>` menggunakan inline style yang menimpa aturan padding responsif `page-container` di CSS.
-
-#### B. Mengapa Top Bar Berantakan di HP (*Top Bar Crowding & Overflow*)?
-1. **Penyatuan Terlalu Banyak Elemen dalam 1 Baris Top Bar (`StudentHeader.jsx`)**:
-   - Dalam satu baris `header` setinggi 60px dijejalkan sekaligus:
-     - Logo & Nama Brand ClassHub (~110px)
-     - 4 tombol navigasi pil dengan teks lengkap: *Hari Ini*, *Jadwal Mingguan*, *Semua Tugas*, *Teman & Kelas* (~360px)
-     - Toggle Tema (~40px)
-     - Avatar & Nama Siswa (~90px)
-     - Tombol Logout (~40px)
-   - Total lebar minimum gabungan adalah **> 640px**, sementara lebar layar smartphone rata-rata hanya **360px – 412px**.
-   - Hal ini membuat tombol tab di tengah terhimpit parah, teks terpotong, atau saling tumpuk secara visual tidak karuan.
-2. **Pola Navigasi Mobile Belum Modern (Belum Menggunakan Bottom Navigation Bar)**:
-   - Standar aplikasi web/PWA mobile modern (seperti Instagram, Notion, Spotify, Youtube) **tidak menaruh 4 tab utama di header atas**.
-   - 4 tab utama wajib dipindahkan ke **Bottom Navigation Dock** di bawah layar yang mudah dijangkau satu tangan (*thumb-friendly*), sedangkan Top Bar hanya menyisakan Logo dan Profil Akun.
-
----
-
-### 🛠️ Solusi Tuntas & Blueprint Perbaikan Teknis
+Berdasarkan audit arsitektur sistem, ClassHub saat ini beroperasi murni di sisi peramban (*client-side*) menggunakan `localStorage` tanpa server database terpusat:
 
 ```
-               ┌──────────────────────────────────────────────────────────┐
-               │         ARSITEKTUR RESPONSIF MOBILE CLASSHUB             │
-               └────────────────────────────┬─────────────────────────────┘
-                                            │
-                    ┌───────────────────────┴───────────────────────┐
-                    ▼                                               ▼
-         [1. FIX HORIZONTAL OVERFLOW]                    [2. REDESAIN TOP & BOTTOM BAR]
-         • html, body: overflow-x: hidden                • Top Bar: Brand + Avatar + Theme
-         • .app-layout: flex-direction: column           • Pindahkan 4 Tab ke Bottom Dock
-         • .main-content-wrapper: width: 100%            • Admin Nav: Horizontal Chip Strip
-         • Table wraps: max-width: 100%                  • Safe-area inset support (iOS)
+                            KONDISI ARSITEKTUR SAAT INI
+         ┌──────────────────────────────────────────────────────────────┐
+         │                    Client Browser (HP Siswa)                 │
+         │  ┌───────────────┐     ┌──────────────┐     ┌─────────────┐  │
+         │  │ React UI (SPA)│ ──> │ StoreContext │ ──> │localStorage │  │
+         │  └───────────────┘     └──────────────┘     └─────────────┘  │
+         └──────────────────────────────────────────────────────────────┘
+                                         ▲
+                                 (TIDAK TERKONEKSI)
+                                         ▼
+         ┌──────────────────────────────────────────────────────────────┐
+         │              Cloud Database / Server (Belum Ada)             │
+         └──────────────────────────────────────────────────────────────┘
 ```
 
-#### Solusi 1: Pembersihan Total Horizontal Overflow (Zero Side-Scroll)
-1. **Kunci Global di `src/index.css`**:
-   ```css
-   html, body, #root {
-     max-width: 100%;
-     overflow-x: hidden;
-     position: relative;
-   }
-   ```
-2. **Ubah Layout Menjadi Vertikal di HP (`<= 768px`)**:
-   ```css
-   @media (max-width: 768px) {
-     .app-layout {
-       flex-direction: column !important;
-       width: 100% !important;
-       max-width: 100vw !important;
-       overflow-x: hidden !important;
-     }
+* **Akar Masalah Jika Memaksakan Fitur Login/Edit Multi-User**:
+  1. Perubahan data (tambah tugas, bayar kas, edit jadwal) yang dilakukan di HP Siswa A **tidak akan pernah muncul** di HP Siswa B karena data terisolasi di memori lokal masing-masing perangkat.
+  2. Siswa merasa terbebani (*high friction*) harus memilih nama dan mengetikkan PIN 4-digit hanya untuk mengecek jadwal pelajaran berikutnya.
 
-     .main-content-wrapper {
-       margin-left: 0 !important;
-       width: 100% !important;
-       max-width: 100vw !important;
-       overflow-x: hidden !important;
-     }
-
-     .page-container {
-       padding: 1rem 0.85rem calc(var(--bottom-nav-height) + 1.5rem) 0.85rem !important;
-       width: 100% !important;
-       max-width: 100% !important;
-     }
-   }
-   ```
-3. **Isolasi Scroll Tabel Kas & Siswa**:
-   Pastikan setiap tabel dibungkus kontainer yang tidak memaksakan lebar layar:
-   ```jsx
-   <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-     <table className="notion-table" style={{ minWidth: '600px' }}>
-       ...
-     </table>
-   </div>
-   ```
-
-#### Solusi 2: Restrukturisasi Top Bar & Bottom Navigation Dock (PWA Standard)
-
-1. **Pemisahan Peran Top Bar Siswa (HP)**:
-   - **Kiri**: Logo `[CH]` + Tulisan `ClassHub`.
-   - **Tengah**: Dikosongkan (tidak ada lagi tombol tab yang berdesakan).
-   - **Kanan**: Toggle Tema (Matahari/Bulan) + Tombol Avatar Siswa (klik untuk ganti akun).
-   - Hasil: Header atas bersih, ramping, dan 100% stabil di semua ukuran layar (iPhone SE hingga Samsung Ultra).
-
-2. **Pengaktifan Bottom Navigation Bar (HP)**:
-   - Memindahkan 4 tombol utama ke bar bawah yang menempel di layar HP (*docked bottom bar*):
-     - 🌟 **Hari Ini** (`dashboard`)
-     - 📅 **Jadwal** (`schedule`)
-     - 📖 **Tugas** (`academic`)
-     - 👥 **Kelas** (`class`)
-   - Dilengkapi padding `env(safe-area-inset-bottom)` agar nyaman di iPhone yang memiliki home gesture bar.
-   - Siswa dapat berpindah menu cukup dengan jempol satu tangan tanpa perlu menjangkau bagian atas layar.
-
-3. **Restrukturisasi Navigasi Halaman Admin di HP**:
-   - Header Admin di HP hanya memuat Logo, status Admin, Avatar, dan tombol Logout.
-   - Pilihan modul admin (Overview, Tugas, Ujian, Jadwal, Kas, Pengumuman, Siswa) ditampilkan sebagai **Horizontal Scroll Pill Strip** yang terpasang rapi tepat di bawah header, dengan indikator aktif yang jelas dan sentuhan halus (*touch scroll*).
+* **Solusi Strategis (v2.1 Read-Only Companion)**:
+  1. **Bypass Login**: Siswa yang membuka link/PWA langsung mendarat di **Dashboard Hari Ini** dalam tempo 1 detik (*instant access*).
+  2. **Data Bersumber Tunggal (*Single Source of Truth*)**: Jadwal, tugas, pengumuman, dan piket diinput oleh pengurus/developer ke dalam data aplikasi sebelum di-deploy, sehingga seluruh siswa melihat data yang 100% identik dan valid.
+  3. **Checklist Tugas Tetap Interaktif Mandiri**: Siswa tetap dapat mencentang tugas yang sudah mereka kerjakan; status centang tersimpan secara aman di `localStorage` HP masing-masing sebagai asisten belajar pribadi.
 
 ---
 
-### 📊 Dampak Perbandingan Sebelum vs. Sesudah Perbaikan
+### 12.2 Evaluasi & Pilihan Hosting Statis (Jamstack)
 
-| Parameter | Kondisi Saat Ini (Bermasalah) | Sesudah Solusi Diterapkan |
-| :--- | :--- | :--- |
-| **Scroll Horizontal** | Layar HP bisa digeser ke kanan/kiri (rusak & tidak presisi). | Layar terkunci 100% tegak lurus (*zero side-scroll*). |
-| **Top Bar Siswa** | 4 tombol tab, logo, avatar berdesakan & saling tumpuk. | Top bar bersih & lega (hanya logo & tombol profil). |
-| **Ergonomi Navigasi** | Jari harus menjangkau ujung atas layar HP. | Menu utama di dock bawah layar, ramah penggunaan satu tangan. |
-| **Halaman Admin** | Menu samping merusak flexbox & halaman melebar >100vw. | Menu admin vertikal/chip strip yang pas dengan lebar layar HP. |
-| **Tabel Kas & Siswa** | Memaksa seluruh badan website ikut melebar. | Hanya kotak tabel yang bisa digeser, badan web tetap kokoh. |
+Karena aplikasi telah menjadi *pure static single-page application*, hasil kompilasi `npm run build` (folder `dist/`) siap di-host di penyedia hosting modern tanpa biaya:
 
+| Penyedia Hosting | Keunggulan Utama | Metode Deploy | Cocok Untuk |
+| :--- | :--- | :--- | :--- |
+| **Vercel** *(Rekomendasi Utama)* | • Deteksi otomatis Vite & React.<br>• Auto-deploy setiap `git push` ke GitHub.<br>• SSL/HTTPS gratis & instan (wajib untuk PWA). | Push ke Repositori GitHub | Alur kerja profesional terintegrasi Git. |
+| **Cloudflare Pages** | • Bandwidth tanpa batas (*unlimited*).<br>• Latensi CDN paling kencang di Indonesia.<br>• Perlindungan keamanan tingkat tinggi. | Push ke GitHub / GitLab | Jaminan web selalu instan saat diakses di jaringan seluler siswa. |
+| **Netlify** | • Memiliki fitur **Netlify Drop** (upload folder `dist/` secara manual tanpa Git).<br>• Setup subdomain gratis (`namakelas.netlify.app`). | Drag-and-Drop folder `dist` **atau** GitHub | Tim pengurus yang ingin rilis instan tanpa setup Git/CLI. |
+| **GitHub Pages** | • Terpasang langsung di ekosistem GitHub tanpa akun ketiga. | GitHub Actions Workflow | Pengelolaan terpusat dalam satu akun GitHub. |
 
+---
 
+### 12.3 Action Checklist Kesiapan Sebelum Digunakan Nyata (*Pre-Launch Checklist*)
+
+Berikut adalah daftar pekerjaan mutlak sebelum web dibagikan ke seluruh anggota kelas:
+
+#### A. Penyesuaian Alur Akses (Bypass Login & Proteksi Kontrol)
+- [x] Nonaktifkan / lewati layar `LoginGate.jsx` secara default agar pengunjung langsung membuka `DashboardView.jsx` (Selesai).
+- [x] Sembunyikan atau amankan tombol tambah tugas/transaksi dari siswa umum agar tidak membingungkan ekspektasi sinkronisasi (Selesai).
+- [x] Pastikan centang tugas personal di dashboard siswa tetap tersimpan rapi di HP masing-masing (Selesai).
+
+#### B. Penggantian Data Dummy ke Data Riil Kelas (`StoreContext.jsx`)
+- [ ] **Identitas Kelas**: Perbarui nama kelas resmi, nama sekolah, tahun ajaran, dan nama Wali Kelas.
+- [ ] **Daftar Siswa Asli (`members`)**: Masukkan seluruh nama siswa dan nomor absen yang sesuai dengan absensi sekolah.
+- [ ] **Jadwal Pelajaran Riil (`schedules`)**: Input mata pelajaran hari Senin s.d. Jumat lengkap dengan nama guru dan ruang lab/kelas.
+- [ ] **Kalibrasi Bel KBM (`LiveClassTracker.jsx`)**: Sesuaikan jam pelajaran aktif, durasi per JP (menit), dan jam istirahat agar hitung mundur sisa waktu KBM 100% akurat dengan bel fisik sekolah.
+- [ ] **Jadwal Piket Kebersihan**: Pasang regu piket harian yang aktif semester ini.
+
+#### C. Konfigurasi Branding & Standar PWA
+- [ ] Sesuaikan nama aplikasi dan deskripsi pada `vite.config.js` (parameter `name` & `short_name`).
+- [ ] Pastikan ikon PWA (`pwa-192x192.png`, `pwa-512x512.png`, `maskable-icon-512x512.png`) memakai logo kelas asli agar tampil tajam dan membanggakan di layar utama HP siswa (*Add to Home Screen*).
+- [ ] Periksa meta tag judul pada `index.html`.
+
+#### D. Aset Identitas Kelas & Visual
+- [ ] **Logo Kelas**: Desain lambang kelas unik untuk header web dan app icon PWA.
+- [ ] **Ikon / Badge Mata Pelajaran**: Sematkan ikon/badge visual pada kartu jadwal dan Live Tracker (Web, Basis Data, Game, Mobile, Umum).
+- [ ] **Easter Egg Programmer**: Pasang pesan santai di footer dan fitur klik rahasia (*secret tap*) pada logo kelas.
+
+#### E. Pengujian Akhir & Peluncuran
+- [ ] Jalankan uji coba lokal di ponsel melalui jaringan WiFi yang sama (`npm run dev -- --host`).
+- [ ] Jalankan uji build produksi bebas kesalahan:
+  ```bash
+  npm run build
+  ```
+- [ ] Hubungkan ke platform hosting pilihan (Vercel / Netlify) dan dapatkan tautan HTTPS publik.
+- [ ] Bagikan tautan ke grup WhatsApp kelas dan uji instalasi PWA di perangkat perwakilan siswa (Android & iOS).
+
+---
+
+### 12.4 Spesifikasi Desain Aset Identitas Kelas
+ 
+Agar web ini terasa memiliki jiwa dan merupakan karya kebanggaan siswa, berikut adalah panduan detail aset visual dan sentuhan interaktif yang direncanakan:
+
+```
+                            IDENTITAS VISUAL KELAS
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        ▼                                ▼                                ▼
+  [1. Logo & App Icon]         [2. Badge Mata Pelajaran]         [3. Easter Eggs]
+  • Monogram "ClassHub"        • Web: Tag `< / >` / React        • Footer: Dev Status
+  • Simbol Code & Terminal     • Basis Data: Silinder SQL        • Logo Secret Tap (5x)
+  • App Icon PWA Homescreen    • Mobile / Game: Phone & Gamepad  • 8-Bit Audio Checklist
+```
+
+#### 1. Logo & App Icon PWA Resmi Kelas
+* **Konsep Desain**:
+  * Menggabungkan inisial kelas dengan aksen khas modern (seperti kurung kurawal `{ }`, tag `< / >`, kursor terminal `_`, atau estetika clean).
+  * Palet warna serasi dengan tema web: *Deep Indigo / Royal Blue* dipadukan dengan aksen *Emerald Green / Neon Cyan*.
+* **Penerapan Aset**:
+  * **Header Web**: Logo SVG vektor tajam di sudut kiri atas navigasi.
+  * **PWA App Icon (`public/pwa-*.png`)**: Ikon persegi membulat (*squircle*) yang tampak profesional di homescreen Android dan iOS.
+
+#### 2. Ikon & Badge Pengenal Mata Pelajaran (*Subject Badges*)
+Setiap mata pelajaran di jadwal harian dan widget *Live Class Tracker* dilengkapi penanda visual mikro agar siswa dapat mengenali mapel dalam 0.5 detik tanpa membaca teks panjang:
+
+| Kategori Mapel | Contoh Mata Pelajaran | Ikon / Badge Visual | Warna Aksen |
+| :--- | :--- | :---: | :--- |
+| **Pemrograman Web** | Pemrograman Web & Perangkat Bergerak | `< / >` / `Code2` | Biru / Indigo |
+| **Basis Data** | Pengelolaan Basis Data (SQL) | `🗄️` / `Database` | Ungu / Violet |
+| **Game Dev** | Pemodelan Perangkat Lunak & Gim | `🎮` / `Gamepad2` | Hijau Neon |
+| **Mobile Dev** | Android & Flutter Programming | `📱` / `Smartphone` | Biru Langit |
+| **Umum / Bahasa** | B. Indonesia, B. Inggris, Sejarah | `📖` / `BookOpen` | Amber / Oranye |
+| **Eksakta** | Matematika Terapan | `📐` / `Binary` | Biru Cyan |
+| **Karakter & Agama** | PAI / PPKn / Bimbingan Konseling | `🛡️` / `Sparkles` | Hijau Zamrud |
+
+#### 3. Easter Egg & Sentuhan Mikro Khas Programmer (*Delight Factor*)
+* **Footer Status Ala Developer**:
+  Di bagian paling bawah halaman ditambahkan status sistem khas anak IT:
+  ```
+  // Compiled with ☕, React & Vite for ClassHub
+  System Status: 0 Errors, 0 Warnings • 100% Bug Free
+  ```
+* **Secret Tap pada Logo Kelas (Easter Egg Interaktif)**:
+  * Jika siswa mengetuk logo kelas di header sebanyak **5 kali berturut-turut**, muncul efek konfeti kejutan beserta notifikasi toast rahasia:
+    > *"🚀 Easter Egg Unlocked! Jangan lupa push ke git sebelum tidur."*
+* **Sound Effect 8-Bit / Pop Lembut**:
+  * Efek audio lembut bernuansa retro game saat siswa mencentang checkbox tugas selesai (*satisfying sound*), memberikan kepuasan instan setelah menyelesaikan PR.
 

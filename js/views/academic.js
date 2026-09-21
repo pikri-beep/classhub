@@ -24,7 +24,7 @@ export function renderAcademic(container, defaultTab = null) {
       <div class="notion-page-header">
         <span class="notion-page-icon">📚</span>
         <h1 class="notion-page-title">Akademik</h1>
-        <p class="notion-page-desc">Daftar tugas terstruktur & agenda evaluasi kelas XII PPLG 1</p>
+        <p class="notion-page-desc">Daftar tugas terstruktur & agenda evaluasi kelas</p>
       </div>
 
       <!-- 2. SUB-TAB & ACTION BAR -->
@@ -274,7 +274,7 @@ function renderExamsContent(exams, isAdmin) {
                 </h3>
                 <div style="font-size: 0.8125rem; color: var(--text-secondary); display: flex; gap: 1.25rem; flex-wrap: wrap;">
                   <span>📅 ${dateFormatted}</span>
-                  <span>📍 ${exam.room || 'Ruang Kelas XII PPLG 1'}</span>
+                  <span>📍 ${exam.room || 'Ruang Kelas'}</span>
                 </div>
               </div>
 

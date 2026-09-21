@@ -19,8 +19,7 @@ import {
   Sparkles,
   TrendingUp,
   AlertCircle,
-  ShieldCheck,
-  RotateCcw
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -50,7 +49,6 @@ export default function AdminDashboardView({
     addEvent, 
     deleteEvent,
     updateSchedule,
-    updateMemberPin,
     addDuesPeriod,
     getTotalCashBalance 
   } = useStore();
@@ -71,12 +69,6 @@ export default function AdminDashboardView({
   const isWhatsAppModalOpen = propIsWhatsAppOpen !== undefined ? propIsWhatsAppOpen : internalIsWhatsAppOpen;
   const setIsWhatsAppModalOpen = propSetIsWhatsAppOpen !== undefined ? propSetIsWhatsAppOpen : setInternalIsWhatsAppOpen;
   const [isAddPeriodOpen, setIsAddPeriodOpen] = useState(false);
-
-  // Detail submission modal
-  const [viewSubmissionsTask, setViewSubmissionsTask] = useState(null);
-
-  // Reset PIN modal
-  const [resettingStudentPin, setResettingStudentPin] = useState(null);
 
   // Task form state
   const [taskSubject, setTaskSubject] = useState('');
@@ -215,13 +207,6 @@ export default function AdminDashboardView({
     setIsAddPeriodOpen(false);
     setPeriodName('');
     showToast(`Periode iuran ${periodName} berhasil dibuat!`, 'success');
-  };
-
-  const handleResetPin = (student) => {
-    if (!student) return;
-    updateMemberPin(student.id, '1234');
-    setResettingStudentPin(null);
-    showToast(`PIN ${student.name} berhasil di-reset ke default (1234)!`, 'success');
   };
 
   const handleAddSubjectToDay = (e) => {
@@ -366,34 +351,24 @@ export default function AdminDashboardView({
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-              {tasks.map(task => {
-                const completedCount = (task.completedStudentIds || []).length;
-                const percent = Math.round((completedCount / (members.length || 1)) * 100);
-
-                return (
-                  <div key={task.id} style={{ padding: '0.75rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <div>
-                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)' }}>{task.subject}</span>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 700 }}>{task.title}</div>
-                      </div>
-                      <button 
-                        onClick={() => setViewSubmissionsTask(task)} 
-                        className="btn btn-secondary btn-xs"
-                        style={{ fontSize: '0.75rem' }}
-                      >
-                        {completedCount} / {members.length} Selesai ({percent}%)
-                      </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+              {tasks.length === 0 ? (
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
+                  Tidak ada tugas aktif saat ini.
+                </div>
+              ) : (
+                tasks.map(task => (
+                  <div key={task.id} style={{ padding: '0.65rem 0.85rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)' }}>{task.subject}</span>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
                     </div>
-
-                    {/* Progress Bar */}
-                    <div style={{ height: '6px', backgroundColor: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
-                      <div style={{ width: `${percent}%`, height: '100%', backgroundColor: percent > 70 ? 'var(--tag-green-text)' : 'var(--primary)', transition: 'width 0.3s ease' }} />
-                    </div>
+                    <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
+                      Tenggat: {task.deadline ? new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : 'Tidak ada'}
+                    </span>
                   </div>
-                );
-              })}
+                ))
+              )}
             </div>
           </div>
 
@@ -404,7 +379,12 @@ export default function AdminDashboardView({
       {activeTab === 'tasks' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Manajemen Tugas Kelas</h2>
+            <div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Manajemen Tugas Kelas</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
+                Tugas yang dibuat akan otomatis muncul pada dashboard dan checklist mandiri setiap siswa.
+              </p>
+            </div>
             <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.3rem' }}>
               <Plus size={14} />
               <span>Tambah Tugas</span>
@@ -412,30 +392,38 @@ export default function AdminDashboardView({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            {tasks.map(task => {
-              const completedCount = (task.completedStudentIds || []).length;
-              const percent = Math.round((completedCount / (members.length || 1)) * 100);
-
-              return (
-                <div key={task.id} className="card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.2rem' }}>
+            {tasks.length === 0 ? (
+              <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Belum ada tugas yang dibuat. Klik "Tambah Tugas" untuk membuat tugas baru.
+              </div>
+            ) : (
+              tasks.map(task => (
+                <div key={task.id} className="card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '240px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                       <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 700 }}>{task.subject}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deadline: {task.deadline}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tenggat: {task.deadline}</span>
+                      {task.link && (
+                        <a href={task.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', textDecoration: 'none', fontWeight: 600 }}>
+                          Link Materi ↗
+                        </a>
+                      )}
                     </div>
-                    <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>{task.title}</h4>
+                    <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>{task.title}</h4>
                     {task.description && (
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>{task.description}</p>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>{task.description}</p>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                     <button
-                      onClick={() => setViewSubmissionsTask(task)}
+                      onClick={() => setIsWhatsAppModalOpen(true)}
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.78rem' }}
+                      style={{ fontSize: '0.78rem', color: '#16A34A', gap: '0.35rem' }}
+                      title="Kirim info tugas ke WhatsApp Kelas"
                     >
-                      {completedCount}/{members.length} Siswa ({percent}%)
+                      <MessageCircle size={14} />
+                      <span>Bagikan WA</span>
                     </button>
                     <button
                       onClick={() => {
@@ -452,8 +440,8 @@ export default function AdminDashboardView({
                     </button>
                   </div>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
       )}
@@ -900,102 +888,53 @@ export default function AdminDashboardView({
         <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
             <div>
-              <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Daftar Siswa & Manajemen Akses Akun</h3>
+              <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Daftar Siswa & Struktur Kelas</h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
-                Demi privasi dan keamanan, PIN siswa dilindungi secara rahasia dan dapat di-reset ke default (1234) jika siswa lupa.
+                Data resmi seluruh anggota kelas dan peran kepengurusan yang tampil pada portal publik.
               </p>
             </div>
+            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+              {members.length} Siswa Terdaftar
+            </span>
           </div>
 
           <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
             <table className="notion-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px' }}>#</th>
+                  <th style={{ width: '45px', textAlign: 'center' }}>#</th>
                   <th>Nama Siswa</th>
                   <th>NISN</th>
-                  <th>Jabatan</th>
-                  <th>Status PIN</th>
-                  <th style={{ width: '120px', textAlign: 'center' }}>Aksi</th>
+                  <th>Jabatan / Peran Kelas</th>
                 </tr>
               </thead>
               <tbody>
-                {members.map(m => (
-                  <tr key={m.id}>
-                    <td style={{ color: 'var(--text-muted)' }}>{m.absentNo}</td>
-                    <td><strong>{m.name}</strong></td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{m.nisn}</td>
-                    <td>
-                      <span className="notion-tag notion-tag-gray">{m.roleTitle || 'Siswa'}</span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}>
-                        <span style={{ letterSpacing: '3px', fontFamily: 'monospace', fontWeight: 800, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                          ••••
+                {members.map(m => {
+                  const hasSpecialRole = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
+                  return (
+                    <tr key={m.id}>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>
+                        {String(m.absentNo).padStart(2, '0')}
+                      </td>
+                      <td>
+                        <strong style={{ color: 'var(--text-primary)' }}>{m.name}</strong>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                        {m.nisn || '-'}
+                      </td>
+                      <td>
+                        <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-blue' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
+                          {m.roleTitle || 'Siswa'}
                         </span>
-                        <span className="notion-tag notion-tag-green" style={{ fontSize: '0.68rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.15rem 0.45rem' }}>
-                          <ShieldCheck size={11} />
-                          <span>Tersimpan Rahasia</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        onClick={() => setResettingStudentPin(m)}
-                        className="btn btn-secondary btn-xs"
-                        style={{ gap: '0.25rem' }}
-                        title={`Reset PIN ${m.name} ke default (1234)`}
-                      >
-                        <RotateCcw size={12} />
-                        <span>Reset PIN</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
-
-      {/* MODAL: DETAIL PENGUMPULAN TUGAS SISWA */}
-      <Modal isOpen={!!viewSubmissionsTask} onClose={() => setViewSubmissionsTask(null)} title="Status Pengumpulan Tugas">
-        {viewSubmissionsTask && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div>
-              <span className="clean-tag-subject" style={{ marginBottom: '0.25rem', display: 'inline-block' }}>
-                {viewSubmissionsTask.subject}
-              </span>
-              <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: '0.2rem 0' }}>{viewSubmissionsTask.title}</h3>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                Tenggat: {viewSubmissionsTask.deadline}
-              </div>
-            </div>
-
-            <div style={{ maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {members.map(m => {
-                const isCompleted = (viewSubmissionsTask.completedStudentIds || []).includes(m.id);
-                return (
-                  <div key={m.id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.45rem 0.65rem',
-                    backgroundColor: isCompleted ? 'var(--tag-green-bg)' : 'var(--bg)',
-                    borderRadius: 'var(--radius-xs)',
-                    fontSize: '0.82rem'
-                  }}>
-                    <span>#{m.absentNo} · {m.name}</span>
-                    <span style={{ fontWeight: 700, color: isCompleted ? 'var(--tag-green-text)' : 'var(--text-muted)' }}>
-                      {isCompleted ? '✓ Selesai' : 'Belum Selesai'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </Modal>
 
       {/* MODAL: TAMBAH TUGAS */}
       <Modal isOpen={isAddTaskOpen} onClose={() => setIsAddTaskOpen(false)} title="Buat Tugas Baru">
@@ -1326,52 +1265,6 @@ export default function AdminDashboardView({
             Publikasikan
           </button>
         </form>
-      </Modal>
-
-      {/* MODAL: RESET PIN SISWA KE DEFAULT */}
-      <Modal isOpen={!!resettingStudentPin} onClose={() => setResettingStudentPin(null)} title="Reset PIN Siswa ke Default">
-        {resettingStudentPin && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            <div style={{
-              padding: '0.75rem 0.95rem',
-              backgroundColor: 'var(--hover-bg)',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              gap: '0.65rem',
-              alignItems: 'flex-start'
-            }}>
-              <ShieldCheck size={20} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
-              <div style={{ fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--text-primary)' }}>
-                <strong>Privasi Terjaga:</strong> Demi keamanan akun, admin tidak dapat melihat PIN pribadi siswa.
-              </div>
-            </div>
-
-            <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-              Apakah siswa <strong>{resettingStudentPin.name}</strong> (#{resettingStudentPin.absentNo}) lupa PIN akun mereka? 
-              Anda dapat mereset PIN login siswa ini kembali ke PIN standar default: <code style={{ backgroundColor: 'var(--hover-bg)', padding: '0.15rem 0.4rem', borderRadius: '3px', fontWeight: 800 }}>1234</code>.
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
-              <button
-                type="button"
-                onClick={() => setResettingStudentPin(null)}
-                className="btn btn-secondary btn-sm"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={() => handleResetPin(resettingStudentPin)}
-                className="btn btn-primary btn-sm"
-                style={{ gap: '0.35rem' }}
-              >
-                <RotateCcw size={14} />
-                <span>Reset ke 1234</span>
-              </button>
-            </div>
-          </div>
-        )}
       </Modal>
 
       {/* MODAL: WHATSAPP SMART SHARE */}

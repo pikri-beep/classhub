@@ -124,26 +124,26 @@ export default function DashboardView({ onNavigate }) {
               <span>{formattedDate}</span>
             </div>
             <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.25rem 0 0 0', letterSpacing: '-0.02em' }}>
-              Halo, {currentUser?.name ? currentUser.name.split(' ')[0] : 'Siswa'}! 👋
+              Selamat Datang! 👋
             </h1>
           </div>
 
           {/* Contextual Status Badges */}
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Piket Badge */}
-            <span className={`clean-chip ${isPiketToday ? 'chip-amber' : 'chip-neutral'}`} style={{ fontWeight: 700 }}>
-              {isPiketToday ? '⚡ Kamu Piket Hari Ini' : '✨ Bebas Piket'}
+            <span className="clean-chip chip-neutral" style={{ fontWeight: 600 }}>
+              🧹 {piketToday.length} Petugas Piket
             </span>
 
             {/* Cash Badge */}
             <button 
               onClick={() => setIsCashDetailOpen(true)}
-              className={`clean-chip ${isCashPaidAll ? 'chip-green' : 'chip-amber'}`}
+              className="clean-chip chip-neutral"
               style={{ cursor: 'pointer', border: 'none', fontWeight: 600 }}
-              title="Klik untuk rincian iuran kamu"
+              title="Lihat rincian kas kelas"
             >
               <Wallet size={12} style={{ marginRight: '0.25rem' }} />
-              {isCashPaidAll ? 'Kas: Lunas ✓' : `Kas: Kurang Rp ${unpaidAmount.toLocaleString('id-ID')}`}
+              Kas: Rp {Number(data?.cash?.balance || 0).toLocaleString('id-ID')}
             </button>
           </div>
         </div>
@@ -224,18 +224,15 @@ export default function DashboardView({ onNavigate }) {
               <Users size={13} />
               <span>Petugas Piket:</span>
             </span>
-            {piketToday.map((name, i) => {
-              const isMe = currentUser?.name && (name.toLowerCase().includes(currentUser.name.toLowerCase()) || currentUser.name.toLowerCase().includes(name.toLowerCase()));
-              return (
-                <span 
-                  key={i} 
-                  className={`clean-chip ${isMe ? 'chip-amber' : 'chip-neutral'}`}
-                  style={{ fontSize: '0.72rem', fontWeight: isMe ? 700 : 500 }}
-                >
-                  {name} {isMe && '★ (Kamu)'}
-                </span>
-              );
-            })}
+            {piketToday.map((name, i) => (
+              <span 
+                key={i} 
+                className="clean-chip chip-neutral"
+                style={{ fontSize: '0.75rem', fontWeight: 600 }}
+              >
+                {name}
+              </span>
+            ))}
           </div>
         )}
       </div>
@@ -414,9 +411,6 @@ export default function DashboardView({ onNavigate }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <span className="notion-tag notion-tag-blue" style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 700 }}>
                 {pinnedAnnouncement.category || 'Info'}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {pinnedAnnouncement.author}
               </span>
             </div>
             <button 

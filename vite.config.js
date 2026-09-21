@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'ClassHub — Portal Kelas XII PPLG 1',
+        name: 'ClassHub — Portal Kelas',
         short_name: 'ClassHub',
-        description: 'Aplikasi Manajemen Kelas, Jadwal Pelajaran, Tugas, Kas, dan Komunitas Siswa XII PPLG 1',
+        description: 'Aplikasi Manajemen Kelas, Jadwal Pelajaran, Tugas, Kas, dan Komunitas Siswa',
         theme_color: '#2563EB',
         background_color: '#FAFAF9',
         display: 'standalone',

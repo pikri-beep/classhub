@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useStore } from './context/StoreContext';
 import { useToast } from './context/ToastContext';
@@ -10,23 +10,21 @@ import Modal from './components/Modal';
 import { InstallBanner } from './components/InstallBanner';
 import WhatsAppShareModal from './components/WhatsAppShareModal';
 
-import LoginGate from './views/LoginGate';
 import DashboardView from './views/DashboardView';
 import AcademicView from './views/AcademicView';
 import ScheduleView from './views/ScheduleView';
 import ClassView from './views/ClassView';
 import AdminDashboardView from './views/AdminDashboardView';
-import { Eye, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Eye, ArrowRight, ShieldCheck, LogOut } from 'lucide-react';
 
 export default function App() {
   const { 
-    isAuthenticated, 
     currentUser, 
     isAdmin, 
     previewAsStudent, 
     setPreviewAsStudent, 
-    loginAsStudent, 
-    loginAsAdmin 
+    loginAsAdmin,
+    logout 
   } = useAuth();
   const { data, resetToDefault } = useStore();
   const { showToast } = useToast();
@@ -38,33 +36,46 @@ export default function App() {
   const [adminTab, setAdminTab] = useState('overview');
   const [isAdminWhatsAppOpen, setIsAdminWhatsAppOpen] = useState(false);
 
-  // Switch user modal state
-  const [isSwitchUserOpen, setIsSwitchUserOpen] = useState(false);
-  const [switchStudentId, setSwitchStudentId] = useState(currentUser?.id || 'std-1');
-  const [switchPin, setSwitchPin] = useState('1234');
-  const [switchAdminPin, setSwitchAdminPin] = useState('admin123');
+  // Admin Login modal state
+  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('admin123');
 
-  if (!isAuthenticated) {
-    return <LoginGate />;
-  }
+  // Detect #admin or /admin in URL and keyboard shortcuts (Ctrl+Shift+A / Alt+A)
+  useEffect(() => {
+    const checkAdminIntent = () => {
+      const path = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path.includes('/admin') || hash.includes('admin')) {
+        if (!isAdmin) {
+          setIsAdminLoginOpen(true);
+        }
+      }
+    };
+    checkAdminIntent();
+    window.addEventListener('hashchange', checkAdminIntent);
 
-  const handleSwitchStudent = (e) => {
+    // Secret keyboard shortcut: Ctrl+Shift+A or Alt+A
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) ||
+          (e.altKey && (e.key === 'a' || e.key === 'A'))) {
+        e.preventDefault();
+        setIsAdminLoginOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('hashchange', checkAdminIntent);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAdmin]);
+
+  const handleAdminLoginSubmit = (e) => {
     e.preventDefault();
-    const res = loginAsStudent(switchStudentId, switchPin);
+    const res = loginAsAdmin(adminPinInput);
     if (res.success) {
-      setIsSwitchUserOpen(false);
-      showToast(`Beralih ke akun ${res.user.name}! 👋`, 'success');
-    } else {
-      showToast(res.message, 'error');
-    }
-  };
-
-  const handleSwitchAdmin = (e) => {
-    e.preventDefault();
-    const res = loginAsAdmin(switchAdminPin);
-    if (res.success) {
-      setIsSwitchUserOpen(false);
-      showToast('Masuk Mode Pengurus / Admin! 🛡️', 'success');
+      setIsAdminLoginOpen(false);
+      showToast('Selamat datang, Admin Kelas! 🛡️', 'success');
     } else {
       showToast(res.message, 'error');
     }
@@ -73,13 +84,12 @@ export default function App() {
   const handleResetData = () => {
     if (confirm('Apakah Anda yakin ingin mereset seluruh data demo ke kondisi awal?')) {
       resetToDefault();
-      setIsSwitchUserOpen(false);
       showToast('Data berhasil di-reset ke kondisi awal!', 'info');
     }
   };
 
   // =========================================================================
-  // 1. ADMIN MODE: "Dashboard Pada Umumnya" (Sidebar Lengkap & Kontrol Penuh)
+  // 1. ADMIN MODE: Dashboard Pengurus Kelas (Sidebar Lengkap & Kontrol Penuh)
   // =========================================================================
   if (isAdmin && !previewAsStudent) {
     return (
@@ -88,16 +98,12 @@ export default function App() {
         <AdminSidebar
           activeTab={adminTab}
           setActiveTab={setAdminTab}
-          onOpenSwitchUser={() => setIsSwitchUserOpen(true)}
           onOpenWhatsApp={() => setIsAdminWhatsAppOpen(true)}
         />
 
         {/* Admin Main Content Wrapper */}
         <div className="main-content-wrapper">
-          <Header
-            activeView="admin"
-            onOpenSwitchUser={() => setIsSwitchUserOpen(true)}
-          />
+          <Header activeView="admin" />
 
           <main className="page-container" style={{ padding: '1.25rem 1.75rem' }}>
             <AdminDashboardView
@@ -108,50 +114,6 @@ export default function App() {
             />
           </main>
         </div>
-
-        {/* Switch User Modal in Admin */}
-        <Modal isOpen={isSwitchUserOpen} onClose={() => setIsSwitchUserOpen(false)} title="Ganti Akun">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <form onSubmit={handleSwitchStudent} className="card" style={{ padding: '1rem 1.15rem' }}>
-              <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.5rem' }}>Beralih ke Akun Siswa</h4>
-              <div className="form-group">
-                <label className="form-label">Pilih Siswa</label>
-                <select
-                  className="form-select"
-                  value={switchStudentId}
-                  onChange={(e) => setSwitchStudentId(e.target.value)}
-                >
-                  {data.members.map(m => (
-                    <option key={m.id} value={m.id}>
-                      #{m.absentNo} · {m.name} ({m.roleTitle || 'Siswa'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">PIN</label>
-                <input
-                  type="password"
-                  className="form-input"
-                  placeholder="1234"
-                  value={switchPin}
-                  onChange={(e) => setSwitchPin(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }}>
-                Buka Mode Siswa
-              </button>
-            </form>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Reset data demo:</span>
-              <button onClick={handleResetData} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.78rem' }}>
-                Reset Data
-              </button>
-            </div>
-          </div>
-        </Modal>
 
         {/* WhatsApp Modal for Admin */}
         <WhatsAppShareModal
@@ -166,7 +128,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // 2. STUDENT / USER MODE: "Today First / Daily Companion" (Simpel & Bersih)
+  // 2. PUBLIC / STUDENT MODE: Companion Bebas Profil untuk Seluruh Siswa
   // =========================================================================
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
@@ -189,7 +151,7 @@ export default function App() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Eye size={16} />
-            <span>Mode Pratinjau: Tampilan Siswa (Akun Admin Sedang Aktif)</span>
+            <span>Mode Pratinjau Siswa (Akun Admin Sedang Aktif)</span>
           </div>
           <button
             onClick={() => setPreviewAsStudent(false)}
@@ -211,16 +173,16 @@ export default function App() {
         </div>
       )}
 
-      {/* Clean Student Top Header (No bulky left sidebar) */}
+      {/* Clean Student Top Header */}
       <StudentHeader
         activeStudentView={activeStudentView}
         setActiveStudentView={setActiveStudentView}
-        onOpenSwitchUser={() => setIsSwitchUserOpen(true)}
+        onOpenAdminLogin={() => setIsAdminLoginOpen(true)}
       />
 
       <InstallBanner />
 
-      {/* Main Companion Canvas (Centered, high-signal, zero clutter) */}
+      {/* Main Companion Canvas */}
       <main style={{
         flex: 1,
         width: '100%',
@@ -232,118 +194,106 @@ export default function App() {
         {activeStudentView === 'dashboard' && (
           <DashboardView onNavigate={(view) => setActiveStudentView(view)} />
         )}
-        {activeStudentView === 'schedule' && (
-          <div>
-            <div style={{ marginBottom: '1rem' }}>
-              <button 
-                onClick={() => setActiveStudentView('dashboard')}
-                className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--primary)', fontWeight: 600, paddingLeft: 0, gap: '0.25rem' }}
-              >
-                ← Kembali ke Hari Ini
-              </button>
-            </div>
-            <ScheduleView />
-          </div>
-        )}
-        {activeStudentView === 'academic' && (
-          <div>
-            <div style={{ marginBottom: '1rem' }}>
-              <button 
-                onClick={() => setActiveStudentView('dashboard')}
-                className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--primary)', fontWeight: 600, paddingLeft: 0, gap: '0.25rem' }}
-              >
-                ← Kembali ke Hari Ini
-              </button>
-            </div>
-            <AcademicView />
-          </div>
-        )}
-        {activeStudentView === 'class' && (
-          <div>
-            <div style={{ marginBottom: '1rem' }}>
-              <button 
-                onClick={() => setActiveStudentView('dashboard')}
-                className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--primary)', fontWeight: 600, paddingLeft: 0, gap: '0.25rem' }}
-              >
-                ← Kembali ke Hari Ini
-              </button>
-            </div>
-            <ClassView />
-          </div>
-        )}
+        {activeStudentView === 'schedule' && <ScheduleView />}
+        {activeStudentView === 'academic' && <AcademicView />}
+        {activeStudentView === 'class' && <ClassView />}
       </main>
 
-      {/* Switch User Modal for Students */}
-      <Modal isOpen={isSwitchUserOpen} onClose={() => setIsSwitchUserOpen(false)} title="Ganti Akun">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          
-          {/* Switch to Another Student */}
-          <form onSubmit={handleSwitchStudent} className="card" style={{ padding: '1rem 1.15rem' }}>
-            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.5rem' }}>Pilih Akun Siswa</h4>
-            <div className="form-group">
-              <label className="form-label">Nama Siswa</label>
-              <select
-                className="form-select"
-                value={switchStudentId}
-                onChange={(e) => setSwitchStudentId(e.target.value)}
+      {/* Discreet Minimalist Footer */}
+      <footer style={{
+        padding: '1.25rem',
+        textAlign: 'center',
+        borderTop: '1px solid var(--border)',
+        backgroundColor: 'var(--bg-surface)',
+        fontSize: '0.78rem',
+        color: 'var(--text-muted)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+          <span>ClassHub</span>
+          <span>•</span>
+          {/* Subtle discreet admin access trigger */}
+          <span
+            onClick={() => setIsAdminLoginOpen(true)}
+            style={{ 
+              cursor: 'pointer', 
+              opacity: 0.35, 
+              display: 'inline-flex', 
+              alignItems: 'center',
+              padding: '0.15rem 0.35rem',
+              borderRadius: 'var(--radius-xs)',
+              transition: 'opacity 0.2s, background-color 0.2s'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.backgroundColor = 'var(--primary-soft)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.35'; e.currentTarget.style.backgroundColor = 'transparent'; }}
+            title="Akses Pengurus"
+          >
+            <ShieldCheck size={13} color="var(--primary)" />
+          </span>
+          {isAdmin && (
+            <>
+              <span>•</span>
+              <button
+                onClick={logout}
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--danger)', fontSize: '0.75rem', padding: '0.15rem 0.45rem', gap: '0.2rem' }}
               >
-                {data.members.map(m => (
-                  <option key={m.id} value={m.id}>
-                    #{m.absentNo} · {m.name} ({m.roleTitle || 'Siswa'})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">PIN Siswa</label>
-              <input
-                type="password"
-                className="form-input"
-                placeholder="1234"
-                value={switchPin}
-                onChange={(e) => setSwitchPin(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-secondary btn-sm" style={{ width: '100%' }}>
-              Buka Akun Siswa Ini
-            </button>
-          </form>
-
-          {/* Switch to Admin */}
-          <form onSubmit={handleSwitchAdmin} className="card" style={{ padding: '1rem 1.15rem' }}>
-            <h4 style={{ fontSize: '0.88rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <ShieldCheck size={16} color="var(--primary)" />
-              <span>Masuk Portal Pengurus / Admin</span>
-            </h4>
-            <div className="form-group">
-              <label className="form-label">PIN Master Admin</label>
-              <input
-                type="password"
-                className="form-input"
-                placeholder="admin123"
-                value={switchAdminPin}
-                onChange={(e) => setSwitchAdminPin(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%' }}>
-              Masuk Admin Dashboard
-            </button>
-          </form>
-
-          {/* Reset Demo Data */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Reset data demo:</span>
-            <button onClick={handleResetData} className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.78rem' }}>
-              Reset Data
-            </button>
-          </div>
-
+                <LogOut size={13} />
+                <span>Keluar Admin</span>
+              </button>
+            </>
+          )}
+          <span>•</span>
+          <button 
+            onClick={handleResetData} 
+            className="btn btn-ghost btn-sm" 
+            style={{ color: 'var(--text-muted)', fontSize: '0.75rem', padding: '0.15rem 0.4rem' }}
+          >
+            Reset Data
+          </button>
         </div>
+      </footer>
+
+      {/* Dedicated Admin Login Modal */}
+      <Modal isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} title="Login Pengurus / Admin">
+        <form onSubmit={handleAdminLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+          <div style={{ textAlign: 'center', padding: '0.25rem 0' }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: 'var(--radius-md)',
+              backgroundColor: 'var(--primary-soft)',
+              color: 'var(--primary)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '0.5rem'
+            }}>
+              <ShieldCheck size={22} />
+            </div>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0 }}>Autentikasi Pengurus</h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem', marginBottom: 0 }}>
+              Masukkan Master PIN Pengurus untuk mengelola tugas, jadwal, pengumuman, dan kas kelas.
+            </p>
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label" style={{ fontWeight: 600 }}>PIN Pengurus</label>
+            <input
+              type="password"
+              className="form-input"
+              placeholder="admin123"
+              value={adminPinInput}
+              onChange={(e) => setAdminPinInput(e.target.value)}
+              autoFocus
+              required
+            />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
+              Master PIN default: <code>admin123</code>
+            </span>
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}>
+            Masuk ke Admin Dashboard
+          </button>
+        </form>
       </Modal>
 
     </div>

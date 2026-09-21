@@ -26,7 +26,6 @@ export default function ScheduleView() {
 
   const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
   const daySchedule = data.schedules[activeDay] || { subjects: [], piket: [] };
-  const isUserPiketToday = (daySchedule.piket || []).includes(currentUser.name);
 
   const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -213,8 +212,8 @@ export default function ScheduleView() {
             <div>
               <div className="notion-section-title" style={{ marginTop: 0 }}>
                 <span>Regu Piket Hari {activeDay}</span>
-                <span className={`notion-tag ${isUserPiketToday ? 'notion-tag-orange' : 'notion-tag-gray'}`}>
-                  {isUserPiketToday ? '⚡ Giliran Kamu' : `${(daySchedule.piket || []).length} Siswa`}
+                <span className="notion-tag notion-tag-gray">
+                  {(daySchedule.piket || []).length} Siswa
                 </span>
               </div>
 
@@ -224,26 +223,21 @@ export default function ScheduleView() {
                     Belum ada regu piket yang dijadwalkan.
                   </div>
                 ) : (
-                  daySchedule.piket.map((name, i) => {
-                    const isMe = name === currentUser.name;
-                    return (
-                      <div
-                        key={i}
-                        className={`clean-chip ${isMe ? 'chip-amber' : 'chip-neutral'}`}
-                        style={{
-                          fontSize: '0.8rem',
-                          fontWeight: isMe ? 700 : 500,
-                          padding: '0.4rem 0.75rem',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.35rem'
-                        }}
-                      >
-                        <span>{name}</span>
-                        {isMe && <span style={{ fontSize: '0.68rem', fontWeight: 800 }}>★ (Kamu)</span>}
-                      </div>
-                    );
-                  })
+                  daySchedule.piket.map((name, i) => (
+                    <div
+                      key={i}
+                      className="clean-chip chip-neutral"
+                      style={{
+                        fontSize: '0.8rem',
+                        fontWeight: 500,
+                        padding: '0.4rem 0.75rem',
+                        display: 'inline-flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <span>{name}</span>
+                    </div>
+                  ))
                 )}
               </div>
 

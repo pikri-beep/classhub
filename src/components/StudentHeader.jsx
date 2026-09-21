@@ -1,24 +1,29 @@
-import React from 'react';
-import { Sun, Moon, Sparkles, CalendarDays, BookOpen, Users, LogOut, ArrowLeftRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sun, Moon, Sparkles, CalendarDays, BookOpen, Users, LogOut, ShieldCheck } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { useStore } from '../context/StoreContext';
 
-export default function StudentHeader({ activeStudentView, setActiveStudentView, onOpenSwitchUser }) {
+export default function StudentHeader({ activeStudentView, setActiveStudentView, onOpenAdminLogin }) {
   const { theme, toggleTheme } = useTheme();
-  const { currentUser, logout } = useAuth();
-  const { data } = useStore();
-
-  const myPendingTasks = (data.tasks || []).filter(
-    t => !(t.completedStudentIds || []).includes(currentUser?.id)
-  );
+  const { logout, isAdmin } = useAuth();
+  const [logoTaps, setLogoTaps] = useState(0);
 
   const studentNavItems = [
     { id: 'dashboard', label: 'Hari Ini', icon: Sparkles },
     { id: 'schedule', label: 'Jadwal Mingguan', icon: CalendarDays },
-    { id: 'academic', label: 'Semua Tugas', icon: BookOpen, badge: myPendingTasks.length > 0 ? myPendingTasks.length : null },
-    { id: 'class', label: 'Teman & Kelas', icon: Users }
+    { id: 'academic', label: 'Semua Tugas', icon: BookOpen },
+    { id: 'class', label: 'Kelas', icon: Users }
   ];
+
+  // Secret 3x tap on CH logo to trigger Admin Login
+  const handleLogoTap = () => {
+    const nextTaps = logoTaps + 1;
+    setLogoTaps(nextTaps);
+    if (nextTaps >= 3) {
+      setLogoTaps(0);
+      onOpenAdminLogin();
+    }
+  };
 
   return (
     <header style={{
@@ -32,33 +37,43 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: '1rem'
+      gap: '0.75rem'
     }}>
-      {/* Brand & Class Tag */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'var(--primary-soft)',
-          border: '1px solid var(--primary-border)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--primary)',
-          fontWeight: 800,
-          fontSize: '0.85rem'
-        }}>
+      {/* Brand Icon & Name (Secret 3-Tap on CH Icon) */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+        <div 
+          onClick={handleLogoTap}
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: 'var(--radius-sm)',
+            backgroundColor: 'var(--primary-soft)',
+            border: '1px solid var(--primary-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--primary)',
+            fontWeight: 800,
+            fontSize: '0.85rem',
+            cursor: 'pointer',
+            userSelect: 'none',
+            transition: 'transform 0.15s ease'
+          }}
+          title="ClassHub"
+        >
           CH
         </div>
-        <div>
-          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            ClassHub
-          </span>
-        </div>
+        <span style={{ 
+          fontSize: '1rem', 
+          fontWeight: 800, 
+          color: 'var(--text-primary)', 
+          letterSpacing: '-0.02em' 
+        }}>
+          ClassHub
+        </span>
       </div>
 
-      {/* Center Nav Pills (Always visible on mobile & desktop with horizontal scroll) */}
+      {/* Center Nav Pills */}
       <div className="student-center-nav" style={{ 
         display: 'flex', 
         gap: '0.3rem', 
@@ -78,7 +93,7 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
               onClick={() => setActiveStudentView(item.id)}
               className="btn btn-sm"
               style={{
-                fontSize: '0.8rem',
+                fontSize: '0.78rem',
                 fontWeight: isActive ? 700 : 500,
                 backgroundColor: isActive ? 'var(--primary-soft)' : 'transparent',
                 borderColor: isActive ? 'var(--primary-border)' : 'transparent',
@@ -92,11 +107,6 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
             >
               <Icon size={14} />
               <span>{item.label}</span>
-              {item.badge && (
-                <span className="notion-tag notion-tag-orange" style={{ padding: '0.05rem 0.35rem', fontSize: '0.65rem', borderRadius: 'var(--radius-full)' }}>
-                  {item.badge}
-                </span>
-              )}
             </button>
           );
         })}
@@ -104,7 +114,25 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
-        {/* Theme Toggle */}
+        {/* Active Admin Badge & Exit (Only shown when Admin is logged in) */}
+        {isAdmin && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 700 }}>
+              Admin
+            </span>
+            <button
+              onClick={logout}
+              className="btn btn-ghost btn-sm"
+              style={{ padding: '0.35rem 0.5rem', color: 'var(--danger)', fontSize: '0.75rem', gap: '0.2rem' }}
+              title="Keluar dari Mode Admin"
+            >
+              <LogOut size={13} />
+              <span>Keluar</span>
+            </button>
+          </div>
+        )}
+
+        {/* Clean Theme Toggle */}
         <button
           onClick={toggleTheme}
           className="btn btn-ghost btn-sm"
@@ -112,47 +140,6 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
           title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
         >
           {theme === 'dark' ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} />}
-        </button>
-
-        {/* Student Avatar / Switch User */}
-        <button
-          onClick={onOpenSwitchUser}
-          className="btn btn-secondary btn-sm"
-          style={{
-            gap: '0.4rem',
-            padding: '0.3rem 0.65rem',
-            borderRadius: 'var(--radius-full)',
-            fontSize: '0.8rem',
-            fontWeight: 600
-          }}
-          title="Klik untuk ganti akun siswa / masuk admin"
-        >
-          <div style={{
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--primary)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.65rem',
-            fontWeight: 800
-          }}>
-            {currentUser?.name?.substring(0, 1) || 'S'}
-          </div>
-          <span style={{ maxWidth: '75px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {currentUser?.name?.split(' ')[0] || 'Siswa'}
-          </span>
-        </button>
-
-        <button
-          onClick={logout}
-          className="btn btn-ghost btn-sm"
-          style={{ padding: '0.4rem', color: 'var(--danger)' }}
-          title="Keluar"
-        >
-          <LogOut size={15} />
         </button>
       </div>
 

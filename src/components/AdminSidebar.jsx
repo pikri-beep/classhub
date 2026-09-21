@@ -10,13 +10,12 @@ import {
   MessageCircle, 
   Eye, 
   LogOut, 
-  ArrowLeftRight,
   ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 
-export default function AdminSidebar({ activeTab, setActiveTab, onOpenSwitchUser, onOpenWhatsApp }) {
+export default function AdminSidebar({ activeTab, setActiveTab, onOpenWhatsApp }) {
   const { currentUser, logout, setPreviewAsStudent } = useAuth();
   const { data } = useStore();
 
@@ -31,7 +30,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, onOpenSwitchUser
     { id: 'schedules', label: 'Jadwal & Piket', icon: CalendarDays },
     { id: 'cash', label: 'Keuangan & Matriks Kas', icon: Wallet },
     { id: 'announcements', label: 'Pengumuman', icon: Megaphone, badge: annCount },
-    { id: 'members', label: 'Data Siswa & PIN', icon: Users, badge: membersCount }
+    { id: 'members', label: 'Data Siswa & Jabatan', icon: Users, badge: membersCount }
   ];
 
   return (
@@ -213,25 +212,24 @@ export default function AdminSidebar({ activeTab, setActiveTab, onOpenSwitchUser
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.35rem' }}>
-          <button
-            onClick={onOpenSwitchUser}
-            className="btn btn-secondary btn-sm"
-            style={{ flex: 1, fontSize: '0.75rem', padding: '0.35rem 0.45rem' }}
-            title="Ganti ke Akun Siswa"
-          >
-            <ArrowLeftRight size={13} />
-            <span>Ganti Akun</span>
-          </button>
-          <button
-            onClick={logout}
-            className="btn btn-ghost btn-sm"
-            style={{ padding: '0.35rem 0.55rem', color: 'var(--danger)' }}
-            title="Keluar dari Admin"
-          >
-            <LogOut size={14} />
-          </button>
-        </div>
+        <button
+          onClick={logout}
+          className="btn btn-secondary btn-sm"
+          style={{
+            width: '100%',
+            fontSize: '0.78rem',
+            padding: '0.45rem',
+            color: 'var(--danger)',
+            borderColor: 'var(--danger-border)',
+            gap: '0.4rem',
+            justifyContent: 'center',
+            fontWeight: 700
+          }}
+          title="Keluar dari Mode Admin"
+        >
+          <LogOut size={14} />
+          <span>Keluar dari Admin</span>
+        </button>
       </div>
     </aside>
 

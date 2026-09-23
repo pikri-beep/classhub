@@ -70,6 +70,20 @@ export default function App() {
     };
   }, [isAdmin]);
 
+  // Synchronize browser tab title and favicon with class branding
+  useEffect(() => {
+    const appName = data?.classInfo?.appName || 'ClassHub';
+    const className = data?.classInfo?.name ? ` — ${data.classInfo.name}` : '';
+    document.title = `${appName}${className}`;
+
+    if (data?.classInfo?.logoUrl) {
+      const iconLink = document.querySelector("link[rel*='icon']");
+      if (iconLink) {
+        iconLink.href = data.classInfo.logoUrl;
+      }
+    }
+  }, [data?.classInfo?.appName, data?.classInfo?.name, data?.classInfo?.logoUrl]);
+
   const handleAdminLoginSubmit = (e) => {
     e.preventDefault();
     const res = loginAsAdmin(adminPinInput);
@@ -242,14 +256,6 @@ export default function App() {
               </button>
             </>
           )}
-          <span>•</span>
-          <button 
-            onClick={handleResetData} 
-            className="btn btn-ghost btn-sm" 
-            style={{ color: 'var(--text-muted)', fontSize: '0.75rem', padding: '0.15rem 0.4rem' }}
-          >
-            Reset Data
-          </button>
         </div>
       </footer>
 

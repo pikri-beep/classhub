@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -19,11 +19,16 @@ import {
   Sparkles,
   TrendingUp,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  Settings,
+  Upload,
+  Camera,
+  RotateCcw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
+import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
 
@@ -50,7 +55,9 @@ export default function AdminDashboardView({
     deleteEvent,
     updateSchedule,
     addDuesPeriod,
-    getTotalCashBalance 
+    getTotalCashBalance,
+    updateClassInfo,
+    resetToDefault
   } = useStore();
   const { showToast } = useToast();
 
@@ -111,6 +118,57 @@ export default function AdminDashboardView({
   const [newSubName, setNewSubName] = useState('');
   const [newSubStart, setNewSubStart] = useState('07:00');
   const [newSubEnd, setNewSubEnd] = useState('08:30');
+
+  // Settings form state
+  const [settingsAppName, setSettingsAppName] = useState(data.classInfo?.appName || 'ClassHub');
+  const [settingsName, setSettingsName] = useState(data.classInfo?.name || 'Kelas');
+  const [settingsSchool, setSettingsSchool] = useState(data.classInfo?.school || 'SMK Negeri 1');
+  const [settingsAcademicYear, setSettingsAcademicYear] = useState(data.classInfo?.academicYear || '2026/2027');
+  const [settingsHomeroomTeacher, setSettingsHomeroomTeacher] = useState(data.classInfo?.homeroomTeacher || '');
+  const [settingsAdminPin, setSettingsAdminPin] = useState(data.classInfo?.adminPin || 'admin123');
+  const [settingsLogoUrl, setSettingsLogoUrl] = useState(data.classInfo?.logoUrl || '');
+  const [isProcessingSettingsImg, setIsProcessingSettingsImg] = useState(false);
+
+  useEffect(() => {
+    if (data.classInfo) {
+      setSettingsAppName(data.classInfo.appName || 'ClassHub');
+      setSettingsName(data.classInfo.name || 'Kelas');
+      setSettingsSchool(data.classInfo.school || 'SMK Negeri 1');
+      setSettingsAcademicYear(data.classInfo.academicYear || '2026/2027');
+      setSettingsHomeroomTeacher(data.classInfo.homeroomTeacher || '');
+      setSettingsAdminPin(data.classInfo.adminPin || 'admin123');
+      setSettingsLogoUrl(data.classInfo.logoUrl || '');
+    }
+  }, [data.classInfo]);
+
+  const handleSettingsLogoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsProcessingSettingsImg(true);
+      const dataUrl = await processImageFile(file, 320, 0.85);
+      setSettingsLogoUrl(dataUrl);
+      showToast('Gambar berhasil dimuat dan dikompresi!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Gagal memproses gambar', 'error');
+    } finally {
+      setIsProcessingSettingsImg(false);
+    }
+  };
+
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    updateClassInfo({
+      appName: settingsAppName.trim() || 'ClassHub',
+      name: settingsName.trim() || 'Kelas',
+      school: settingsSchool.trim(),
+      academicYear: settingsAcademicYear.trim(),
+      homeroomTeacher: settingsHomeroomTeacher.trim(),
+      adminPin: settingsAdminPin.trim() || 'admin123',
+      logoUrl: settingsLogoUrl.trim()
+    });
+    showToast('Identitas dan pengaturan kelas berhasil disimpan! 🎉', 'success');
+  };
 
   const members = data.members || [];
   const tasks = data.tasks || [];
@@ -933,6 +991,233 @@ export default function AdminDashboardView({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* TAB 8: IDENTITAS KELAS & PENGATURAN */}
+      {activeTab === 'settings' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* Class Identity & Logo Form Card */}
+          <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
+            <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>Identitas & Branding Kelas</h3>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                Atur nama web, nama kelas, sekolah, wali kelas, serta logo/foto resmi yang tampil di header aplikasi.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              {/* Logo / Foto Kelas Picker */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--primary-soft)',
+                  border: '2px solid var(--primary-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--primary)',
+                  fontWeight: 800,
+                  fontSize: '1.5rem',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}>
+                  {settingsLogoUrl ? (
+                    <img src={settingsLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <Camera size={28} />
+                  )}
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
+                    Logo / Foto Kelas (Ikon Web & Header)
+                  </label>
+                  
+                  <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: '0.35rem' }}>
+                      <Upload size={14} />
+                      <span>{isProcessingSettingsImg ? 'Memproses...' : 'Pilih Foto dari Perangkat'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleSettingsLogoFileChange}
+                        style={{ display: 'none' }}
+                        disabled={isProcessingSettingsImg}
+                      />
+                    </label>
+
+                    {settingsLogoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setSettingsLogoUrl('')}
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: 'var(--danger)', fontSize: '0.78rem' }}
+                      >
+                        Hapus Foto
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* URL alternatif */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  Atau Link URL Gambar (Eksternal)
+                </label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://contoh.com/logo.png"
+                  value={settingsLogoUrl.startsWith('data:') ? '' : settingsLogoUrl}
+                  onChange={(e) => setSettingsLogoUrl(e.target.value)}
+                  style={{ fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Nama Web / Aplikasi</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="ClassHub"
+                    value={settingsAppName}
+                    onChange={(e) => setSettingsAppName(e.target.value)}
+                    required
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                    Mengganti judul brand "ClassHub" di navbar atas
+                  </span>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Nama Kelas</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: XII PPLG 1"
+                    value={settingsName}
+                    onChange={(e) => setSettingsName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 700 }}>Nama Sekolah</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: SMK Negeri 1 Cibinong"
+                  value={settingsSchool}
+                  onChange={(e) => setSettingsSchool(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Tahun Ajaran</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="2026/2027"
+                    value={settingsAcademicYear}
+                    onChange={(e) => setSettingsAcademicYear(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Wali Kelas</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Nama Guru Pengampu"
+                    value={settingsHomeroomTeacher}
+                    onChange={(e) => setSettingsHomeroomTeacher(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Master PIN Pengurus */}
+              <div className="form-group" style={{ marginBottom: 0, paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
+                <label className="form-label" style={{ fontWeight: 700 }}>Master PIN Pengurus</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="admin123"
+                  value={settingsAdminPin}
+                  onChange={(e) => setSettingsAdminPin(e.target.value)}
+                  style={{ maxWidth: '280px', fontFamily: 'monospace', letterSpacing: '0.05em' }}
+                  required
+                />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                  PIN ini digunakan pengurus untuk login ke dashboard admin.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, padding: '0.6rem 1.25rem' }}>
+                  Simpan Perubahan Pengaturan
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* DANGER ZONE: RESET DATA CARD */}
+          <div className="card" style={{ padding: '1.25rem 1.4rem', border: '1px solid var(--danger-border, #FCA5A5)', backgroundColor: 'var(--bg-surface)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--tag-red-bg)',
+                color: 'var(--danger)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <AlertCircle size={22} />
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: 'var(--danger)', margin: 0 }}>
+                  Zona Berbahaya: Reset Seluruh Data Kelas
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.35rem 0 0.85rem 0', lineHeight: 1.5 }}>
+                  Tindakan ini akan mengembalikan seluruh jadwal, tugas, pengumuman, dan kas ke data bawaan demo awal. Data di Supabase Cloud juga akan di-reset.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('PERINGATAN: Apakah Anda benar-benar yakin ingin mereset seluruh data kelas ke kondisi awal? Tindakan ini tidak dapat dibatalkan.')) {
+                      resetToDefault();
+                      showToast('Seluruh data berhasil di-reset ke bawaan demo awal.', 'info');
+                    }
+                  }}
+                  className="btn btn-sm"
+                  style={{
+                    backgroundColor: 'var(--tag-red-bg)',
+                    borderColor: 'var(--danger)',
+                    color: 'var(--danger)',
+                    fontWeight: 700,
+                    gap: '0.35rem',
+                    padding: '0.45rem 0.85rem'
+                  }}
+                >
+                  <RotateCcw size={14} />
+                  <span>Reset Seluruh Data ke Bawaan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       )}
 

@@ -41,7 +41,7 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
       justifyContent: 'space-between',
       gap: '0.75rem'
     }}>
-      {/* Brand Icon & Name (Secret 3-Tap on CH Icon) */}
+      {/* Brand Icon & Name (Secret 3-Tap on Logo) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
         <div 
           onClick={handleLogoTap}
@@ -59,20 +59,42 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
             fontSize: '0.85rem',
             cursor: 'pointer',
             userSelect: 'none',
-            transition: 'transform 0.15s ease'
+            transition: 'transform 0.15s ease',
+            overflow: 'hidden'
           }}
-          title="ClassHub"
+          title={data?.classInfo?.appName || 'ClassHub'}
         >
-          CH
+          {data?.classInfo?.logoUrl ? (
+            <img 
+              src={data.classInfo.logoUrl} 
+              alt="Logo Kelas" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          ) : (
+            (data?.classInfo?.appName || 'CH').slice(0, 2).toUpperCase()
+          )}
         </div>
-        <span style={{ 
-          fontSize: '1rem', 
-          fontWeight: 800, 
-          color: 'var(--text-primary)', 
-          letterSpacing: '-0.02em' 
-        }}>
-          ClassHub
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ 
+            fontSize: '0.95rem', 
+            fontWeight: 800, 
+            color: 'var(--text-primary)', 
+            letterSpacing: '-0.02em',
+            lineHeight: 1.2
+          }}>
+            {data?.classInfo?.appName || 'ClassHub'}
+          </span>
+          {data?.classInfo?.name && (
+            <span style={{ 
+              fontSize: '0.68rem', 
+              color: 'var(--primary)', 
+              fontWeight: 700,
+              lineHeight: 1
+            }}>
+              {data.classInfo.name}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Center Nav Pills */}

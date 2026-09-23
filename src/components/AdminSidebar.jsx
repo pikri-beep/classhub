@@ -10,7 +10,8 @@ import {
   MessageCircle, 
   Eye, 
   LogOut, 
-  ShieldCheck
+  ShieldCheck,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -30,7 +31,8 @@ export default function AdminSidebar({ activeTab, setActiveTab, onOpenWhatsApp }
     { id: 'schedules', label: 'Jadwal & Piket', icon: CalendarDays },
     { id: 'cash', label: 'Keuangan & Matriks Kas', icon: Wallet },
     { id: 'announcements', label: 'Pengumuman', icon: Megaphone, badge: annCount },
-    { id: 'members', label: 'Data Siswa & Jabatan', icon: Users, badge: membersCount }
+    { id: 'members', label: 'Data Siswa & Jabatan', icon: Users, badge: membersCount },
+    { id: 'settings', label: 'Identitas & Pengaturan', icon: Settings }
   ];
 
   return (
@@ -55,16 +57,21 @@ export default function AdminSidebar({ activeTab, setActiveTab, onOpenWhatsApp }
           justifyContent: 'center',
           fontWeight: 800,
           fontSize: '0.95rem',
-          flexShrink: 0
+          flexShrink: 0,
+          overflow: 'hidden'
         }}>
-          <ShieldCheck size={20} />
+          {data?.classInfo?.logoUrl ? (
+            <img src={data.classInfo.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <ShieldCheck size={20} />
+          )}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            ClassHub Admin
+          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {data?.classInfo?.appName || 'ClassHub'} Admin
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700 }}>
-            Pusat Pengelolaan Kelas
+            {data?.classInfo?.name || 'Pusat Pengelolaan Kelas'}
           </div>
         </div>
       </div>

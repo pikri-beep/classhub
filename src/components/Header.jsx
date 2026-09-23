@@ -54,10 +54,15 @@ export default function Header({ activeView }) {
             color: 'var(--primary)',
             fontWeight: 800,
             fontSize: '0.75rem',
-            flexShrink: 0
+            flexShrink: 0,
+            overflow: 'hidden'
           }}
         >
-          CH
+          {data?.classInfo?.logoUrl ? (
+            <img src={data.classInfo.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            (data?.classInfo?.appName || 'CH').slice(0, 2).toUpperCase()
+          )}
         </div>
 
         {/* Dynamic Breadcrumbs */}

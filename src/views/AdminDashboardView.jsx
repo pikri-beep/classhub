@@ -57,7 +57,10 @@ export default function AdminDashboardView({
     addDuesPeriod,
     getTotalCashBalance,
     updateClassInfo,
-    resetToDefault
+    resetToDefault,
+    addMember,
+    updateMember,
+    deleteMember
   } = useStore();
   const { showToast } = useToast();
 
@@ -168,6 +171,48 @@ export default function AdminDashboardView({
       logoUrl: settingsLogoUrl.trim()
     });
     showToast('Identitas dan pengaturan kelas berhasil disimpan! 🎉', 'success');
+  };
+
+  // Member form state
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isEditMemberOpen, setIsEditMemberOpen] = useState(false);
+  const [selectedMemberForEdit, setSelectedMemberForEdit] = useState(null);
+  const [studentAbsentNo, setStudentAbsentNo] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [studentNisn, setStudentNisn] = useState('');
+  const [studentRoleTitle, setStudentRoleTitle] = useState('Anggota');
+
+  const [editMemberAbsentNo, setEditMemberAbsentNo] = useState('');
+  const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberNisn, setEditMemberNisn] = useState('');
+  const [editMemberRoleTitle, setEditMemberRoleTitle] = useState('Anggota');
+
+  const handleCreateMember = (e) => {
+    e.preventDefault();
+    if (!studentName.trim()) return;
+    addMember({
+      absentNo: Number(studentAbsentNo) || (members.length + 1),
+      name: studentName.trim(),
+      nisn: studentNisn.trim(),
+      roleTitle: studentRoleTitle.trim() || 'Anggota'
+    });
+    setIsAddMemberOpen(false);
+    setStudentName('');
+    setStudentNisn('');
+    showToast(`Siswa "${studentName.trim()}" berhasil ditambahkan! 🎉`, 'success');
+  };
+
+  const handleUpdateMember = (e) => {
+    e.preventDefault();
+    if (!selectedMemberForEdit || !editMemberName.trim()) return;
+    updateMember(selectedMemberForEdit.id, {
+      absentNo: Number(editMemberAbsentNo),
+      name: editMemberName.trim(),
+      nisn: editMemberNisn.trim(),
+      roleTitle: editMemberRoleTitle.trim() || 'Anggota'
+    });
+    setIsEditMemberOpen(false);
+    showToast(`Data siswa "${editMemberName.trim()}" diperbarui!`, 'success');
   };
 
   const members = data.members || [];
@@ -944,16 +989,33 @@ export default function AdminDashboardView({
       {/* TAB 7: DATA SISWA & PIN */}
       {activeTab === 'members' && (
         <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
               <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Daftar Siswa & Struktur Kelas</h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
                 Data resmi seluruh anggota kelas dan peran kepengurusan yang tampil pada portal publik.
               </p>
             </div>
-            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-              {members.length} Siswa Terdaftar
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                {members.length} Siswa Terdaftar
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setStudentAbsentNo(members.length + 1);
+                  setStudentName('');
+                  setStudentNisn('');
+                  setStudentRoleTitle('Anggota');
+                  setIsAddMemberOpen(true);
+                }}
+                className="btn btn-primary btn-sm"
+                style={{ fontWeight: 700, gap: '0.35rem' }}
+              >
+                <Plus size={14} />
+                <span>+ Input Siswa Baru</span>
+              </button>
+            </div>
           </div>
 
           <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
@@ -964,30 +1026,73 @@ export default function AdminDashboardView({
                   <th>Nama Siswa</th>
                   <th>NISN</th>
                   <th>Jabatan / Peran Kelas</th>
+                  <th style={{ width: '80px', textAlign: 'center' }}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {members.map(m => {
-                  const hasSpecialRole = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
-                  return (
-                    <tr key={m.id}>
-                      <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>
-                        {String(m.absentNo).padStart(2, '0')}
-                      </td>
-                      <td>
-                        <strong style={{ color: 'var(--text-primary)' }}>{m.name}</strong>
-                      </td>
-                      <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>
-                        {m.nisn || '-'}
-                      </td>
-                      <td>
-                        <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-blue' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
-                          {m.roleTitle || 'Siswa'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {members.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
+                      Belum ada siswa terdaftar. Klik "+ Input Siswa Baru" untuk menambahkan.
+                    </td>
+                  </tr>
+                ) : (
+                  members.map(m => {
+                    const hasSpecialRole = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
+                    return (
+                      <tr key={m.id}>
+                        <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>
+                          {String(m.absentNo || 0).padStart(2, '0')}
+                        </td>
+                        <td>
+                          <strong style={{ color: 'var(--text-primary)' }}>{m.name}</strong>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                          {m.nisn || '-'}
+                        </td>
+                        <td>
+                          <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-blue' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
+                            {m.roleTitle || 'Siswa'}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedMemberForEdit(m);
+                                setEditMemberAbsentNo(m.absentNo || '');
+                                setEditMemberName(m.name || '');
+                                setEditMemberNisn(m.nisn || '');
+                                setEditMemberRoleTitle(m.roleTitle || 'Anggota');
+                                setIsEditMemberOpen(true);
+                              }}
+                              className="btn btn-ghost btn-sm"
+                              style={{ padding: '0.2rem 0.35rem', color: 'var(--text-secondary)' }}
+                              title="Edit Data Siswa"
+                            >
+                              <Edit3 size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm(`Hapus siswa "${m.name}" dari data kelas?`)) {
+                                  deleteMember(m.id);
+                                  showToast(`Siswa "${m.name}" telah dihapus.`, 'info');
+                                }
+                              }}
+                              className="btn btn-ghost btn-sm"
+                              style={{ padding: '0.2rem 0.35rem', color: 'var(--danger)' }}
+                              title="Hapus Siswa"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -1549,6 +1654,148 @@ export default function AdminDashboardView({
           <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
             Publikasikan
           </button>
+        </form>
+      </Modal>
+
+      {/* MODAL: INPUT SISWA BARU */}
+      <Modal isOpen={isAddMemberOpen} onClose={() => setIsAddMemberOpen(false)} title="Input Siswa Baru">
+        <form onSubmit={handleCreateMember} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0.75rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">No. Absen</label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="1"
+                value={studentAbsentNo}
+                onChange={(e) => setStudentAbsentNo(e.target.value)}
+                min="1"
+                required
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Nama Lengkap Siswa</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Contoh: Muhammad Rizki"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">NISN (Opsional)</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="0078129381"
+                value={studentNisn}
+                onChange={(e) => setStudentNisn(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Jabatan / Peran Kelas</label>
+              <select
+                className="form-select"
+                value={studentRoleTitle}
+                onChange={(e) => setStudentRoleTitle(e.target.value)}
+              >
+                <option value="Anggota">Anggota</option>
+                <option value="Ketua Kelas">Ketua Kelas</option>
+                <option value="Wakil Ketua">Wakil Ketua</option>
+                <option value="Sekretaris">Sekretaris</option>
+                <option value="Bendahara">Bendahara</option>
+                <option value="Seksi Kebersihan">Seksi Kebersihan</option>
+                <option value="Seksi Keamanan">Seksi Keamanan</option>
+                <option value="Seksi Olahraga">Seksi Olahraga</option>
+                <option value="Seksi Rohani">Seksi Rohani</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" onClick={() => setIsAddMemberOpen(false)} className="btn btn-secondary">
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" style={{ fontWeight: 700 }}>
+              Simpan Siswa
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* MODAL: EDIT DATA SISWA */}
+      <Modal isOpen={isEditMemberOpen} onClose={() => setIsEditMemberOpen(false)} title="Edit Data Siswa">
+        <form onSubmit={handleUpdateMember} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0.75rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">No. Absen</label>
+              <input
+                type="number"
+                className="form-input"
+                value={editMemberAbsentNo}
+                onChange={(e) => setEditMemberAbsentNo(e.target.value)}
+                min="1"
+                required
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Nama Lengkap Siswa</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editMemberName}
+                onChange={(e) => setEditMemberName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">NISN</label>
+              <input
+                type="text"
+                className="form-input"
+                value={editMemberNisn}
+                onChange={(e) => setEditMemberNisn(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Jabatan / Peran Kelas</label>
+              <select
+                className="form-select"
+                value={editMemberRoleTitle}
+                onChange={(e) => setEditMemberRoleTitle(e.target.value)}
+              >
+                <option value="Anggota">Anggota</option>
+                <option value="Ketua Kelas">Ketua Kelas</option>
+                <option value="Wakil Ketua">Wakil Ketua</option>
+                <option value="Sekretaris">Sekretaris</option>
+                <option value="Bendahara">Bendahara</option>
+                <option value="Seksi Kebersihan">Seksi Kebersihan</option>
+                <option value="Seksi Keamanan">Seksi Keamanan</option>
+                <option value="Seksi Olahraga">Seksi Olahraga</option>
+                <option value="Seksi Rohani">Seksi Rohani</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" onClick={() => setIsEditMemberOpen(false)} className="btn btn-secondary">
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" style={{ fontWeight: 700 }}>
+              Perbarui Data
+            </button>
+          </div>
         </form>
       </Modal>
 

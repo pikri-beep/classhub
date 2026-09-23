@@ -164,6 +164,27 @@ const DEFAULT_SEED_DATA = {
   }
 };
 
+const sanitizeData = (raw) => {
+  if (!raw || typeof raw !== 'object') return DEFAULT_SEED_DATA;
+  return {
+    ...DEFAULT_SEED_DATA,
+    ...raw,
+    classInfo: { ...DEFAULT_SEED_DATA.classInfo, ...(raw.classInfo || {}) },
+    members: Array.isArray(raw.members) ? raw.members : DEFAULT_SEED_DATA.members,
+    tasks: Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks,
+    announcements: Array.isArray(raw.announcements) ? raw.announcements : DEFAULT_SEED_DATA.announcements,
+    exams: Array.isArray(raw.exams) ? raw.exams : DEFAULT_SEED_DATA.exams,
+    events: Array.isArray(raw.events) ? raw.events : DEFAULT_SEED_DATA.events,
+    schedules: raw.schedules && typeof raw.schedules === 'object' ? raw.schedules : DEFAULT_SEED_DATA.schedules,
+    cash: {
+      ...DEFAULT_SEED_DATA.cash,
+      ...(raw.cash || {}),
+      duesPeriods: Array.isArray(raw.cash?.duesPeriods) ? raw.cash.duesPeriods : DEFAULT_SEED_DATA.cash.duesPeriods,
+      transactions: Array.isArray(raw.cash?.transactions) ? raw.cash.transactions : DEFAULT_SEED_DATA.cash.transactions
+    }
+  };
+};
+
 const StoreContext = createContext();
 
 export function StoreProvider({ children }) {
@@ -183,8 +204,8 @@ export function StoreProvider({ children }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && parsed.members && parsed.tasks) {
-          return parsed;
+        if (parsed) {
+          return sanitizeData(parsed);
         }
       }
     } catch (e) {
@@ -239,10 +260,10 @@ export function StoreProvider({ children }) {
           return;
         }
 
-        if (row && row.data && row.data.members) {
-          // Cloud has valid data, load it!
+        if (row && row.data) {
+          // Cloud has valid data, load it safely!
           if (isMounted) {
-            setData(row.data);
+            setData(sanitizeData(row.data));
             setSyncStatus('connected');
           }
         } else {
@@ -272,8 +293,8 @@ export function StoreProvider({ children }) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'class_store', filter: 'id=eq.main_class' },
         (payload) => {
-          if (payload.new && payload.new.data && payload.new.data.members) {
-            setData(payload.new.data);
+          if (payload.new && payload.new.data) {
+            setData(sanitizeData(payload.new.data));
             setSyncStatus('connected');
           }
         }
@@ -532,6 +553,62 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const addMember = (member) => {
+    const newMember = {
+      id: `std-${Date.now()}`,
+      absentNo: Number(member.absentNo) || (data.members.length + 1),
+      nisn: (member.nisn || '').trim(),
+      name: member.name.trim(),
+      role: member.roleTitle && ['Ketua Kelas', 'Wakil Ketua', 'Bendahara', 'Sekretaris'].some(r => member.roleTitle.includes(r)) ? 'admin' : 'member',
+      roleTitle: member.roleTitle || 'Anggota',
+      pin: '1234',
+      avatarText: (member.name || 'S').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(),
+      ...member
+    };
+    commitData(prev => {
+      const updated = [...(prev.members || []), newMember].sort((a, b) => (Number(a.absentNo) || 0) - (Number(b.absentNo) || 0));
+      return {
+        ...prev,
+        members: updated,
+        classInfo: {
+          ...(prev.classInfo || {}),
+          totalStudents: updated.length
+        }
+      };
+    });
+  };
+
+  const updateMember = (id, updatedFields) => {
+    commitData(prev => {
+      const updated = (prev.members || []).map(m => {
+        if (m.id !== id) return m;
+        return {
+          ...m,
+          ...updatedFields,
+          absentNo: Number(updatedFields.absentNo !== undefined ? updatedFields.absentNo : m.absentNo)
+        };
+      }).sort((a, b) => (Number(a.absentNo) || 0) - (Number(b.absentNo) || 0));
+      return {
+        ...prev,
+        members: updated
+      };
+    });
+  };
+
+  const deleteMember = (id) => {
+    commitData(prev => {
+      const updated = (prev.members || []).filter(m => m.id !== id);
+      return {
+        ...prev,
+        members: updated,
+        classInfo: {
+          ...(prev.classInfo || {}),
+          totalStudents: updated.length
+        }
+      };
+    });
+  };
+
   const updateClassInfo = (newInfo) => {
     commitData(prev => ({
       ...prev,
@@ -594,6 +671,9 @@ export function StoreProvider({ children }) {
       deleteEvent,
       updateSchedule,
       updateMemberPin,
+      addMember,
+      updateMember,
+      deleteMember,
       updateClassInfo,
       addDuesPeriod,
       resetToDefault,

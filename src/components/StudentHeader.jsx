@@ -7,7 +7,7 @@ import { useStore } from '../context/StoreContext';
 export default function StudentHeader({ activeStudentView, setActiveStudentView, onOpenAdminLogin }) {
   const { theme, toggleTheme } = useTheme();
   const { logout, isAdmin } = useAuth();
-  const { syncStatus } = useStore();
+  const { data, syncStatus } = useStore();
   const [logoTaps, setLogoTaps] = useState(0);
 
   const studentNavItems = [

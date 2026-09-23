@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Sanitize URL: Strip any accidental /rest/v1 or trailing slashes entered in .env or Vercel
+const rawUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseUrl = rawUrl
+  .replace(/\/rest\/v1\/?$/i, '')
+  .replace(/\/+$/, '')
+  .trim();
+
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && 
@@ -19,3 +25,4 @@ export const supabase = isSupabaseConfigured
       }
     })
   : null;
+

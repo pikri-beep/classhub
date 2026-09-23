@@ -260,23 +260,30 @@ export function StoreProvider({ children }) {
           return;
         }
 
-        if (row && row.data) {
-          // Cloud has valid data, load it safely!
+        if (row && row.data && Array.isArray(row.data.members) && row.data.members.length > 0) {
+          // Cloud has valid populated data, load it safely!
           if (isMounted) {
             setData(sanitizeData(row.data));
             setSyncStatus('connected');
           }
         } else {
-          // Empty cloud table, seed it with initial data so it's ready!
-          const { error: insertErr } = await supabase.from('class_store').insert({
+          // Empty or uninitialized cloud table, seed it with current local state or default data!
+          const dataToSeed = (dataRef.current && Array.isArray(dataRef.current.members) && dataRef.current.members.length > 0)
+            ? dataRef.current
+            : DEFAULT_SEED_DATA;
+
+          const { error: seedErr } = await supabase.from('class_store').upsert({
             id: 'main_class',
-            data: dataRef.current || DEFAULT_SEED_DATA,
+            data: dataToSeed,
             updated_at: new Date().toISOString()
           });
-          if (insertErr) {
-            console.warn('[Supabase] Seed insert error:', insertErr.message);
+          if (seedErr) {
+            console.warn('[Supabase] Seed upsert error:', seedErr.message);
           }
-          if (isMounted) setSyncStatus('connected');
+          if (isMounted) {
+            setData(sanitizeData(dataToSeed));
+            setSyncStatus('connected');
+          }
         }
       } catch (err) {
         console.warn('[Supabase] Cloud connection failed:', err);
@@ -314,7 +321,8 @@ export function StoreProvider({ children }) {
   // Helper to commit state changes locally and push to Supabase Cloud
   const commitData = (updater) => {
     setData(prev => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
+      const safePrev = sanitizeData(prev);
+      const next = sanitizeData(typeof updater === 'function' ? updater(safePrev) : updater);
       
       // Push to Supabase if online
       if (isSupabaseConfigured && supabase) {
@@ -347,14 +355,14 @@ export function StoreProvider({ children }) {
     };
     commitData(prev => ({
       ...prev,
-      tasks: [newTask, ...prev.tasks]
+      tasks: [newTask, ...(prev.tasks || [])]
     }));
   };
 
   const deleteTask = (id) => {
     commitData(prev => ({
       ...prev,
-      tasks: prev.tasks.filter(t => t.id !== id)
+      tasks: (prev.tasks || []).filter(t => t.id !== id)
     }));
   };
 
@@ -369,7 +377,7 @@ export function StoreProvider({ children }) {
 
     commitData(prev => ({
       ...prev,
-      tasks: prev.tasks.map(t => {
+      tasks: (prev.tasks || []).map(t => {
         if (t.id !== taskId) return t;
         const completed = new Set(t.completedStudentIds || []);
         const inProgress = new Set(t.inProgressStudentIds || []);
@@ -401,14 +409,14 @@ export function StoreProvider({ children }) {
     };
     commitData(prev => ({
       ...prev,
-      exams: [...prev.exams, newExam]
+      exams: [...(prev.exams || []), newExam]
     }));
   };
 
   const deleteExam = (id) => {
     commitData(prev => ({
       ...prev,
-      exams: prev.exams.filter(e => e.id !== id)
+      exams: (prev.exams || []).filter(e => e.id !== id)
     }));
   };
 
@@ -421,14 +429,14 @@ export function StoreProvider({ children }) {
     };
     commitData(prev => ({
       ...prev,
-      announcements: [newAnn, ...prev.announcements]
+      announcements: [newAnn, ...(prev.announcements || [])]
     }));
   };
 
   const togglePinAnnouncement = (id) => {
     commitData(prev => ({
       ...prev,
-      announcements: prev.announcements.map(a => 
+      announcements: (prev.announcements || []).map(a => 
         a.id === id ? { ...a, isPinned: !a.isPinned } : a
       )
     }));
@@ -437,7 +445,7 @@ export function StoreProvider({ children }) {
   const deleteAnnouncement = (id) => {
     commitData(prev => ({
       ...prev,
-      announcements: prev.announcements.filter(a => a.id !== id)
+      announcements: (prev.announcements || []).filter(a => a.id !== id)
     }));
   };
 

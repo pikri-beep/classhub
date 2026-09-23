@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const STORAGE_KEY = 'classhub_data_v1';
+const PERSONAL_TASKS_KEY = 'classhub_personal_done_tasks_v1';
 
 const DEFAULT_SEED_DATA = {
   classInfo: {
@@ -165,6 +167,17 @@ const DEFAULT_SEED_DATA = {
 const StoreContext = createContext();
 
 export function StoreProvider({ children }) {
+  // Sync status: 'local' | 'connecting' | 'connected' | 'error'
+  const [syncStatus, setSyncStatus] = useState(isSupabaseConfigured ? 'connecting' : 'local');
+  const [personalDoneTasks, setPersonalDoneTasks] = useState(() => {
+    try {
+      const stored = localStorage.getItem(PERSONAL_TASKS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [data, setData] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -180,6 +193,20 @@ export function StoreProvider({ children }) {
     return DEFAULT_SEED_DATA;
   });
 
+  // Keep a ref to data to avoid stale closures in realtime handlers
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  // Save personal checklist to local storage
+  useEffect(() => {
+    try {
+      localStorage.setItem(PERSONAL_TASKS_KEY, JSON.stringify(personalDoneTasks));
+    } catch (e) {}
+  }, [personalDoneTasks]);
+
+  // Always backup data to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -187,6 +214,107 @@ export function StoreProvider({ children }) {
       console.error('Failed to save to localStorage', e);
     }
   }, [data]);
+
+  // 1. Initial Cloud Sync and Realtime Subscription
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setSyncStatus('local');
+      return;
+    }
+
+    let isMounted = true;
+
+    const initCloud = async () => {
+      try {
+        setSyncStatus('connecting');
+        const { data: row, error } = await supabase
+          .from('class_store')
+          .select('data')
+          .eq('id', 'main_class')
+          .maybeSingle();
+
+        if (error) {
+          console.warn('[Supabase] Initial fetch error:', error.message);
+          if (isMounted) setSyncStatus('local');
+          return;
+        }
+
+        if (row && row.data && row.data.members) {
+          // Cloud has valid data, load it!
+          if (isMounted) {
+            setData(row.data);
+            setSyncStatus('connected');
+          }
+        } else {
+          // Empty cloud table, seed it with initial data so it's ready!
+          const { error: insertErr } = await supabase.from('class_store').insert({
+            id: 'main_class',
+            data: dataRef.current || DEFAULT_SEED_DATA,
+            updated_at: new Date().toISOString()
+          });
+          if (insertErr) {
+            console.warn('[Supabase] Seed insert error:', insertErr.message);
+          }
+          if (isMounted) setSyncStatus('connected');
+        }
+      } catch (err) {
+        console.warn('[Supabase] Cloud connection failed:', err);
+        if (isMounted) setSyncStatus('local');
+      }
+    };
+
+    initCloud();
+
+    // Setup Realtime WebSocket Listener
+    const channel = supabase
+      .channel('class_store_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'class_store', filter: 'id=eq.main_class' },
+        (payload) => {
+          if (payload.new && payload.new.data && payload.new.data.members) {
+            setData(payload.new.data);
+            setSyncStatus('connected');
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && isMounted) {
+          setSyncStatus('connected');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Helper to commit state changes locally and push to Supabase Cloud
+  const commitData = (updater) => {
+    setData(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      
+      // Push to Supabase if online
+      if (isSupabaseConfigured && supabase) {
+        supabase
+          .from('class_store')
+          .upsert({
+            id: 'main_class',
+            data: next,
+            updated_at: new Date().toISOString()
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('[Supabase] Upsert error:', error.message);
+            }
+          })
+          .catch(e => console.error('[Supabase] Network error:', e));
+      }
+
+      return next;
+    });
+  };
 
   // Actions
   const addTask = (task) => {
@@ -196,21 +324,29 @@ export function StoreProvider({ children }) {
       inProgressStudentIds: [],
       ...task
     };
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       tasks: [newTask, ...prev.tasks]
     }));
   };
 
   const deleteTask = (id) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       tasks: prev.tasks.filter(t => t.id !== id)
     }));
   };
 
+  // Update task completion (supports personal toggle for student or specific studentId)
   const updateTaskStatus = (taskId, studentId, status) => {
-    setData(prev => ({
+    // If it's a student (public-student or specific student), track in personal storage too
+    if (status === 'done') {
+      setPersonalDoneTasks(prev => Array.from(new Set([...prev, taskId])));
+    } else {
+      setPersonalDoneTasks(prev => prev.filter(id => id !== taskId));
+    }
+
+    commitData(prev => ({
       ...prev,
       tasks: prev.tasks.map(t => {
         if (t.id !== taskId) return t;
@@ -242,14 +378,14 @@ export function StoreProvider({ children }) {
       id: `ex-${Date.now()}`,
       ...exam
     };
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       exams: [...prev.exams, newExam]
     }));
   };
 
   const deleteExam = (id) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       exams: prev.exams.filter(e => e.id !== id)
     }));
@@ -262,14 +398,14 @@ export function StoreProvider({ children }) {
       isPinned: false,
       ...ann
     };
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       announcements: [newAnn, ...prev.announcements]
     }));
   };
 
   const togglePinAnnouncement = (id) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       announcements: prev.announcements.map(a => 
         a.id === id ? { ...a, isPinned: !a.isPinned } : a
@@ -278,7 +414,7 @@ export function StoreProvider({ children }) {
   };
 
   const deleteAnnouncement = (id) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       announcements: prev.announcements.filter(a => a.id !== id)
     }));
@@ -290,7 +426,7 @@ export function StoreProvider({ children }) {
       date: new Date().toISOString().split('T')[0],
       ...tx
     };
-    setData(prev => {
+    commitData(prev => {
       const isIncome = newTx.type === 'income';
       const updatedBalance = isIncome 
         ? prev.cash.balance + Number(newTx.amount) 
@@ -308,7 +444,7 @@ export function StoreProvider({ children }) {
   };
 
   const deleteTransaction = (id) => {
-    setData(prev => {
+    commitData(prev => {
       const tx = (prev.cash.transactions || []).find(t => t.id === id);
       if (!tx) return prev;
 
@@ -329,7 +465,7 @@ export function StoreProvider({ children }) {
   };
 
   const toggleDuesPaid = (periodId, studentId) => {
-    setData(prev => {
+    commitData(prev => {
       let isNowPaid = false;
       const updatedPeriods = (prev.cash.duesPeriods || []).map(p => {
         if (p.id !== periodId) return p;
@@ -366,21 +502,21 @@ export function StoreProvider({ children }) {
       id: `ev-${Date.now()}`,
       ...event
     };
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       events: [...(prev.events || []), newEvent]
     }));
   };
 
   const deleteEvent = (id) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       events: (prev.events || []).filter(e => e.id !== id)
     }));
   };
 
   const updateSchedule = (day, newScheduleData) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       schedules: {
         ...prev.schedules,
@@ -390,9 +526,19 @@ export function StoreProvider({ children }) {
   };
 
   const updateMemberPin = (memberId, newPin) => {
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       members: prev.members.map(m => m.id === memberId ? { ...m, pin: newPin } : m)
+    }));
+  };
+
+  const updateClassInfo = (newInfo) => {
+    commitData(prev => ({
+      ...prev,
+      classInfo: {
+        ...(prev.classInfo || {}),
+        ...newInfo
+      }
     }));
   };
 
@@ -403,7 +549,7 @@ export function StoreProvider({ children }) {
       amount: Number(amount),
       paidStudentIds: []
     };
-    setData(prev => ({
+    commitData(prev => ({
       ...prev,
       cash: {
         ...prev.cash,
@@ -413,8 +559,7 @@ export function StoreProvider({ children }) {
   };
 
   const resetToDefault = () => {
-    setData(DEFAULT_SEED_DATA);
-    localStorage.removeItem(STORAGE_KEY);
+    commitData(DEFAULT_SEED_DATA);
   };
 
   // Derived financial stats
@@ -432,6 +577,8 @@ export function StoreProvider({ children }) {
   return (
     <StoreContext.Provider value={{
       data,
+      syncStatus,
+      personalDoneTasks,
       addTask,
       deleteTask,
       updateTaskStatus,
@@ -447,6 +594,7 @@ export function StoreProvider({ children }) {
       deleteEvent,
       updateSchedule,
       updateMemberPin,
+      updateClassInfo,
       addDuesPeriod,
       resetToDefault,
       getTotalCashBalance

@@ -38,7 +38,7 @@ export default function App() {
 
   // Admin Login modal state
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
-  const [adminPinInput, setAdminPinInput] = useState('admin123');
+  const [adminPinInput, setAdminPinInput] = useState('');
 
   // Detect #admin or /admin in URL and keyboard shortcuts (Ctrl+Shift+A / Alt+A)
   useEffect(() => {
@@ -280,7 +280,7 @@ export default function App() {
             <input
               type="password"
               className="form-input"
-              placeholder="admin123"
+              placeholder="Masukkan Master PIN"
               value={adminPinInput}
               onChange={(e) => setAdminPinInput(e.target.value)}
               autoFocus

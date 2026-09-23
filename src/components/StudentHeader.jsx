@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Sun, Moon, Sparkles, CalendarDays, BookOpen, Users, LogOut, ShieldCheck } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useStore } from '../context/StoreContext';
 
 export default function StudentHeader({ activeStudentView, setActiveStudentView, onOpenAdminLogin }) {
   const { theme, toggleTheme } = useTheme();
   const { logout, isAdmin } = useAuth();
+  const { syncStatus } = useStore();
   const [logoTaps, setLogoTaps] = useState(0);
 
   const studentNavItems = [
@@ -130,6 +132,27 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
               <span>Keluar</span>
             </button>
           </div>
+        )}
+
+        {/* Cloud Sync Status Indicator */}
+        {syncStatus === 'connected' && (
+          <span 
+            className="notion-tag notion-tag-green"
+            style={{ fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.45rem', gap: '0.3rem', display: 'inline-flex', alignItems: 'center' }}
+            title="Tersinkronisasi Realtime dengan Cloud (Supabase)"
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#16A34A', display: 'inline-block' }} />
+            <span>Cloud Live</span>
+          </span>
+        )}
+        {syncStatus === 'connecting' && (
+          <span 
+            className="notion-tag notion-tag-orange"
+            style={{ fontSize: '0.68rem', fontWeight: 600, padding: '0.15rem 0.45rem' }}
+            title="Menghubungkan ke Supabase..."
+          >
+            Menghubungkan...
+          </span>
         )}
 
         {/* Clean Theme Toggle */}

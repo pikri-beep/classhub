@@ -54,8 +54,8 @@ export function AuthProvider({ children }) {
     const inputPin = (pin || '').trim();
     const validPin = (data?.classInfo?.adminPin || 'admin123').trim();
     
-    if (inputPin !== validPin && inputPin !== 'admin123') {
-      return { success: false, message: 'PIN Pengurus salah! (Default: admin123)' };
+    if (inputPin !== validPin) {
+      return { success: false, message: 'PIN Pengurus salah!' };
     }
 
     setIsAdminLoggedIn(true);

@@ -27,4 +27,11 @@ dev-dist
 *.sln
 *.sw?
 
+# Ignore all markdown files except README
+*.md
+!README.md
+!readme.md
+!**/README.md
+!**/readme.md
+!**/.agents/**
 

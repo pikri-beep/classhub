@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Sparkles, CalendarDays, BookOpen, Users, LogOut, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Sparkles, CalendarDays, BookOpen, Users, Wallet, LogOut, ShieldCheck } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -14,6 +14,7 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
     { id: 'dashboard', label: 'Hari Ini', icon: Sparkles },
     { id: 'schedule', label: 'Jadwal Mingguan', icon: CalendarDays },
     { id: 'academic', label: 'Semua Tugas', icon: BookOpen },
+    { id: 'cash', label: 'Kas Kelas', icon: Wallet },
     { id: 'class', label: 'Kelas', icon: Users }
   ];
 
@@ -28,29 +29,17 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
   };
 
   return (
-    <header style={{
-      height: '60px',
-      backgroundColor: 'var(--bg-surface)',
-      borderBottom: '1px solid var(--border)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 50,
-      padding: '0 1.25rem',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '0.75rem'
-    }}>
-      {/* Brand Icon & Name (Secret 3-Tap on Logo) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
+    <header className="student-header-bar">
+      {/* Left: Brand Icon & Name */}
+      <div className="student-header-left">
         <div 
           onClick={handleLogoTap}
           style={{
-            width: '34px',
-            height: '34px',
+            width: '36px',
+            height: '36px',
             borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--primary-soft)',
-            border: '1px solid var(--primary-border)',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -59,8 +48,9 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
             fontSize: '0.85rem',
             cursor: 'pointer',
             userSelect: 'none',
-            transition: 'transform 0.15s ease',
-            overflow: 'hidden'
+            transition: 'transform 0.15s ease, border-color 0.15s ease',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-sm)'
           }}
           title={data?.classInfo?.appName || 'ClassHub'}
         >
@@ -68,7 +58,7 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
             <img 
               src={data.classInfo.logoUrl} 
               alt="Logo Kelas" 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
             />
           ) : (
             (data?.classInfo?.appName || 'CH').slice(0, 2).toUpperCase()
@@ -97,16 +87,8 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
         </div>
       </div>
 
-      {/* Center Nav Pills */}
-      <div className="student-center-nav" style={{ 
-        display: 'flex', 
-        gap: '0.3rem', 
-        alignItems: 'center',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none'
-      }}>
+      {/* Center: Navigation Buttons (Absolute True Center) */}
+      <div className="student-center-nav">
         {studentNavItems.map(item => {
           const Icon = item.icon;
           const isActive = activeStudentView === item.id;
@@ -136,12 +118,21 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
         })}
       </div>
 
-      {/* Right Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
-        {/* Active Admin Badge & Exit (Only shown when Admin is logged in) */}
+      {/* Right: Controls (Theme Toggle & Admin) */}
+      <div className="student-header-right">
+        {/* Active Admin Badge & Exit */}
         {isAdmin && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 700 }}>
+            <span 
+              className="notion-tag" 
+              style={{ 
+                fontSize: '0.72rem', 
+                fontWeight: 700,
+                backgroundColor: 'var(--primary-soft)',
+                color: 'var(--primary)',
+                border: '1px solid var(--primary-border)'
+              }}
+            >
               Admin
             </span>
             <button
@@ -156,27 +147,6 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
           </div>
         )}
 
-        {/* Cloud Sync Status Indicator */}
-        {syncStatus === 'connected' && (
-          <span 
-            className="notion-tag notion-tag-green"
-            style={{ fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.45rem', gap: '0.3rem', display: 'inline-flex', alignItems: 'center' }}
-            title="Tersinkronisasi Realtime dengan Cloud (Supabase)"
-          >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#16A34A', display: 'inline-block' }} />
-            <span>Cloud Live</span>
-          </span>
-        )}
-        {syncStatus === 'connecting' && (
-          <span 
-            className="notion-tag notion-tag-orange"
-            style={{ fontSize: '0.68rem', fontWeight: 600, padding: '0.15rem 0.45rem' }}
-            title="Menghubungkan ke Supabase..."
-          >
-            Menghubungkan...
-          </span>
-        )}
-
         {/* Clean Theme Toggle */}
         <button
           onClick={toggleTheme}
@@ -189,8 +159,49 @@ export default function StudentHeader({ activeStudentView, setActiveStudentView,
       </div>
 
       <style>{`
-        .student-center-nav::-webkit-scrollbar {
-          display: none;
+        .student-header-bar {
+          height: 60px;
+          background-color: var(--bg-surface);
+          border-bottom: 1px solid var(--border);
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          width: 100%;
+          padding: 0 1.25rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          position: sticky;
+        }
+
+        .student-header-left {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          z-index: 2;
+        }
+
+        .student-center-nav {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: 0.3rem;
+          align-items: center;
+          z-index: 1;
+        }
+
+        .student-header-right {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+          z-index: 2;
+        }
+
+        @media (max-width: 860px) {
+          .student-center-nav {
+            display: none !important;
+          }
         }
       `}</style>
     </header>

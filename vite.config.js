@@ -4,9 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const rawUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || 'https://oksyweagotmzokmdsjtt.supabase.co';
+  const rawUrl = env.VITE_SUPABASE_URL || env.SUPABASE_URL || '';
   const cleanUrl = rawUrl.replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '').trim();
-  const anonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rc3l3ZWFnb3Rtem9rbWRzanR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxMzU0NjcsImV4cCI6MjEwNTcxMTQ2N30.ty7YtO2uHL_yPbwtE_ML8vNSu8zxI9YSBKVy0LewRVU';
+  const anonKey = env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || '';
 
   return {
     define: {
@@ -17,12 +17,12 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon-16x16.png', 'favicon-32x32.png', 'logo.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'ClassHub — XI PPLG',
         short_name: 'XI PPLG',
         description: 'Aplikasi Manajemen Kelas XI PPLG: Jadwal Pelajaran, Tugas, Kas, dan Komunitas Siswa',
-        theme_color: '#2563EB',
+        theme_color: '#D97706',
         background_color: '#FAFAF9',
         display: 'standalone',
         orientation: 'portrait-primary',
@@ -34,12 +34,14 @@ export default defineConfig(({ mode }) => {
           {
             src: '/pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
             src: '/maskable-icon-512x512.png',
@@ -87,6 +89,18 @@ export default defineConfig(({ mode }) => {
       }
     })
   ],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-icons': ['lucide-react']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 600
+    },
     server: {
       port: 3000,
       host: '127.0.0.1',

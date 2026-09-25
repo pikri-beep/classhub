@@ -476,7 +476,7 @@ export default function AcademicView() {
               const diffMs = !isNaN(dateObj) ? dateObj - new Date() : 0;
               const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-              let tagClass = 'notion-tag-blue';
+              let tagClass = 'notion-tag-gray';
               let urgencyText = `${diffDays} hari lagi`;
               if (diffDays <= 0) {
                 urgencyText = 'Hari Ini';
@@ -492,7 +492,7 @@ export default function AcademicView() {
                 tagClass = 'notion-tag-orange';
               } else {
                 urgencyText = `${diffDays} hari lagi`;
-                tagClass = 'notion-tag-blue';
+                tagClass = 'notion-tag-gray';
               }
 
               return (

@@ -767,3 +767,9 @@
   transform: scale(1.08);
 }
 
+@media (max-width: 767px) {
+  .student-main-canvas {
+    padding-bottom: 5.5rem !important;
+  }
+}
+

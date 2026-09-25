@@ -133,12 +133,12 @@ export default function ClassView() {
             width: '64px',
             height: '64px',
             borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--primary)',
+            backgroundColor: 'var(--bg-surface)',
             border: '2px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ffffff',
+            color: 'var(--primary)',
             fontWeight: 800,
             fontSize: '1.35rem',
             flexShrink: 0,
@@ -149,7 +149,7 @@ export default function ClassView() {
               <img 
                 src={classInfo.logoUrl} 
                 alt={classInfo.name || 'Foto Kelas'} 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
               />
             ) : (
               (classInfo.name || 'KL').slice(0, 2).toUpperCase()
@@ -158,7 +158,7 @@ export default function ClassView() {
 
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-              <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
                 {classInfo.appName || 'ClassHub'}
               </span>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -336,7 +336,7 @@ export default function ClassView() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                         {ann.isPinned && (
-                          <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.7rem', fontWeight: 700, gap: '0.25rem' }}>
+                          <span className="notion-tag" style={{ fontSize: '0.7rem', fontWeight: 700, gap: '0.25rem', backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-border)' }}>
                             <Pin size={11} /> Disematkan
                           </span>
                         )}
@@ -403,6 +403,60 @@ export default function ClassView() {
       {/* 4. CLASSMATES ROSTER */}
       {activeTab === 'members' && (
         <div>
+          {/* Highlight Pengurus Inti Kelas */}
+          {!memberSearch && (
+            <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', background: 'var(--card)' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <Users size={16} color="var(--primary)" />
+                <span>Pengurus Inti Kelas</span>
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '0.65rem'
+              }}>
+                {members.filter(m => m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa').map(officer => (
+                  <div 
+                    key={officer.id}
+                    style={{
+                      padding: '0.65rem 0.85rem',
+                      backgroundColor: 'var(--primary-soft)',
+                      border: '1px solid var(--primary-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.65rem'
+                    }}
+                  >
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: 'var(--radius-full)',
+                      backgroundColor: 'var(--primary)',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.75rem',
+                      flexShrink: 0
+                    }}>
+                      {officer.avatarText || officer.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        {officer.roleTitle}
+                      </div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {officer.name}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             <input
               type="text"
@@ -473,7 +527,7 @@ export default function ClassView() {
 
                     {role && (
                       <span
-                        className="notion-tag notion-tag-blue"
+                        className="notion-tag notion-tag-gray"
                         style={{
                           fontSize: '0.7rem',
                           padding: '0.15rem 0.5rem',

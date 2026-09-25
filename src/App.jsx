@@ -13,8 +13,10 @@ import WhatsAppShareModal from './components/WhatsAppShareModal';
 import DashboardView from './views/DashboardView';
 import AcademicView from './views/AcademicView';
 import ScheduleView from './views/ScheduleView';
+import CashStudentView from './views/CashStudentView';
 import ClassView from './views/ClassView';
 import AdminDashboardView from './views/AdminDashboardView';
+import BottomDock from './components/BottomDock';
 import { Eye, ArrowRight, ShieldCheck, LogOut } from 'lucide-react';
 
 export default function App() {
@@ -48,6 +50,8 @@ export default function App() {
       if (path.includes('/admin') || hash.includes('admin')) {
         if (!isAdmin) {
           setIsAdminLoginOpen(true);
+        } else {
+          setPreviewAsStudent(false);
         }
       }
     };
@@ -89,6 +93,8 @@ export default function App() {
     const res = loginAsAdmin(adminPinInput);
     if (res.success) {
       setIsAdminLoginOpen(false);
+      setAdminPinInput('');
+      setPreviewAsStudent(false);
       showToast('Selamat datang, Admin Kelas! 🛡️', 'success');
     } else {
       showToast(res.message, 'error');
@@ -153,7 +159,7 @@ export default function App() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          backgroundColor: '#2563EB',
+          backgroundColor: 'var(--primary)',
           color: '#ffffff',
           padding: '0.5rem 1.25rem',
           fontSize: '0.82rem',
@@ -172,7 +178,7 @@ export default function App() {
             className="btn btn-sm"
             style={{
               backgroundColor: '#ffffff',
-              color: '#2563EB',
+              color: 'var(--primary)',
               fontWeight: 800,
               padding: '0.25rem 0.75rem',
               fontSize: '0.78rem',
@@ -197,19 +203,23 @@ export default function App() {
       <InstallBanner />
 
       {/* Main Companion Canvas */}
-      <main style={{
-        flex: 1,
-        width: '100%',
-        maxWidth: '860px',
-        margin: '0 auto',
-        padding: '1.25rem 1.15rem 3rem 1.15rem',
-        boxSizing: 'border-box'
-      }}>
+      <main 
+        className="student-main-canvas"
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: '860px',
+          margin: '0 auto',
+          padding: '1.25rem 1.15rem 3rem 1.15rem',
+          boxSizing: 'border-box'
+        }}
+      >
         {activeStudentView === 'dashboard' && (
           <DashboardView onNavigate={(view) => setActiveStudentView(view)} />
         )}
         {activeStudentView === 'schedule' && <ScheduleView />}
         {activeStudentView === 'academic' && <AcademicView />}
+        {activeStudentView === 'cash' && <CashStudentView />}
         {activeStudentView === 'class' && <ClassView />}
       </main>
 
@@ -259,6 +269,12 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Mobile-only Bottom Dock (Hidden on >=768px via CSS) */}
+      <BottomDock 
+        activeView={activeStudentView} 
+        onViewChange={setActiveStudentView} 
+      />
+
       {/* Dedicated Admin Login Modal */}
       <Modal isOpen={isAdminLoginOpen} onClose={() => setIsAdminLoginOpen(false)} title="Login Pengurus / Admin">
         <form onSubmit={handleAdminLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
@@ -293,7 +309,7 @@ export default function App() {
               required
             />
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-              Master PIN default: <code>admin123</code>
+              Master PIN default: <code>admin123</code> atau <code>1234</code>
             </span>
           </div>
           <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}>

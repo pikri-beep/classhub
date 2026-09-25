@@ -292,7 +292,7 @@ export default function WhatsAppShareModal({
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginRight: '0.2rem' }}>
               Data termuat:
             </span>
-            <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
               <BookOpen size={10} style={{ marginRight: '3px' }} />
               {subjects.length} Mapel
             </span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -31,6 +31,8 @@ import { useToast } from '../context/ToastContext';
 import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
+import { getPeriodMonth, formatMonthLabel, getAvailableMonths, getCurrentMonthKey } from '../lib/duesUtils';
+import MonthNavigator from '../components/MonthNavigator';
 
 export default function AdminDashboardView({ 
   activeTab: propActiveTab, 
@@ -55,6 +57,7 @@ export default function AdminDashboardView({
     deleteEvent,
     updateSchedule,
     addDuesPeriod,
+    deleteDuesPeriod,
     getTotalCashBalance,
     updateClassInfo,
     resetToDefault,
@@ -112,8 +115,10 @@ export default function AdminDashboardView({
   const [annContent, setAnnContent] = useState('');
 
   // Dues period form state
-  const [periodName, setPeriodName] = useState('');
-  const [periodAmount, setPeriodAmount] = useState('10000');
+  const [periodName, setPeriodName] = useState('Minggu 1');
+  const [periodAmount, setPeriodAmount] = useState('5000');
+  const [periodMonth, setPeriodMonth] = useState(getCurrentMonthKey());
+  const [selectedDuesMonth, setSelectedDuesMonth] = useState(getCurrentMonthKey());
 
   // Schedule editor state
   const [selectedDay, setSelectedDay] = useState('Senin');
@@ -223,6 +228,20 @@ export default function AdminDashboardView({
   const transactions = data.cash.transactions || [];
   const cashStats = getTotalCashBalance();
 
+  const availableDuesMonths = useMemo(() => {
+    return getAvailableMonths(duesPeriods);
+  }, [duesPeriods]);
+
+  useEffect(() => {
+    if (availableDuesMonths.length > 0 && !availableDuesMonths.includes(selectedDuesMonth)) {
+      setSelectedDuesMonth(availableDuesMonths[availableDuesMonths.length - 1]);
+    }
+  }, [availableDuesMonths, selectedDuesMonth]);
+
+  const monthlyDuesPeriods = useMemo(() => {
+    return duesPeriods.filter(p => getPeriodMonth(p) === selectedDuesMonth);
+  }, [duesPeriods, selectedDuesMonth]);
+
   // Handlers
   const handleCreateTask = (e) => {
     e.preventDefault();
@@ -306,10 +325,12 @@ export default function AdminDashboardView({
 
   const handleCreatePeriod = (e) => {
     e.preventDefault();
-    addDuesPeriod(periodName.trim(), Number(periodAmount));
+    const finalMonth = periodMonth || selectedDuesMonth || getCurrentMonthKey();
+    addDuesPeriod(periodName.trim(), Number(periodAmount), finalMonth);
+    setSelectedDuesMonth(finalMonth);
     setIsAddPeriodOpen(false);
-    setPeriodName('');
-    showToast(`Periode iuran ${periodName} berhasil dibuat!`, 'success');
+    setPeriodName('Minggu 1');
+    showToast(`Periode ${periodName} (${formatMonthLabel(finalMonth)}) berhasil dibuat!`, 'success');
   };
 
   const handleAddSubjectToDay = (e) => {
@@ -466,7 +487,7 @@ export default function AdminDashboardView({
                       <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)' }}>{task.subject}</span>
                       <div style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
                     </div>
-                    <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
+                    <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
                       Tenggat: {task.deadline ? new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : 'Tidak ada'}
                     </span>
                   </div>
@@ -504,7 +525,7 @@ export default function AdminDashboardView({
                 <div key={task.id} className="card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: '240px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
-                      <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 700 }}>{task.subject}</span>
+                      <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 700 }}>{task.subject}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tenggat: {task.deadline}</span>
                       {task.link && (
                         <a href={task.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '0.2rem', textDecoration: 'none', fontWeight: 600 }}>
@@ -675,7 +696,7 @@ export default function AdminDashboardView({
                     <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{sub.subject}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+                    <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
                       {sub.timeStart} - {sub.timeEnd}
                     </span>
                     <button
@@ -702,7 +723,7 @@ export default function AdminDashboardView({
                     Pilih siswa dari daftar untuk ditugaskan piket pada hari {selectedDay}.
                   </p>
                 </div>
-                <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', fontWeight: 700 }}>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 700 }}>
                   {(data.schedules[selectedDay]?.piket || []).length} Siswa Bertugas
                 </span>
               </div>
@@ -802,7 +823,14 @@ export default function AdminDashboardView({
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button onClick={() => setIsAddPeriodOpen(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.3rem' }}>
+              <button 
+                onClick={() => {
+                  setPeriodMonth(selectedDuesMonth || getCurrentMonthKey());
+                  setIsAddPeriodOpen(true);
+                }} 
+                className="btn btn-secondary btn-sm" 
+                style={{ gap: '0.3rem' }}
+              >
                 <Plus size={14} />
                 <span>+ Periode Iuran</span>
               </button>
@@ -815,13 +843,20 @@ export default function AdminDashboardView({
 
           {/* Dues Matrix Table */}
           <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div>
                 <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Matriks Iuran Seluruh Siswa</h3>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
                   Klik kotak centang pada setiap nama siswa untuk menandai lunas / belum.
                 </p>
               </div>
+
+              {/* Month Navigator Ringkas */}
+              <MonthNavigator
+                availableMonths={availableDuesMonths}
+                selectedMonth={selectedDuesMonth}
+                onMonthChange={setSelectedDuesMonth}
+              />
             </div>
 
             <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
@@ -830,49 +865,86 @@ export default function AdminDashboardView({
                   <tr>
                     <th style={{ width: '40px' }}>#</th>
                     <th>Nama Siswa</th>
-                    {duesPeriods.map(p => (
-                      <th key={p.id} style={{ textAlign: 'center' }}>
-                        {p.name}
+                    {monthlyDuesPeriods.map(p => (
+                      <th key={p.id} style={{ textAlign: 'center', minWidth: '95px' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                          <span>{p.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Hapus periode "${p.name}"? Data centang iuran pada periode ini akan ikut terhapus.`)) {
+                                deleteDuesPeriod(p.id);
+                                showToast(`Periode ${p.name} dihapus.`, 'info');
+                              }
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              padding: '2px',
+                              cursor: 'pointer',
+                              color: 'var(--text-muted)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              opacity: 0.6
+                            }}
+                            title="Hapus periode"
+                            onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--danger)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <div style={{ fontSize: '0.68rem', fontWeight: 400, color: 'var(--text-muted)' }}>
+                          Rp {Number(p.amount || 0).toLocaleString('id-ID')}
+                        </div>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {members.map(m => (
-                    <tr key={m.id}>
-                      <td style={{ color: 'var(--text-muted)' }}>{m.absentNo}</td>
-                      <td><strong>{m.name}</strong></td>
-                      {duesPeriods.map(p => {
-                        const isPaid = (p.paidStudentIds || []).includes(m.id);
-                        return (
-                          <td key={p.id} style={{ textAlign: 'center' }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                toggleDuesPaid(p.id, m.id);
-                                showToast(`Status ${m.name} di ${p.name} diperbarui!`, 'success');
-                              }}
-                              style={{
-                                width: '26px',
-                                height: '26px',
-                                borderRadius: '4px',
-                                border: isPaid ? '1px solid var(--tag-green-text)' : '1px solid var(--border)',
-                                backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'transparent',
-                                color: isPaid ? 'var(--tag-green-text)' : 'transparent',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
-                              title={`Klik untuk ganti status ${m.name}`}
-                            >
-                              <Check size={14} strokeWidth={3} />
-                            </button>
-                          </td>
-                        );
-                      })}
+                  {monthlyDuesPeriods.length === 0 ? (
+                    <tr>
+                      <td colSpan={2} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        Belum ada periode kas di bulan {formatMonthLabel(selectedDuesMonth)}. Klik "+ Periode Iuran" untuk membuat periode.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    members.map(m => (
+                      <tr key={m.id}>
+                        <td style={{ color: 'var(--text-muted)' }}>{m.absentNo}</td>
+                        <td><strong>{m.name}</strong></td>
+                        {monthlyDuesPeriods.map(p => {
+                          const isPaid = (p.paidStudentIds || []).includes(m.id);
+                          return (
+                            <td key={p.id} style={{ textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  toggleDuesPaid(p.id, m.id);
+                                  showToast(`Status ${m.name} di ${p.name} diperbarui!`, 'success');
+                                }}
+                                style={{
+                                  width: '26px',
+                                  height: '26px',
+                                  borderRadius: '4px',
+                                  border: isPaid ? '1px solid var(--tag-green-text)' : '1px solid var(--border)',
+                                  backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'transparent',
+                                  color: isPaid ? 'var(--tag-green-text)' : 'transparent',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                                title={`Klik untuk ganti status ${m.name}`}
+                              >
+                                <Check size={14} strokeWidth={3} />
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -939,7 +1011,7 @@ export default function AdminDashboardView({
               <div key={ann.id} className="card" style={{ padding: '1rem 1.25rem', borderLeft: ann.isPinned ? '3px solid var(--primary)' : '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                    <span className="notion-tag notion-tag-blue" style={{ textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 700 }}>
+                    <span className="notion-tag notion-tag-gray" style={{ textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 700 }}>
                       {ann.category}
                     </span>
                     {ann.isPinned && (
@@ -1051,7 +1123,7 @@ export default function AdminDashboardView({
                           {m.nisn || '-'}
                         </td>
                         <td>
-                          <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-blue' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
+                          <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-orange' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
                             {m.roleTitle || 'Siswa'}
                           </span>
                         </td>
@@ -1131,7 +1203,7 @@ export default function AdminDashboardView({
                   flexShrink: 0
                 }}>
                   {settingsLogoUrl ? (
-                    <img src={settingsLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={settingsLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                   ) : (
                     <Camera size={28} />
                   )}
@@ -1585,18 +1657,53 @@ export default function AdminDashboardView({
 
       {/* MODAL: TAMBAH PERIODE IURAN */}
       <Modal isOpen={isAddPeriodOpen} onClose={() => setIsAddPeriodOpen(false)} title="Tambah Periode Iuran">
-        <form onSubmit={handleCreatePeriod} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <form onSubmit={handleCreatePeriod} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+          <div className="form-group">
+            <label className="form-label">Bulan Periode</label>
+            <input
+              type="month"
+              className="form-input"
+              value={periodMonth}
+              onChange={(e) => setPeriodMonth(e.target.value)}
+              required
+            />
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              Bulan terpilih: <strong>{formatMonthLabel(periodMonth)}</strong>
+            </span>
+          </div>
+
           <div className="form-group">
             <label className="form-label">Nama Periode</label>
+            <div style={{ display: 'flex', gap: '0.35rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+              {['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5'].map(preset => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setPeriodName(preset)}
+                  style={{
+                    padding: '0.25rem 0.55rem',
+                    fontSize: '0.72rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: periodName === preset ? '1px solid var(--text-primary)' : '1px solid var(--border)',
+                    backgroundColor: periodName === preset ? 'var(--text-primary)' : 'var(--bg)',
+                    color: periodName === preset ? 'var(--bg)' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
             <input
               type="text"
               className="form-input"
-              placeholder="Contoh: Minggu 5 (Okt)"
+              placeholder="Contoh: Minggu 1"
               value={periodName}
               onChange={(e) => setPeriodName(e.target.value)}
               required
             />
           </div>
+
           <div className="form-group">
             <label className="form-label">Nominal Iuran (Rp)</label>
             <input
@@ -1607,6 +1714,7 @@ export default function AdminDashboardView({
               required
             />
           </div>
+
           <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
             Buat Periode Baru
           </button>

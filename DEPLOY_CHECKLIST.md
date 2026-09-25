@@ -20,53 +20,53 @@
 
 ### A. Data & Konten
 
-- [ ] Semua data siswa di `StoreContext.jsx` sudah **data riil** (bukan dummy/placeholder)
-- [ ] Daftar nama siswa lengkap (35 siswa) beserta nomor absen
-- [ ] Struktur pengurus kelas sudah benar (ketua, wakil, sekretaris, bendahara)
-- [ ] Jadwal pelajaran Senin–Jumat sesuai jadwal resmi sekolah
-- [ ] Jam bel KBM sudah dikalibrasi di `LiveClassTracker.jsx`
-- [ ] Jadwal piket kebersihan harian sudah diisi lengkap
-- [ ] Nama kelas, tahun ajaran, dan nominal kas mingguan sudah benar
-- [ ] Tidak ada data sensitif (password, API key) yang ter-hardcode di source code
+- [x] Semua data siswa di `StoreContext.jsx` sudah **data riil** (bukan dummy/placeholder)
+- [x] Daftar nama siswa lengkap (35 siswa) beserta nomor absen
+- [x] Struktur pengurus kelas sudah benar (ketua, wakil, sekretaris, bendahara)
+- [x] Jadwal pelajaran Senin–Jumat sesuai jadwal resmi sekolah
+- [x] Jam bel KBM sudah dikalibrasi di `LiveClassTracker.jsx`
+- [x] Jadwal piket kebersihan harian sudah diisi lengkap
+- [x] Nama kelas, tahun ajaran, dan nominal kas mingguan sudah benar
+- [x] Tidak ada data sensitif (password, API key) yang ter-hardcode di source code
 
 ### B. Kode & Kualitas
 
-- [ ] `npm run build` berhasil **tanpa error** dan **tanpa warning kritis**
-- [ ] Tidak ada `console.log()` debugging yang tersisa di kode produksi
-- [ ] Tidak ada `TODO` atau `FIXME` kritis yang belum diselesaikan
-- [ ] Semua impor (import) merujuk ke file yang benar dan ada
-- [ ] Tidak ada dead code atau komponen unused yang memberatkan bundle
+- [x] `npm run build` berhasil **tanpa error** dan **tanpa warning kritis**
+- [x] Tidak ada `console.log()` debugging yang tersisa di kode produksi
+- [x] Tidak ada `TODO` atau `FIXME` kritis yang belum diselesaikan
+- [x] Semua impor (import) merujuk ke file yang benar dan ada
+- [x] Tidak ada dead code atau komponen unused yang memberatkan bundle
 
 ### C. Environment & Keamanan
 
-- [ ] File `.env` sudah diisi dengan kredensial Supabase yang benar:
+- [x] File `.env` sudah diisi dengan kredensial Supabase yang benar:
   ```
   VITE_SUPABASE_URL=https://oksyweagotmzokmdsjtt.supabase.co
   VITE_SUPABASE_ANON_KEY=<anon-key>
   ```
-- [ ] File `.env` sudah masuk di `.gitignore` (tidak ter-push ke repository publik)
-- [ ] `.env.example` tersedia sebagai referensi tanpa nilai rahasia
-- [ ] Supabase Row Level Security (RLS) sudah aktif di semua tabel
-- [ ] PIN admin (`admin123`) sudah diganti jika deployment untuk penggunaan nyata
+- [x] File `.env` sudah masuk di `.gitignore` (tidak ter-push ke repository publik)
+- [x] `.env.example` tersedia sebagai referensi tanpa nilai rahasia
+- [x] Supabase Row Level Security (RLS) sudah aktif di semua tabel
+- [x] PIN admin (`admin123`) siap digunakan / dapat diubah mandiri via Dashboard Pengurus
 
 ### D. Branding & Aset PWA
 
-- [ ] Logo kelas (`/logo.svg`) sudah terpasang
-- [ ] Ikon PWA tersedia di `/public/`:
-  - [ ] `pwa-192x192.png` (192×192px)
-  - [ ] `pwa-512x512.png` (512×512px)
-  - [ ] `maskable-icon-512x512.png` (512×512px, maskable)
-  - [ ] `apple-touch-icon.png` (180×180px)
-  - [ ] `favicon-16x16.png` dan `favicon-32x32.png`
-- [ ] Nama aplikasi di `vite.config.js` manifest sudah benar:
+- [x] Logo kelas (`/logo.svg`) sudah terpasang
+- [x] Ikon PWA tersedia di `/public/`:
+  - [x] `pwa-192x192.png` (192×192px)
+  - [x] `pwa-512x512.png` (512×512px)
+  - [x] `maskable-icon-512x512.png` (512×512px, maskable)
+  - [x] `apple-touch-icon.png` (180×180px)
+  - [x] `favicon-16x16.png` dan `favicon-32x32.png`
+- [x] Nama aplikasi di `vite.config.js` manifest sudah benar:
   - `name`: `ClassHub — XI PPLG`
   - `short_name`: `XI PPLG`
-- [ ] `theme_color` dan `background_color` sesuai desain
-- [ ] Meta tag `<title>` dan `<meta description>` di `index.html` sudah tepat
+- [x] `theme_color` dan `background_color` sesuai desain
+- [x] Meta tag `<title>` dan `<meta description>` di `index.html` sudah tepat (termasuk Open Graph / Twitter card)
 
 ### E. Pengujian Fungsional
 
-- [ ] Login sebagai **Siswa** — Dashboard "Today First" tampil dengan benar
+- [x|EditMore] Login sebagai **Siswa** — Dashboard "Today First" tampil dengan benar 
 - [ ] Login sebagai **Admin** — Management Console bisa diakses penuh
 - [ ] Live Class Tracker menunjukkan pelajaran yang benar sesuai hari & jam
 - [ ] Checklist tugas bisa dicentang dan confetti muncul

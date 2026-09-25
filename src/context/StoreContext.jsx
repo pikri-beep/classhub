@@ -12,7 +12,8 @@ const DEFAULT_SEED_DATA = {
     homeroomTeacher: '',
     totalStudents: 35,
     adminPin: 'admin123',
-    appName: 'ClassHub'
+    appName: 'ClassHub',
+    logoUrl: '/pwa-512x512.png'
   },
   members: [
     { id: 'std-1', absentNo: 1, nisn: '006819201', name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AF' },
@@ -223,10 +224,10 @@ const DEFAULT_SEED_DATA = {
     balance: 175000,
     duesAmount: 5000,
     duesPeriods: [
-      { id: 'dp-1', name: 'Minggu 1 (Sep)', amount: 5000, paidStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-11', 'std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
-      { id: 'dp-2', name: 'Minggu 2 (Sep)', amount: 5000, paidStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
-      { id: 'dp-3', name: 'Minggu 3 (Sep)', amount: 5000, paidStudentIds: ['std-26', 'std-28', 'std-33'] },
-      { id: 'dp-4', name: 'Minggu 4 (Sep)', amount: 5000, paidStudentIds: ['std-26', 'std-28'] }
+      { id: 'dp-1', month: '2026-09', name: 'Minggu 1', amount: 5000, paidStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-11', 'std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
+      { id: 'dp-2', month: '2026-09', name: 'Minggu 2', amount: 5000, paidStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
+      { id: 'dp-3', month: '2026-09', name: 'Minggu 3', amount: 5000, paidStudentIds: ['std-26', 'std-28', 'std-33'] },
+      { id: 'dp-4', month: '2026-09', name: 'Minggu 4', amount: 5000, paidStudentIds: ['std-26', 'std-28'] }
     ],
     transactions: [
       { id: 'tx-1', type: 'income', amount: 60000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 1', date: '2026-09-02', recordedBy: 'Rani Aprilia (Bendahara 1)' },
@@ -242,7 +243,11 @@ const sanitizeData = (raw) => {
   return {
     ...DEFAULT_SEED_DATA,
     ...raw,
-    classInfo: { ...DEFAULT_SEED_DATA.classInfo, ...(raw.classInfo || {}) },
+    classInfo: { 
+      ...DEFAULT_SEED_DATA.classInfo, 
+      ...(raw.classInfo || {}),
+      logoUrl: raw.classInfo?.logoUrl || DEFAULT_SEED_DATA.classInfo.logoUrl
+    },
     members: Array.isArray(raw.members) ? raw.members : DEFAULT_SEED_DATA.members,
     tasks: Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks,
     announcements: Array.isArray(raw.announcements) ? raw.announcements : DEFAULT_SEED_DATA.announcements,
@@ -700,10 +705,12 @@ export function StoreProvider({ children }) {
     }));
   };
 
-  const addDuesPeriod = (name, amount = 10000) => {
+  const addDuesPeriod = (name, amount = 10000, month = '') => {
+    const targetMonth = month || new Date().toISOString().slice(0, 7);
     const newPeriod = {
       id: `dp-${Date.now()}`,
       name,
+      month: targetMonth,
       amount: Number(amount),
       paidStudentIds: []
     };
@@ -714,6 +721,30 @@ export function StoreProvider({ children }) {
         duesPeriods: [...(prev.cash.duesPeriods || []), newPeriod]
       }
     }));
+  };
+
+  const deleteDuesPeriod = (periodId) => {
+    commitData(prev => {
+      // Find period being deleted to optionally revert balance
+      const periodToDelete = (prev.cash.duesPeriods || []).find(p => p.id === periodId);
+      const remainingPeriods = (prev.cash.duesPeriods || []).filter(p => p.id !== periodId);
+      
+      let newBalance = prev.cash.balance;
+      if (periodToDelete) {
+        const paidCount = (periodToDelete.paidStudentIds || []).length;
+        const totalDeducted = paidCount * (Number(periodToDelete.amount) || 0);
+        newBalance = Math.max(0, newBalance - totalDeducted);
+      }
+
+      return {
+        ...prev,
+        cash: {
+          ...prev.cash,
+          balance: newBalance,
+          duesPeriods: remainingPeriods
+        }
+      };
+    });
   };
 
   const resetToDefault = () => {
@@ -757,6 +788,7 @@ export function StoreProvider({ children }) {
       deleteMember,
       updateClassInfo,
       addDuesPeriod,
+      deleteDuesPeriod,
       resetToDefault,
       getTotalCashBalance
     }}>

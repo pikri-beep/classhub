@@ -138,7 +138,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
             </span>
           )}
           {status === 'before-school' && (
-            <span className="live-pulse-badge badge-blue">
+            <span className="live-pulse-badge badge-amber">
               <Sun size={12} />
               SEBELUM KBM
             </span>
@@ -233,7 +233,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
 
         {status === 'before-school' && (
           <div className="live-state-message clean-state">
-            <div className="live-state-icon-box blue">
+            <div className="live-state-icon-box amber">
               <Sun size={20} />
             </div>
             <div style={{ flex: 1 }}>
@@ -242,7 +242,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
                   KBM Belum Dimulai
                 </h4>
                 {timeRemaining > 0 && (
-                  <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
                     Mulai dlm {formatRemaining(timeRemaining)}
                   </span>
                 )}

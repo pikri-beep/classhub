@@ -24,7 +24,6 @@ export default function DashboardView({ onNavigate }) {
   const { showToast } = useToast();
 
   const [selectedTaskDetail, setSelectedTaskDetail] = useState(null);
-  const [isCashDetailOpen, setIsCashDetailOpen] = useState(false);
 
   const now = new Date();
   const daysMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -86,7 +85,7 @@ export default function DashboardView({ onNavigate }) {
 
   // Calculate days until date helper & color
   const getExamUrgency = (dateStr) => {
-    if (!dateStr) return { text: '', tagClass: 'notion-tag-blue' };
+    if (!dateStr) return { text: '', tagClass: 'notion-tag-gray' };
     const target = new Date(dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -98,7 +97,7 @@ export default function DashboardView({ onNavigate }) {
     if (diffDays === 1) return { text: 'Besok', tagClass: 'notion-tag-red' };
     if (diffDays === 2) return { text: '2 hari lagi', tagClass: 'notion-tag-red' };
     if (diffDays <= 5) return { text: `${diffDays} hari lagi`, tagClass: 'notion-tag-orange' };
-    return { text: `${diffDays} hari lagi`, tagClass: 'notion-tag-blue' };
+    return { text: `${diffDays} hari lagi`, tagClass: 'notion-tag-gray' };
   };
 
   const getDaysUntil = (dateStr) => {
@@ -137,10 +136,10 @@ export default function DashboardView({ onNavigate }) {
 
             {/* Cash Badge */}
             <button 
-              onClick={() => setIsCashDetailOpen(true)}
+              onClick={() => onNavigate && onNavigate('cash')}
               className="clean-chip chip-neutral"
               style={{ cursor: 'pointer', border: 'none', fontWeight: 600 }}
-              title="Lihat rincian kas kelas"
+              title="Buka Halaman Kas Kelas"
             >
               <Wallet size={12} style={{ marginRight: '0.25rem' }} />
               Kas: Rp {Number(data?.cash?.balance || 0).toLocaleString('id-ID')}
@@ -200,7 +199,7 @@ export default function DashboardView({ onNavigate }) {
                   </div>
                 </div>
 
-                <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
                   {sub.timeStart} - {sub.timeEnd}
                 </span>
               </div>
@@ -409,7 +408,7 @@ export default function DashboardView({ onNavigate }) {
         <div className="card" style={{ padding: '1.25rem 1.4rem', borderLeft: '3px solid var(--primary)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <span className="notion-tag notion-tag-blue" style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 700 }}>
+              <span className="notion-tag notion-tag-gray" style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 700 }}>
                 {pinnedAnnouncement.category || 'Info'}
               </span>
             </div>
@@ -494,101 +493,6 @@ export default function DashboardView({ onNavigate }) {
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* MODAL: RINCIAN KAS SAYA & KELAS (PERSONAL TRANSPARENCY) */}
-      <Modal isOpen={isCashDetailOpen} onClose={() => setIsCashDetailOpen(false)} title="Status Kas & Iuran">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          
-          {/* Summary Box */}
-          <div style={{
-            padding: '0.85rem 1rem',
-            backgroundColor: 'var(--bg)',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Saldo Kas Kelas Saat Ini</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                Rp {Number(data.cash.balance || 0).toLocaleString('id-ID')}
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Iuran Wajib</div>
-              <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--primary)' }}>
-                Rp {Number(data.cash.duesAmount || 10000).toLocaleString('id-ID')} / pekan
-              </div>
-            </div>
-          </div>
-
-          {/* Dues Periods Checklist for Current Student */}
-          <div>
-            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.45rem' }}>
-              Riwayat Iuran Saya ({currentUser?.name})
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {duesPeriods.map(p => {
-                const isPaid = (p.paidStudentIds || []).includes(currentUser?.id);
-                return (
-                  <div 
-                    key={p.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.55rem 0.75rem',
-                      backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'var(--tag-orange-bg)',
-                      borderRadius: 'var(--radius-xs)',
-                      fontSize: '0.82rem'
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, color: isPaid ? 'var(--tag-green-text)' : 'var(--tag-orange-text)' }}>
-                      {p.name}
-                    </span>
-                    <span style={{ fontWeight: 700, color: isPaid ? 'var(--tag-green-text)' : 'var(--tag-orange-text)' }}>
-                      {isPaid ? 'Lunas ✓' : `Belum Dibayar (Rp ${Number(p.amount || 10000).toLocaleString('id-ID')})`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recent Class Expenses */}
-          <div>
-            <h4 style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.45rem' }}>
-              Pengeluaran Kelas Terakhir
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {(data.cash.transactions || []).filter(t => t.type === 'expense').slice(0, 3).map(tx => (
-                <div 
-                  key={tx.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.45rem 0.65rem',
-                    backgroundColor: 'var(--bg)',
-                    borderRadius: 'var(--radius-xs)',
-                    fontSize: '0.78rem'
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{tx.description}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.date} • {tx.category}</div>
-                  </div>
-                  <span style={{ color: 'var(--danger)', fontWeight: 700 }}>
-                    -Rp {Number(tx.amount).toLocaleString('id-ID')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
       </Modal>
 
     </div>

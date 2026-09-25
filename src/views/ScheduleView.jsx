@@ -199,7 +199,7 @@ export default function ScheduleView() {
                           </div>
                         </div>
                       </div>
-                      <span className="notion-tag notion-tag-blue" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
+                      <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
                         {item.timeStart} - {item.timeEnd}
                       </span>
                     </div>
@@ -376,7 +376,7 @@ export default function ScheduleView() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.2rem' }}>
                       <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{ev.title}</span>
-                      <span className={`notion-tag ${ev.type === 'exam' ? 'notion-tag-red' : (ev.type === 'task' ? 'notion-tag-orange' : 'notion-tag-blue')}`}>
+                      <span className={`notion-tag ${ev.type === 'exam' ? 'notion-tag-red' : (ev.type === 'task' ? 'notion-tag-orange' : 'notion-tag-green')}`}>
                         {ev.type === 'exam' ? 'Ujian' : (ev.type === 'task' ? 'Tugas' : 'Agenda')}
                       </span>
                     </div>

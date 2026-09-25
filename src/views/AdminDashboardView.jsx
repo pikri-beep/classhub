@@ -124,8 +124,8 @@ export default function AdminDashboardView({
 
   // Settings form state
   const [settingsAppName, setSettingsAppName] = useState(data.classInfo?.appName || 'ClassHub');
-  const [settingsName, setSettingsName] = useState(data.classInfo?.name || 'Kelas');
-  const [settingsSchool, setSettingsSchool] = useState(data.classInfo?.school || 'SMK Negeri 1');
+  const [settingsName, setSettingsName] = useState(data.classInfo?.name || 'XI PPLG');
+  const [settingsSchool, setSettingsSchool] = useState(data.classInfo?.school || '');
   const [settingsAcademicYear, setSettingsAcademicYear] = useState(data.classInfo?.academicYear || '2026/2027');
   const [settingsHomeroomTeacher, setSettingsHomeroomTeacher] = useState(data.classInfo?.homeroomTeacher || '');
   const [settingsAdminPin, setSettingsAdminPin] = useState(data.classInfo?.adminPin || 'admin123');
@@ -135,8 +135,8 @@ export default function AdminDashboardView({
   useEffect(() => {
     if (data.classInfo) {
       setSettingsAppName(data.classInfo.appName || 'ClassHub');
-      setSettingsName(data.classInfo.name || 'Kelas');
-      setSettingsSchool(data.classInfo.school || 'SMK Negeri 1');
+      setSettingsName(data.classInfo.name || 'XI PPLG');
+      setSettingsSchool(data.classInfo.school || '');
       setSettingsAcademicYear(data.classInfo.academicYear || '2026/2027');
       setSettingsHomeroomTeacher(data.classInfo.homeroomTeacher || '');
       setSettingsAdminPin(data.classInfo.adminPin || 'admin123');

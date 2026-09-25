@@ -1,55 +1,81 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
-const STORAGE_KEY = 'classhub_data_v1';
-const PERSONAL_TASKS_KEY = 'classhub_personal_done_tasks_v1';
+const STORAGE_KEY = 'classhub_data_v2';
+const PERSONAL_TASKS_KEY = 'classhub_personal_done_tasks_v2';
 
 const DEFAULT_SEED_DATA = {
   classInfo: {
-    name: 'Kelas',
-    school: 'SMK Negeri 1',
+    name: 'XI PPLG',
+    school: '',
     academicYear: '2026/2027',
-    homeroomTeacher: 'Budi Santoso, S.Kom., M.T.',
-    totalStudents: 10,
-    adminPin: 'admin123'
+    homeroomTeacher: '',
+    totalStudents: 35,
+    adminPin: 'admin123',
+    appName: 'ClassHub'
   },
   members: [
-    { id: 'std-1', absentNo: 1, nisn: '006819201', name: 'Ahmad Fauzan', role: 'admin', roleTitle: 'Ketua Kelas', pin: '1234', avatarText: 'AF' },
-    { id: 'std-2', absentNo: 2, nisn: '006819202', name: 'Alya Rahmadani', role: 'admin', roleTitle: 'Bendahara 1', pin: '1234', avatarText: 'AR' },
-    { id: 'std-3', absentNo: 3, nisn: '006819203', name: 'Bagas Pratama', role: 'member', roleTitle: 'Wakil Ketua', pin: '1234', avatarText: 'BP' },
-    { id: 'std-4', absentNo: 4, nisn: '006819204', name: 'Citra Kirana', role: 'member', roleTitle: 'Sekretaris', pin: '1234', avatarText: 'CK' },
-    { id: 'std-5', absentNo: 5, nisn: '006819205', name: 'Dimas Aditya', role: 'member', roleTitle: 'Seksi Kebersihan', pin: '1234', avatarText: 'DA' },
-    { id: 'std-6', absentNo: 6, nisn: '006819206', name: 'Eka Lestari', role: 'member', roleTitle: 'Seksi Olahraga', pin: '1234', avatarText: 'EL' },
-    { id: 'std-7', absentNo: 7, nisn: '006819207', name: 'Fikri Haikal', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FH' },
-    { id: 'std-8', absentNo: 8, nisn: '006819208', name: 'Gita Permata', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'GP' },
-    { id: 'std-9', absentNo: 9, nisn: '006819209', name: 'Hafiz Prasetyo', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'HP' },
-    { id: 'std-10', absentNo: 10, nisn: '006819210', name: 'Indah Cahyani', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'IC' }
+    { id: 'std-1', absentNo: 1, nisn: '006819201', name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AF' },
+    { id: 'std-2', absentNo: 2, nisn: '006819202', name: 'Ardyansyah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AR' },
+    { id: 'std-3', absentNo: 3, nisn: '006819203', name: 'Arvin Putra Pratama', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AP' },
+    { id: 'std-4', absentNo: 4, nisn: '006819204', name: 'Arwan Putra Nusantara', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AN' },
+    { id: 'std-5', absentNo: 5, nisn: '006819205', name: 'Ayasy Radlliyan', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AR' },
+    { id: 'std-6', absentNo: 6, nisn: '006819206', name: "Azman Rif'at Siregar", role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AS' },
+    { id: 'std-7', absentNo: 7, nisn: '006819207', name: 'Bayu Havilah Dias', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'BD' },
+    { id: 'std-8', absentNo: 8, nisn: '006819208', name: 'Derly Rayyan Aqly', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'DA' },
+    { id: 'std-9', absentNo: 9, nisn: '006819209', name: 'Dhaffa Alhabsy', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'DH' },
+    { id: 'std-10', absentNo: 10, nisn: '006819210', name: 'Faturrahman Ilhami Dema', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FD' },
+    { id: 'std-11', absentNo: 11, nisn: '006819211', name: 'Fauzan Zuhri', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FZ' },
+    { id: 'std-12', absentNo: 12, nisn: '006819212', name: 'Feyoland Obrian Aldanys', role: 'admin', roleTitle: 'Wakil Ketua', pin: '1234', avatarText: 'FO' },
+    { id: 'std-13', absentNo: 13, nisn: '006819213', name: 'Lion Aslam Maulana', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'LM' },
+    { id: 'std-14', absentNo: 14, nisn: '006819214', name: 'Lutfiya Ghania Nashita', role: 'admin', roleTitle: 'Sekretaris 1', pin: '1234', avatarText: 'LN' },
+    { id: 'std-15', absentNo: 15, nisn: '006819215', name: 'Mehsa Oktarina', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'MO' },
+    { id: 'std-16', absentNo: 16, nisn: '006819216', name: 'M. Aidil Fitriansyah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AF' },
+    { id: 'std-17', absentNo: 17, nisn: '006819217', name: 'M. Fahri Fatihul Aqso', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FA' },
+    { id: 'std-18', absentNo: 18, nisn: '006819218', name: 'M. Ihsan Alldaffa', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'IA' },
+    { id: 'std-19', absentNo: 19, nisn: '006819219', name: 'M. Rafa Fadhillah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RF' },
+    { id: 'std-20', absentNo: 20, nisn: '006819220', name: 'M. Rama Sylva', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RS' },
+    { id: 'std-21', absentNo: 21, nisn: '006819221', name: 'M. Reyhan Elsirajy', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RE' },
+    { id: 'std-22', absentNo: 22, nisn: '006819222', name: 'M. Reyhan Julvianto', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RJ' },
+    { id: 'std-23', absentNo: 23, nisn: '006819223', name: 'Nadine Misya Utami', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'NU' },
+    { id: 'std-24', absentNo: 24, nisn: '006819224', name: 'Nurrohmat Gilang Utama', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'NG' },
+    { id: 'std-25', absentNo: 25, nisn: '006819225', name: 'Pira Aditia', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'PA' },
+    { id: 'std-26', absentNo: 26, nisn: '006819226', name: 'Rani Aprilia', role: 'admin', roleTitle: 'Bendahara 1', pin: '1234', avatarText: 'RA' },
+    { id: 'std-27', absentNo: 27, nisn: '006819227', name: 'Ridho Abdillah Kalim', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RK' },
+    { id: 'std-28', absentNo: 28, nisn: '006819228', name: 'Salwa Azzahra', role: 'admin', roleTitle: 'Bendahara 2', pin: '1234', avatarText: 'SA' },
+    { id: 'std-29', absentNo: 29, nisn: '006819229', name: 'Satria Azka Pratama P.', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SP' },
+    { id: 'std-30', absentNo: 30, nisn: '006819230', name: 'Shainajwa Checilia', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SC' },
+    { id: 'std-31', absentNo: 31, nisn: '006819231', name: 'Siva Inka Pratami', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SP' },
+    { id: 'std-32', absentNo: 32, nisn: '006819232', name: 'Vania Artanti', role: 'admin', roleTitle: 'Sekretaris 2', pin: '1234', avatarText: 'VA' },
+    { id: 'std-33', absentNo: 33, nisn: '006819233', name: 'Wahyu Iscoki', role: 'admin', roleTitle: 'Ketua Kelas', pin: '1234', avatarText: 'WI' },
+    { id: 'std-34', absentNo: 34, nisn: '006819234', name: 'Widiansyah Wida S.', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'WW' },
+    { id: 'std-35', absentNo: 35, nisn: '006819235', name: 'Yoga Adi Permana', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'YP' }
   ],
   announcements: [
     {
       id: 'ann-1',
-      title: 'Persiapan Penilaian Tengah Semester (PTS) Ganjil',
-      content: 'Halo teman-teman! PTS Ganjil akan dimulai pekan depan. Mohon cek jadwal dan kisi-kisi pada tab Ujian. Pastikan semua tugas yang belum selesai segera dikumpulkan ke guru mapel masing-masing.',
-      author: 'Ahmad Fauzan (Ketua Kelas)',
-      createdAt: '2026-09-08T08:30:00Z',
+      title: 'Selamat Datang di Portal Kelas XI PPLG',
+      content: 'Halo rekan-rekan XI PPLG! Portal ini dirancang untuk mempermudah pemantauan jadwal harian, pelacakan live KBM, pengumpulan tugas, info piket, serta transparansi pembukuan kas kelas.',
+      author: 'Wahyu Iscoki (Ketua Kelas)',
+      createdAt: '2026-09-20T08:00:00Z',
       isPinned: true,
       category: 'penting'
     },
     {
       id: 'ann-2',
-      title: 'Iuran Kas Bulan September 2026',
-      content: 'Iuran kas kelas sebesar Rp 10.000 per minggu sudah dapat diserahkan ke Bendahara (Alya). Uang kas akan dialokasikan untuk perlengkapan kebersihan kelas dan fotokopi materi.',
-      author: 'Alya Rahmadani (Bendahara)',
-      createdAt: '2026-09-07T10:15:00Z',
+      title: 'Iuran Kas Mingguan Rp 5.000',
+      content: 'Iuran kas kelas sebesar Rp 5.000 per minggu dapat diserahkan langsung ke Bendahara (Rani Aprilia / Salwa Azzahra). Dana kas digunakan untuk kebutuhan bersama, kebersihan, dan perlengkapan kelas.',
+      author: 'Rani Aprilia & Salwa Azzahra (Bendahara)',
+      createdAt: '2026-09-21T09:00:00Z',
       isPinned: false,
       category: 'keuangan'
     },
     {
       id: 'ann-3',
-      title: 'Pembaruan Jadwal Piket Kebersihan',
-      content: 'Bagi rekan-rekan yang bertugas piket hari ini, harap hadir 15 menit lebih awal untuk menyapu dan merapikan papan tulis sebelum guru pengampu masuk kelas.',
-      author: 'Dimas Aditya (Seksi Kebersihan)',
-      createdAt: '2026-09-06T14:00:00Z',
+      title: 'Jadwal Piket Kebersihan Harian',
+      content: 'Dihimbau bagi anggota regu piket hari ini untuk hadir 15 menit sebelum bel KBM (pukul 07.00 WIB) guna memastikan ruang kelas bersih dan siap digunakan belajar.',
+      author: 'Lutfiya Ghania Nashita & Vania Artanti (Sekretaris)',
+      createdAt: '2026-09-22T07:00:00Z',
       isPinned: false,
       category: 'kegiatan'
     }
@@ -57,109 +83,156 @@ const DEFAULT_SEED_DATA = {
   tasks: [
     {
       id: 'tsk-1',
-      subject: 'Pemrograman Web (PPLG)',
-      title: 'Pembuatan REST API Login & Autentikasi JWT',
-      deadline: '2026-09-12T23:59:00',
-      description: 'Buat endpoint POST /api/login dengan validasi token JWT. Kumpulkan repo GitHub dan file export Postman.',
+      subject: 'Pemrograman Web',
+      title: 'Praktikum REST API & Form Handling',
+      deadline: '2026-09-28T23:59:00',
+      description: 'Implementasikan form handling dan endpoint API. Unggah link repositori GitHub ke form pengumpulan.',
       link: 'https://classroom.google.com',
-      completedStudentIds: ['std-2', 'std-4'],
-      inProgressStudentIds: ['std-1', 'std-3']
+      completedStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'],
+      inProgressStudentIds: ['std-11', 'std-1']
     },
     {
       id: 'tsk-2',
       subject: 'Basis Data',
-      title: 'Normalisasi Database 1NF s.d. 3NF Sistem Akademik',
-      deadline: '2026-09-14T12:00:00',
-      description: 'Lakukan analisis normalisasi pada tabel siswa, kelas, guru, dan nilai. Sertakan diagram ERD terbaru.',
+      title: 'Perancangan Skema Database & Relasi Tabel',
+      deadline: '2026-09-30T15:00:00',
+      description: 'Buat diagram ERD dan query DDL (CREATE TABLE) beserta relasi foreign key untuk sistem akademik.',
       link: '',
-      completedStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5'],
-      inProgressStudentIds: []
+      completedStudentIds: ['std-33', 'std-11', 'std-12'],
+      inProgressStudentIds: ['std-14', 'std-26']
     },
     {
       id: 'tsk-3',
-      subject: 'Bahasa Indonesia',
-      title: 'Penyusunan Proposal Kegiatan Bakti Sosial',
-      deadline: '2026-09-18T15:00:00',
-      description: 'Buat draf bab 1 pendahuluan dan bab 2 rencana anggaran biaya kegiatan per kelompok.',
+      subject: 'Pemrograman Berbasis Teks dan Multimedia',
+      title: 'Implementasi Antarmuka GUI & Komponen Visual',
+      deadline: '2026-10-02T15:30:00',
+      description: 'Rancang modul antarmuka interaktif dan integrasikan elemen multimedia sesuai spesifikasi tugas.',
       link: '',
       completedStudentIds: [],
-      inProgressStudentIds: ['std-1']
+      inProgressStudentIds: ['std-33']
     }
   ],
   exams: [
     {
       id: 'ex-1',
-      subject: 'Pemrograman Web & Perangkat Bergerak',
-      title: 'Penilaian Harian: Fullstack React & Node.js',
-      examDate: '2026-09-15T08:00:00',
-      scope: 'State management, component lifecycle, API integration, routing, JWT middleware'
+      subject: 'Pemrograman Web',
+      title: 'Penilaian Harian: Frontend React & Component Architecture',
+      examDate: '2026-10-01T08:00:00',
+      scope: 'State management, props drilling vs context, component lifecycle, dan routing'
     },
     {
       id: 'ex-2',
-      subject: 'Matematika Terapan',
-      title: 'PTS Ganjil: Matriks & Program Linear',
-      examDate: '2026-09-22T09:30:00',
-      scope: 'Determinan matriks 3x3, invers matriks, sistem pertidaksamaan linear dua variabel'
+      subject: 'Basis Data',
+      title: 'Penilaian Harian: Normalisasi Database & SQL Joins',
+      examDate: '2026-10-07T08:00:00',
+      scope: 'Normalisasi 1NF-3NF, INNER JOIN, LEFT JOIN, agregasi GROUP BY & HAVING'
     }
   ],
   schedules: {
     Senin: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '08:30', subject: 'Upacara Bendera' },
-        { timeStart: '08:30', timeEnd: '11:45', subject: 'Pemrograman Web & Bergerak' },
-        { timeStart: '12:30', timeEnd: '14:30', subject: 'Pendidikan Pancasila' }
+        { timeStart: '07:15', timeEnd: '10:15', subject: 'Bahasa Indonesia' },
+        { timeStart: '10:30', timeEnd: '12:00', subject: 'PPKN' },
+        { timeStart: '12:30', timeEnd: '15:30', subject: 'Pemrograman Berbasis Teks dan Multimedia' }
       ],
-      piket: ['Ahmad Fauzan', 'Alya Rahmadani', 'Bagas Pratama']
+      piket: [
+        'Ahmad Fikry Al Khair',
+        'Ardyansyah',
+        'Arvin Putra Pratama',
+        'Arwan Putra Nusantara',
+        'Ayasy Radlliyan',
+        "Azman Rif'at Siregar",
+        'Bayu Havilah Dias'
+      ]
     },
     Selasa: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '09:15', subject: 'Basis Data Lanjut' },
-        { timeStart: '09:30', timeEnd: '11:45', subject: 'Bahasa Indonesia' },
-        { timeStart: '12:30', timeEnd: '14:30', subject: 'Matematika Terapan' }
+        { timeStart: '07:15', timeEnd: '10:15', subject: 'KIK (Kreativitas, Inovasi, dan Kewirausahaan)' },
+        { timeStart: '10:30', timeEnd: '11:15', subject: 'KIK (Kreativitas, Inovasi, dan Kewirausahaan)' },
+        { timeStart: '11:15', timeEnd: '12:00', subject: 'Agama' },
+        { timeStart: '12:30', timeEnd: '14:00', subject: 'Agama' },
+        { timeStart: '14:00', timeEnd: '15:30', subject: 'P5' }
       ],
-      piket: ['Citra Kirana', 'Dimas Aditya', 'Eka Lestari']
+      piket: [
+        'Derly Rayyan Aqly',
+        'Dhaffa Alhabsy',
+        'Faturrahman Ilhami Dema',
+        'Fauzan Zuhri',
+        'Feyoland Obrian Aldanys',
+        'Lion Aslam Maulana',
+        'Lutfiya Ghania Nashita'
+      ]
     },
     Rabu: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '11:00', subject: 'Proyek Kreatif & Kewirausahaan' },
-        { timeStart: '11:15', timeEnd: '14:00', subject: 'Bahasa Inggris Kejuruan' }
+        { timeStart: '07:15', timeEnd: '10:15', subject: 'Bahasa Inggris' },
+        { timeStart: '10:30', timeEnd: '12:00', subject: 'Sejarah' },
+        { timeStart: '12:30', timeEnd: '15:30', subject: 'Basis Data' }
       ],
-      piket: ['Fikri Haikal', 'Gita Permata']
+      piket: [
+        'Mehsa Oktarina',
+        'M. Aidil Fitriansyah',
+        'M. Fahri Fatihul Aqso',
+        'M. Ihsan Alldaffa',
+        'M. Rafa Fadhillah',
+        'M. Rama Sylva',
+        'M. Reyhan Elsirajy'
+      ]
     },
     Kamis: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '10:00', subject: 'Pemodelan Perangkat Lunak (UML)' },
-        { timeStart: '10:15', timeEnd: '12:00', subject: 'Pendidikan Agama & Budi Pekerti' }
+        { timeStart: '07:15', timeEnd: '08:45', subject: 'PJOK' },
+        { timeStart: '08:45', timeEnd: '10:15', subject: 'IOT' },
+        { timeStart: '10:30', timeEnd: '12:00', subject: 'BK' },
+        { timeStart: '12:30', timeEnd: '15:30', subject: 'Pemrograman Web' }
       ],
-      piket: ['Hafiz Prasetyo', 'Indah Cahyani']
+      piket: [
+        'M. Reyhan Julvianto',
+        'Nadine Misya Utami',
+        'Nurrohmat Gilang Utama',
+        'Pira Aditia',
+        'Rani Aprilia',
+        'Ridho Abdillah Kalim',
+        'Salwa Azzahra'
+      ]
     },
     Jumat: {
       subjects: [
-        { timeStart: '07:00', timeEnd: '08:30', subject: 'Senam Pagi & Kebersihan' },
-        { timeStart: '08:45', timeEnd: '11:00', subject: 'Bimbingan Konseling / Karir' }
+        { timeStart: '07:15', timeEnd: '09:45', subject: 'Matematika Lanjutan' },
+        { timeStart: '10:00', timeEnd: '12:00', subject: 'Pemrograman Perangkat Bergerak' },
+        { timeStart: '13:15', timeEnd: '13:55', subject: 'Pemrograman Perangkat Bergerak' },
+        { timeStart: '13:55', timeEnd: '15:55', subject: 'Matematika Umum' }
       ],
-      piket: ['Ahmad Fauzan', 'Citra Kirana', 'Eka Lestari']
+      piket: [
+        'Satria Azka Pratama P.',
+        'Shainajwa Checilia',
+        'Siva Inka Pratami',
+        'Vania Artanti',
+        'Wahyu Iscoki',
+        'Widiansyah Wida S.',
+        'Yoga Adi Permana'
+      ]
     }
   },
   events: [
-    { id: 'ev-1', title: 'Tryout Ujian Sertifikasi BNSP', date: '2026-09-19', type: 'exam', desc: 'Simulasi kompetensi programmer muda' },
-    { id: 'ev-2', title: 'Kunjungan Industri Tech Summit', date: '2026-09-25', type: 'event', desc: 'Kunjungan studi lapangan' },
-    { id: 'ev-3', title: 'Batas Akhir Iuran Kas September', date: '2026-09-30', type: 'task', desc: 'Pelunasan 4 pekan iuran kelas' }
+    { id: 'ev-1', title: 'Tryout Simulasi Sertifikasi PPLG', date: '2026-10-05', type: 'exam', desc: 'Simulasi kompetensi software development' },
+    { id: 'ev-2', title: 'Kunjungan Industri / Webinar Tech', date: '2026-10-12', type: 'event', desc: 'Sesi bersama praktisi industri teknologi' },
+    { id: 'ev-3', title: 'Batas Rekap Kas Periode September', date: '2026-09-30', type: 'task', desc: 'Penutupan buku kas bulan September' }
   ],
   cash: {
-    balance: 1450000,
-    duesAmount: 10000,
+    balance: 175000,
+    duesAmount: 5000,
     duesPeriods: [
-      { id: 'dp-1', name: 'Minggu 1 (Sep)', amount: 10000, paidStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-6', 'std-7', 'std-8', 'std-9', 'std-10'] },
-      { id: 'dp-2', name: 'Minggu 2 (Sep)', amount: 10000, paidStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-6', 'std-8'] },
-      { id: 'dp-3', name: 'Minggu 3 (Sep)', amount: 10000, paidStudentIds: ['std-1', 'std-2', 'std-4'] },
-      { id: 'dp-4', name: 'Minggu 4 (Sep)', amount: 10000, paidStudentIds: ['std-2'] }
+      { id: 'dp-1', name: 'Minggu 1 (Sep)', amount: 5000, paidStudentIds: ['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-11', 'std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
+      { id: 'dp-2', name: 'Minggu 2 (Sep)', amount: 5000, paidStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'] },
+      { id: 'dp-3', name: 'Minggu 3 (Sep)', amount: 5000, paidStudentIds: ['std-26', 'std-28', 'std-33'] },
+      { id: 'dp-4', name: 'Minggu 4 (Sep)', amount: 5000, paidStudentIds: ['std-26', 'std-28'] }
     ],
     transactions: [
-      { id: 'tx-1', type: 'income', amount: 1000000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 1 lengkap 10 siswa', date: '2026-09-02', recordedBy: 'Alya Rahmadani (Bendahara)' },
-      { id: 'tx-2', type: 'expense', amount: 150000, category: 'Kebersihan', description: 'Pembelian 2 sapu lantai, 1 pel microfiber, dan karbol wangi', date: '2026-09-03', recordedBy: 'Alya Rahmadani (Bendahara)' },
-      { id: 'tx-3', type: 'income', amount: 700000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 2 (7 siswa)', date: '2026-09-08', recordedBy: 'Alya Rahmadani (Bendahara)' },
-      { id: 'tx-4', type: 'expense', amount: 100000, category: 'Perlengkapan', description: 'Beli spidol whiteboard 4 warna & penghapus papan', date: '2026-09-09', recordedBy: 'Alya Rahmadani (Bendahara)' }
+      { id: 'tx-1', type: 'income', amount: 60000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 1', date: '2026-09-02', recordedBy: 'Rani Aprilia (Bendahara 1)' },
+      { id: 'tx-2', type: 'expense', amount: 35000, category: 'Kebersihan', description: 'Pembelian refill sabun cuci tangan & pewangi lantai', date: '2026-09-03', recordedBy: 'Salwa Azzahra (Bendahara 2)' },
+      { id: 'tx-3', type: 'income', amount: 30000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 2', date: '2026-09-08', recordedBy: 'Rani Aprilia (Bendahara 1)' },
+      { id: 'tx-4', type: 'expense', amount: 25000, category: 'Perlengkapan', description: 'Beli spidol whiteboard hitam & biru', date: '2026-09-09', recordedBy: 'Salwa Azzahra (Bendahara 2)' }
     ]
   }
 };

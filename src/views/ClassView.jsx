@@ -75,8 +75,8 @@ export default function ClassView() {
 
   const handleOpenEditProfile = () => {
     setEditAppName(classInfo.appName || 'ClassHub');
-    setEditName(classInfo.name || 'Kelas');
-    setEditSchool(classInfo.school || 'SMK Negeri 1');
+    setEditName(classInfo.name || 'XI PPLG');
+    setEditSchool(classInfo.school || '');
     setEditAcademicYear(classInfo.academicYear || '2026/2027');
     setEditHomeroomTeacher(classInfo.homeroomTeacher || '');
     setEditLogoUrl(classInfo.logoUrl || '');
@@ -176,14 +176,28 @@ export default function ClassView() {
               overflow: 'hidden',
               textOverflow: 'ellipsis'
             }}>
-              {classInfo.name || 'Kelas Belum Dinamai'}
+              {classInfo.name || 'XI PPLG'}
             </h2>
 
             <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <span>🏫 {classInfo.school || 'SMK Negeri 1'}</span>
-              <span>•</span>
-              <span>👨‍🏫 Wali: {classInfo.homeroomTeacher || '-'}</span>
-              <span>•</span>
+              {classInfo.school && classInfo.school !== '-' && (
+                <>
+                  <span>🏫 {classInfo.school}</span>
+                  <span>•</span>
+                </>
+              )}
+              {classInfo.homeroomTeacher && classInfo.homeroomTeacher !== '-' && (
+                <>
+                  <span>👨‍🏫 Wali: {classInfo.homeroomTeacher}</span>
+                  <span>•</span>
+                </>
+              )}
+              {classInfo.academicYear && (
+                <>
+                  <span>📅 {classInfo.academicYear}</span>
+                  <span>•</span>
+                </>
+              )}
               <span>👥 {members.length} Siswa</span>
             </div>
           </div>

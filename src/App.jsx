@@ -308,9 +308,6 @@ export default function App() {
               autoFocus
               required
             />
-            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block' }}>
-              Master PIN default: <code>admin123</code> atau <code>1234</code>
-            </span>
           </div>
           <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}>
             Masuk ke Admin Dashboard

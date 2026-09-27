@@ -1326,7 +1326,7 @@ export default function AdminDashboardView({
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="admin123"
+                  placeholder="Masukkan PIN"
                   value={settingsAdminPin}
                   onChange={(e) => setSettingsAdminPin(e.target.value)}
                   style={{ maxWidth: '280px', fontFamily: 'monospace', letterSpacing: '0.05em' }}

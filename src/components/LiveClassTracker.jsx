@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, ArrowRight, Sparkles, Coffee, BookOpen, Sun, Moon, Calendar } from 'lucide-react';
+import SleepingBoxPet from './SleepingBoxPet';
 
 export default function LiveClassTracker({ schedules, onNavigate }) {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -122,6 +123,7 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
 
   return (
     <div className="live-tracker-card card">
+
       {/* HEADER STRIP */}
       <div className="live-tracker-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -207,26 +209,31 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'break' && (
-          <div className="live-state-message clean-state">
-            <div className="live-state-icon-box amber">
-              <Coffee size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                  {gapType === 'istirahat' ? 'Waktu Istirahat' : 'Jam Kosong / Mandiri'}
-                </h4>
-                {timeRemaining > 0 && (
-                  <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
-                    Selesai dlm {formatRemaining(timeRemaining)}
-                  </span>
+          <div className="live-state-row-layout">
+            <div className="live-state-message clean-state" style={{ flex: 1, minWidth: 0 }}>
+              <div className="live-state-icon-box amber">
+                <Coffee size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    {gapType === 'istirahat' ? 'Waktu Istirahat' : 'Jam Kosong / Mandiri'}
+                  </h4>
+                  {timeRemaining > 0 && (
+                    <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.78rem', fontWeight: 600 }}>
+                      Selesai dlm {formatRemaining(timeRemaining)}
+                    </span>
+                  )}
+                </div>
+                {nextSubject && (
+                  <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                    Berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})
+                  </div>
                 )}
               </div>
-              {nextSubject && (
-                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                  Berikutnya: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})
-                </div>
-              )}
+            </div>
+            <div className="live-tracker-bottom-pet-wrapper">
+              <SleepingBoxPet />
             </div>
           </div>
         )}
@@ -257,49 +264,59 @@ export default function LiveClassTracker({ schedules, onNavigate }) {
         )}
 
         {status === 'after-school' && (
-          <div className="live-state-message clean-state">
-            <div className="live-state-icon-box gray">
-              <Moon size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                  KBM Hari Ini Selesai
-                </h4>
-                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.78rem' }}>
-                  Waktu Bebas
-                </span>
+          <div className="live-state-row-layout">
+            <div className="live-state-message clean-state" style={{ flex: 1, minWidth: 0 }}>
+              <div className="live-state-icon-box gray">
+                <Moon size={20} />
               </div>
-              {nextSubject && (
-                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Calendar size={13} style={{ opacity: 0.7 }} />
-                  <span>Mapel pertama hari {getNextSchoolDay()}: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    KBM Hari Ini Selesai
+                  </h4>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.78rem' }}>
+                    Waktu Bebas
+                  </span>
                 </div>
-              )}
+                {nextSubject && (
+                  <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Calendar size={13} style={{ opacity: 0.7 }} />
+                    <span>Mapel pertama hari {getNextSchoolDay()}: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="live-tracker-bottom-pet-wrapper">
+              <SleepingBoxPet />
             </div>
           </div>
         )}
 
         {status === 'weekend' && (
-          <div className="live-state-message clean-state">
-            <div className="live-state-icon-box purple">
-              <Sparkles size={20} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
-                  Akhir Pekan (Libur KBM)
-                </h4>
-                <span className="notion-tag notion-tag-purple" style={{ fontSize: '0.78rem' }}>
-                  Libur
-                </span>
+          <div className="live-state-row-layout">
+            <div className="live-state-message clean-state" style={{ flex: 1, minWidth: 0 }}>
+              <div className="live-state-icon-box purple">
+                <Sparkles size={20} />
               </div>
-              {nextSubject && (
-                <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <Calendar size={13} style={{ opacity: 0.7 }} />
-                  <span>Jadwal Senin: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    Akhir Pekan (Libur KBM)
+                  </h4>
+                  <span className="notion-tag notion-tag-purple" style={{ fontSize: '0.78rem' }}>
+                    Libur
+                  </span>
                 </div>
-              )}
+                {nextSubject && (
+                  <div style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Calendar size={13} style={{ opacity: 0.7 }} />
+                    <span>Jadwal Senin: <strong style={{ color: 'var(--text-primary)' }}>{nextSubject.subject}</strong> ({nextSubject.timeStart})</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="live-tracker-bottom-pet-wrapper">
+              <SleepingBoxPet />
             </div>
           </div>
         )}

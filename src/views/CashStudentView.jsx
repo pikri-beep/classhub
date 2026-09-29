@@ -56,27 +56,27 @@ export default function CashStudentView() {
   };
 
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div style={{ maxWidth: '940px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       {/* 1. TABEL PEMBAYARAN KAS */}
-      <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
+      <div className="card" style={{ padding: '1.5rem 1.6rem' }}>
         {/* Header Bar: Judul, Saldo Badge, MonthNavigator */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '1rem',
+          marginBottom: '1.25rem',
           flexWrap: 'wrap',
-          gap: '0.75rem',
+          gap: '0.85rem',
           borderBottom: '1px solid var(--border-subtle)',
-          paddingBottom: '0.85rem'
+          paddingBottom: '1rem'
         }}>
           <div>
-            <h3 style={{ fontSize: '1.08rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
               Daftar Pembayaran Kas
             </h3>
-            <div style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: 500 }}>
-              Total Saldo Kas: <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Rp {Number(cashStats.balance || 0).toLocaleString('id-ID')}</span>
+            <div style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '0.25rem', fontWeight: 500 }}>
+              Total Saldo Kas: <span style={{ fontWeight: 800, color: 'var(--text-primary)', marginLeft: '0.2rem' }}>Rp {Number(cashStats.balance || 0).toLocaleString('id-ID')}</span>
             </div>
           </div>
 
@@ -89,11 +89,11 @@ export default function CashStudentView() {
         </div>
 
         {/* Toolbar: Search input */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginBottom: '0.85rem' }}>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
-            <Search size={14} style={{
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', marginBottom: '1.25rem' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '320px' }}>
+            <Search size={15} style={{
               position: 'absolute',
-              left: '0.75rem',
+              left: '0.85rem',
               top: '50%',
               transform: 'translateY(-50%)',
               color: 'var(--text-muted)'
@@ -105,28 +105,45 @@ export default function CashStudentView() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="form-input"
               style={{
-                paddingLeft: '2.1rem',
-                paddingTop: '0.35rem',
-                paddingBottom: '0.35rem',
-                fontSize: '0.8125rem',
-                height: '34px',
+                paddingLeft: '2.3rem',
+                paddingTop: '0.45rem',
+                paddingBottom: '0.45rem',
+                fontSize: '0.85rem',
+                height: '38px',
                 borderRadius: 'var(--radius-sm)'
               }}
             />
           </div>
         </div>
 
-        {/* Matrix Table */}
-        <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', WebkitOverflowScrolling: 'touch' }}>
-          <table className="notion-table" style={{ width: '100%', minWidth: '550px', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
-                <th style={{ width: '48px', textAlign: 'center', padding: '0.65rem 0.5rem' }}>#</th>
-                <th style={{ textAlign: 'left', padding: '0.65rem 0.95rem' }}>Nama Siswa</th>
+        {/* Matrix Table with Ultra-Soft Zebra, Sticky Weeks Header & Fixed Columns */}
+        <div style={{ 
+          overflowX: 'auto', 
+          overflowY: 'auto', 
+          maxHeight: 'min(560px, 70vh)', 
+          border: '1px solid var(--border)', 
+          borderRadius: 'var(--radius-sm)', 
+          position: 'relative',
+          WebkitOverflowScrolling: 'touch' 
+        }}>
+          <table 
+            className="notion-table zebra-kas-table" 
+            style={{ 
+              width: `${Math.max(640, 56 + 180 + monthlyPeriods.length * 120)}px`, 
+              minWidth: '100%', 
+              tableLayout: 'fixed', 
+              borderCollapse: 'separate', 
+              borderSpacing: 0 
+            }}
+          >
+            <thead style={{ position: 'sticky', top: 0, zIndex: 25 }}>
+              <tr style={{ backgroundColor: 'var(--bg)' }}>
+                <th style={{ width: '56px', minWidth: '56px', maxWidth: '56px', textAlign: 'center', padding: '1rem 0.65rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>#</th>
+                <th style={{ width: '180px', minWidth: '180px', maxWidth: '180px', textAlign: 'left', padding: '1rem 1.15rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>Nama Siswa</th>
                 {monthlyPeriods.map(p => (
-                  <th key={p.id} style={{ textAlign: 'center', minWidth: '100px', padding: '0.65rem 0.65rem' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.84rem' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.7rem', fontWeight: 500, color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                  <th key={p.id} style={{ width: '120px', minWidth: '120px', maxWidth: '120px', textAlign: 'center', padding: '1rem 0.85rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.86rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.74rem', fontWeight: 500, color: 'var(--text-muted)', marginTop: '0.2rem', whiteSpace: 'nowrap' }}>
                       Rp {Number(p.amount || 0).toLocaleString('id-ID')}
                     </div>
                   </th>
@@ -136,36 +153,60 @@ export default function CashStudentView() {
             <tbody>
               {monthlyPeriods.length === 0 ? (
                 <tr>
-                  <td colSpan={2} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <td colSpan={2} style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
                     Belum ada data iuran di bulan {formatMonthLabel(selectedMonth)}.
                   </td>
                 </tr>
               ) : filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan={2 + monthlyPeriods.length} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <td colSpan={2 + monthlyPeriods.length} style={{ textAlign: 'center', padding: '3.5rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
                     Tidak ada siswa dengan nama "{searchQuery}".
                   </td>
                 </tr>
               ) : (
-                filteredMembers.map(m => (
-                  <tr key={m.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.82rem', padding: '0.75rem 0.5rem' }}>
+                filteredMembers.map((m, idx) => {
+                  const isOdd = idx % 2 === 1;
+                  return (
+                    <tr
+                      key={m.id}
+                      className={isOdd ? 'zebra-kas-row-odd' : 'zebra-kas-row-even'}
+                      style={{
+                        backgroundColor: isOdd ? 'var(--zebra-kas-odd)' : 'var(--zebra-kas-even)',
+                        borderBottom: '1px solid var(--border-subtle)'
+                      }}
+                    >
+                    <td style={{ width: '56px', minWidth: '56px', maxWidth: '56px', color: 'var(--text-muted)', textAlign: 'center', fontSize: '0.84rem', padding: '0.95rem 0.65rem', fontWeight: 600 }}>
                       {m.absentNo}
                     </td>
-                    <td style={{ padding: '0.75rem 0.95rem', fontSize: '0.88rem' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{m.name}</span>
+                    <td style={{ width: '180px', minWidth: '180px', maxWidth: '180px', padding: '0.95rem 1.15rem' }}>
+                      <span
+                        className="kas-student-name"
+                        title={m.name}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        {m.name}
+                      </span>
                     </td>
                     {monthlyPeriods.map(p => {
                       const isPaid = (p.paidStudentIds || []).includes(m.id);
                       return (
-                        <td key={p.id} style={{ textAlign: 'center', padding: '0.75rem 0.65rem' }}>
+                        <td key={p.id} style={{ width: '120px', minWidth: '120px', maxWidth: '120px', textAlign: 'center', padding: '0.95rem 0.85rem' }}>
                           {isPaid ? (
                             <div
                               style={{
-                                width: '25px',
-                                height: '25px',
+                                width: '26px',
+                                height: '26px',
                                 borderRadius: '5px',
-                                border: '1.5px solid var(--tag-green-text)',
+                                border: '1px solid var(--tag-green-text)',
                                 backgroundColor: 'var(--tag-green-bg)',
                                 color: 'var(--tag-green-text)',
                                 display: 'inline-flex',
@@ -175,16 +216,16 @@ export default function CashStudentView() {
                               }}
                               title="Lunas"
                             >
-                              <Check size={15} strokeWidth={3} />
+                              <Check size={15} strokeWidth={2.2} />
                             </div>
                           ) : (
                             <div
                               style={{
-                                width: '25px',
-                                height: '25px',
+                                width: '26px',
+                                height: '26px',
                                 borderRadius: '5px',
-                                border: '1.5px solid var(--border)',
-                                backgroundColor: 'var(--bg)',
+                                border: '1px solid var(--border)',
+                                backgroundColor: 'transparent',
                                 margin: '0 auto'
                               }}
                               title="Belum Bayar"
@@ -194,7 +235,8 @@ export default function CashStudentView() {
                       );
                     })}
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>
@@ -202,8 +244,8 @@ export default function CashStudentView() {
       </div>
 
       {/* 2. RIWAYAT KAS */}
-      <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-        <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.85rem 0', color: 'var(--text-primary)' }}>
+      <div className="card" style={{ padding: '1.5rem 1.6rem' }}>
+        <h3 style={{ fontSize: '1.08rem', fontWeight: 800, margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>
           Riwayat Kas
         </h3>
 

@@ -108,22 +108,33 @@ export default function WhatsAppShareModal({
   const generateAutoBrief = () => {
     const lines = [];
 
+    const greeting = classInfo?.waGreeting || "Assalamu'alaikum & selamat malam rekan-rekan! 👋";
+    const bannerTitle = classInfo?.waBannerTitle || 'PERSIAPAN KELAS';
+    const footerNote = classInfo?.waFooterNote !== undefined ? classInfo.waFooterNote : `🌐 *Buka ${classInfo?.appName || 'ClassHub'} untuk detail lengkap.*`;
+    const closing = classInfo?.waClosing || 'Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨';
+    const includeSchedule = classInfo?.waIncludeSchedule !== false;
+    const includeTasks = classInfo?.waIncludeTasks !== false;
+    const includePiket = classInfo?.waIncludePiket !== false;
+    const includeExams = classInfo?.waIncludeExams !== false;
+
     // Greeting
-    lines.push(`Assalamu'alaikum & selamat malam rekan-rekan! 👋`);
-    lines.push(``);
+    if (greeting) {
+      lines.push(greeting);
+      lines.push('');
+    }
 
     // Title banner
     const targetLabel = isTomorrow ? 'BESOK' : (isToday ? 'HARI INI' : dayName.toUpperCase());
-    lines.push(`📚 *PERSIAPAN KELAS — ${targetLabel}*`);
+    lines.push(`📚 *${bannerTitle} — ${targetLabel}*`);
     lines.push(`🗓️ ${dateFormatted}`);
     lines.push(`━━━━━━━━━━━━━━━━━━`);
 
     let hasAnyContent = false;
 
     // 1. Jadwal Pelajaran (Tanpa jam, tanpa guru / ruangan)
-    if (subjects.length > 0) {
+    if (includeSchedule && subjects.length > 0) {
       hasAnyContent = true;
-      lines.push(``);
+      lines.push('');
       lines.push(`📅 *JADWAL ${targetLabel}*`);
       subjects.forEach((sub, idx) => {
         lines.push(`${idx + 1}. ${sub.subject}`);
@@ -131,9 +142,9 @@ export default function WhatsAppShareModal({
     }
 
     // 2. Deadline Besok (Nomor, tanpa jam)
-    if (dueOnTargetTasks.length > 0) {
+    if (includeTasks && dueOnTargetTasks.length > 0) {
       hasAnyContent = true;
-      lines.push(``);
+      lines.push('');
       lines.push(`📝 *DEADLINE ${targetLabel}*`);
       dueOnTargetTasks.forEach((task, idx) => {
         lines.push(`${idx + 1}. ${task.subject} — ${task.title}`);
@@ -141,9 +152,9 @@ export default function WhatsAppShareModal({
     }
 
     // 3. Piket Besok (Nomor, tanpa note hadir awal)
-    if (piketList.length > 0) {
+    if (includePiket && piketList.length > 0) {
       hasAnyContent = true;
-      lines.push(``);
+      lines.push('');
       lines.push(`🧹 *PIKET ${targetLabel}*`);
       piketList.forEach((person, idx) => {
         lines.push(`${idx + 1}. ${person}`);
@@ -151,9 +162,9 @@ export default function WhatsAppShareModal({
     }
 
     // 4. Ujian Terdekat (Ringkas nama ujian dan tanggal)
-    if (upcomingExams.length > 0) {
+    if (includeExams && upcomingExams.length > 0) {
       hasAnyContent = true;
-      lines.push(``);
+      lines.push('');
       lines.push(`🎯 *UJIAN TERDEKAT*`);
       upcomingExams.slice(0, 2).forEach((ex, idx) => {
         const exDate = new Date(ex.examDate);
@@ -165,17 +176,21 @@ export default function WhatsAppShareModal({
 
     // Fallback jika tidak ada konten sama sekali (misal akhir pekan)
     if (!hasAnyContent) {
-      lines.push(``);
+      lines.push('');
       lines.push(`🏖️ *AGENDA ${targetLabel}*`);
-      lines.push(`Hari libur / tidak ada jam pembelajaran atau tugas esok hari. Selamat beristirahat!`);
+      lines.push('Hari libur / tidak ada jam pembelajaran atau tugas esok hari. Selamat beristirahat!');
     }
 
     // Footer
-    lines.push(``);
-    lines.push(`━━━━━━━━━━━━━━━━━━`);
-    lines.push(`🌐 *Buka ClassHub untuk detail lengkap.*`);
-    lines.push(``);
-    lines.push(`Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨`);
+    lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━');
+    if (footerNote) {
+      lines.push(footerNote);
+      lines.push('');
+    }
+    if (closing) {
+      lines.push(closing);
+    }
 
     return lines.join('\n');
   };

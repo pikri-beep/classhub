@@ -41,6 +41,11 @@
   --tag-gray-bg: #F1F1EF;
   --tag-gray-text: #5A5A58;
 
+  /* Kas Zebra Striping Palette (Putih & Oren Ultra-Soft) */
+  --zebra-kas-even: #FFFFFF;
+  --zebra-kas-odd: #FFF9F2;
+  --zebra-kas-hover: #FFF2E2;
+
   --success: #2E7C57;
   --danger: #C4554D;
   --warning: #C27429;
@@ -103,6 +108,11 @@
   --tag-purple-text: #B994F7;
   --tag-gray-bg: rgba(120, 119, 116, 0.25);
   --tag-gray-text: #BDBDBD;
+
+  /* Kas Zebra Striping Palette Dark Mode */
+  --zebra-kas-even: #19191D;
+  --zebra-kas-odd: rgba(245, 158, 11, 0.035);
+  --zebra-kas-hover: rgba(245, 158, 11, 0.08);
 
   --success: #6BC99C;
   --danger: #F08C85;
@@ -1609,15 +1619,74 @@ button, input, select, textarea {
   outline-offset: 2px;
 }
 
-/* Mobile Button Touch Target (min 44px) */
+/* Mobile Button Touch Target (min 44px for regular buttons, compact for sm/xs) */
 @media (max-width: 768px) {
-  .btn {
+  .btn:not(.btn-sm):not(.btn-xs) {
     min-height: 44px;
     padding: 0.55rem 1rem;
   }
+  .btn-sm {
+    min-height: 32px;
+    padding: 0.35rem 0.55rem;
+  }
+  .btn-xs {
+    min-height: 28px;
+    padding: 0.25rem 0.45rem;
+  }
 }
 
-/* Sticky Columns for Tables (e.g. Cash Matrix) */
+/* Zebra striping for Kas / Dues Matrix with Sticky Weeks Header & Fixed Columns */
+.zebra-kas-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.zebra-kas-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+}
+
+.zebra-kas-table th {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background-color: var(--bg);
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
+  vertical-align: middle;
+}
+
+.zebra-kas-table td {
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.zebra-kas-table .kas-student-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zebra-kas-table tbody tr.zebra-kas-row-even,
+.zebra-kas-table tbody tr.zebra-kas-row-even td {
+  background-color: var(--zebra-kas-even);
+}
+
+.zebra-kas-table tbody tr.zebra-kas-row-odd,
+.zebra-kas-table tbody tr.zebra-kas-row-odd td {
+  background-color: var(--zebra-kas-odd);
+}
+
+/* Sticky Columns for Tables (Optional fallback) */
 .sticky-col-left-1 {
   position: sticky;
   left: 0;

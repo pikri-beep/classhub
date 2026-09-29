@@ -13,7 +13,15 @@ const DEFAULT_SEED_DATA = {
     totalStudents: 35,
     adminPin: 'admin123',
     appName: 'ClassHub',
-    logoUrl: '/pwa-512x512.png'
+    logoUrl: '/pwa-512x512.png',
+    waGreeting: "Assalamu'alaikum & selamat malam rekan-rekan! 👋",
+    waBannerTitle: 'PERSIAPAN KELAS',
+    waFooterNote: '🌐 *Buka ClassHub untuk detail lengkap.*',
+    waClosing: 'Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨',
+    waIncludeSchedule: true,
+    waIncludeTasks: true,
+    waIncludePiket: true,
+    waIncludeExams: true
   },
   members: [
     { id: 'std-1', absentNo: 1, name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', avatarText: 'AF', phone: '' },
@@ -453,6 +461,15 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const updateTask = (id, updatedFields) => {
+    commitData(prev => ({
+      ...prev,
+      tasks: (prev.tasks || []).map(t => 
+        t.id === id ? { ...t, ...updatedFields } : t
+      )
+    }));
+  };
+
   // Update task completion (supports personal toggle for student or specific studentId)
   const updateTaskStatus = (taskId, studentId, status) => {
     // If it's a student (public-student or specific student), track in personal storage too
@@ -507,6 +524,15 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const updateExam = (id, updatedFields) => {
+    commitData(prev => ({
+      ...prev,
+      exams: (prev.exams || []).map(e => 
+        e.id === id ? { ...e, ...updatedFields } : e
+      )
+    }));
+  };
+
   const addAnnouncement = (ann) => {
     const newAnn = {
       id: `ann-${Date.now()}`,
@@ -533,6 +559,15 @@ export function StoreProvider({ children }) {
     commitData(prev => ({
       ...prev,
       announcements: (prev.announcements || []).filter(a => a.id !== id)
+    }));
+  };
+
+  const updateAnnouncement = (id, updatedFields) => {
+    commitData(prev => ({
+      ...prev,
+      announcements: (prev.announcements || []).map(a => 
+        a.id === id ? { ...a, ...updatedFields } : a
+      )
     }));
   };
 
@@ -803,11 +838,14 @@ export function StoreProvider({ children }) {
       syncStatus,
       personalDoneTasks,
       addTask,
+      updateTask,
       deleteTask,
       updateTaskStatus,
       addExam,
+      updateExam,
       deleteExam,
       addAnnouncement,
+      updateAnnouncement,
       togglePinAnnouncement,
       deleteAnnouncement,
       addTransaction,

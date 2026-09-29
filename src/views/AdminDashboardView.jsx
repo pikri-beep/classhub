@@ -50,6 +50,27 @@ import {
 } from '../components/admin';
 import { getSubjectTagClass } from '../lib/subjectColors';
 
+const DEFAULT_WA_GREETING = "Assalamu'alaikum & selamat malam rekan-rekan! 👋";
+const DEFAULT_WA_BANNER_TITLE = "PERSIAPAN KELAS";
+const DEFAULT_WA_FOOTER_NOTE = "🌐 *Buka ClassHub untuk detail lengkap.*";
+const DEFAULT_WA_CLOSING = "Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨";
+
+const formatForDatetimeLocal = (dateStr) => {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateStr)) {
+    return dateStr.slice(0, 16);
+  }
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+};
+
 export default function AdminDashboardView({
   activeTab: propActiveTab,
   setActiveTab: propSetActiveTab,
@@ -60,10 +81,13 @@ export default function AdminDashboardView({
   const {
     data,
     addTask,
+    updateTask,
     deleteTask,
     addExam,
+    updateExam,
     deleteExam,
     addAnnouncement,
+    updateAnnouncement,
     togglePinAnnouncement,
     deleteAnnouncement,
     addTransaction,
@@ -108,11 +132,28 @@ export default function AdminDashboardView({
   const [taskDesc, setTaskDesc] = useState('');
   const [taskLink, setTaskLink] = useState('');
 
+  // Task edit state
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [selectedTaskForEdit, setSelectedTaskForEdit] = useState(null);
+  const [editTaskSubject, setEditTaskSubject] = useState('');
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskDeadline, setEditTaskDeadline] = useState('');
+  const [editTaskDesc, setEditTaskDesc] = useState('');
+  const [editTaskLink, setEditTaskLink] = useState('');
+
   // Exam form state
   const [examSubject, setExamSubject] = useState('');
   const [examTitle, setExamTitle] = useState('');
   const [examDate, setExamDate] = useState('');
   const [examScope, setExamScope] = useState('');
+
+  // Exam edit state
+  const [isEditExamOpen, setIsEditExamOpen] = useState(false);
+  const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
+  const [editExamSubject, setEditExamSubject] = useState('');
+  const [editExamTitle, setEditExamTitle] = useState('');
+  const [editExamDate, setEditExamDate] = useState('');
+  const [editExamScope, setEditExamScope] = useState('');
 
   // Event form state
   const [eventTitle, setEventTitle] = useState('');
@@ -131,6 +172,23 @@ export default function AdminDashboardView({
   const [annCat, setAnnCat] = useState('akademik');
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
+
+  // Announcement edit state
+  const [isEditAnnOpen, setIsEditAnnOpen] = useState(false);
+  const [selectedAnnForEdit, setSelectedAnnForEdit] = useState(null);
+  const [editAnnCat, setEditAnnCat] = useState('akademik');
+  const [editAnnTitle, setEditAnnTitle] = useState('');
+  const [editAnnContent, setEditAnnContent] = useState('');
+
+  // WhatsApp Brief default settings state
+  const [waGreeting, setWaGreeting] = useState(data.classInfo?.waGreeting !== undefined ? data.classInfo.waGreeting : DEFAULT_WA_GREETING);
+  const [waBannerTitle, setWaBannerTitle] = useState(data.classInfo?.waBannerTitle || DEFAULT_WA_BANNER_TITLE);
+  const [waFooterNote, setWaFooterNote] = useState(data.classInfo?.waFooterNote !== undefined ? data.classInfo.waFooterNote : DEFAULT_WA_FOOTER_NOTE);
+  const [waClosing, setWaClosing] = useState(data.classInfo?.waClosing !== undefined ? data.classInfo.waClosing : DEFAULT_WA_CLOSING);
+  const [waIncludeSchedule, setWaIncludeSchedule] = useState(data.classInfo?.waIncludeSchedule !== false);
+  const [waIncludeTasks, setWaIncludeTasks] = useState(data.classInfo?.waIncludeTasks !== false);
+  const [waIncludePiket, setWaIncludePiket] = useState(data.classInfo?.waIncludePiket !== false);
+  const [waIncludeExams, setWaIncludeExams] = useState(data.classInfo?.waIncludeExams !== false);
 
   // Dues period form state
   const [periodName, setPeriodName] = useState('Minggu 1');
@@ -171,6 +229,15 @@ export default function AdminDashboardView({
       setSettingsHomeroomTeacher(data.classInfo.homeroomTeacher || '');
       setSettingsAdminPin(data.classInfo.adminPin || 'admin123');
       setSettingsLogoUrl(data.classInfo.logoUrl || '');
+
+      setWaGreeting(data.classInfo.waGreeting !== undefined ? data.classInfo.waGreeting : DEFAULT_WA_GREETING);
+      setWaBannerTitle(data.classInfo.waBannerTitle || DEFAULT_WA_BANNER_TITLE);
+      setWaFooterNote(data.classInfo.waFooterNote !== undefined ? data.classInfo.waFooterNote : DEFAULT_WA_FOOTER_NOTE);
+      setWaClosing(data.classInfo.waClosing !== undefined ? data.classInfo.waClosing : DEFAULT_WA_CLOSING);
+      setWaIncludeSchedule(data.classInfo.waIncludeSchedule !== false);
+      setWaIncludeTasks(data.classInfo.waIncludeTasks !== false);
+      setWaIncludePiket(data.classInfo.waIncludePiket !== false);
+      setWaIncludeExams(data.classInfo.waIncludeExams !== false);
     }
   }, [data.classInfo]);
 
@@ -486,6 +553,163 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
     setAnnContent('');
     showToast('Pengumuman kelas dipublikasikan!', 'success');
   };
+
+  // Edit Task handlers
+  const handleOpenEditTask = (task) => {
+    setSelectedTaskForEdit(task);
+    setEditTaskSubject(task.subject || '');
+    setEditTaskTitle(task.title || '');
+    setEditTaskDeadline(formatForDatetimeLocal(task.deadline));
+    setEditTaskDesc(task.description || '');
+    setEditTaskLink(task.link || '');
+    setIsEditTaskOpen(true);
+  };
+
+  const handleUpdateTask = (e) => {
+    e.preventDefault();
+    if (!selectedTaskForEdit) return;
+    updateTask(selectedTaskForEdit.id, {
+      subject: editTaskSubject.trim(),
+      title: editTaskTitle.trim(),
+      deadline: editTaskDeadline,
+      description: editTaskDesc.trim(),
+      link: editTaskLink.trim()
+    });
+    setIsEditTaskOpen(false);
+    showToast(`Tugas "${editTaskTitle.trim()}" berhasil diperbarui!`, 'success');
+  };
+
+  // Edit Exam handlers
+  const handleOpenEditExam = (exam) => {
+    setSelectedExamForEdit(exam);
+    setEditExamSubject(exam.subject || '');
+    setEditExamTitle(exam.title || '');
+    setEditExamDate(formatForDatetimeLocal(exam.examDate));
+    setEditExamScope(exam.scope || '');
+    setIsEditExamOpen(true);
+  };
+
+  const handleUpdateExam = (e) => {
+    e.preventDefault();
+    if (!selectedExamForEdit) return;
+    updateExam(selectedExamForEdit.id, {
+      subject: editExamSubject.trim(),
+      title: editExamTitle.trim(),
+      examDate: editExamDate,
+      scope: editExamScope.trim()
+    });
+    setIsEditExamOpen(false);
+    showToast(`Jadwal ujian "${editExamTitle.trim()}" berhasil diperbarui!`, 'success');
+  };
+
+  // Edit Announcement handlers
+  const handleOpenEditAnn = (ann) => {
+    setSelectedAnnForEdit(ann);
+    setEditAnnCat(ann.category || 'akademik');
+    setEditAnnTitle(ann.title || '');
+    setEditAnnContent(ann.content || '');
+    setIsEditAnnOpen(true);
+  };
+
+  const handleUpdateAnn = (e) => {
+    e.preventDefault();
+    if (!selectedAnnForEdit) return;
+    updateAnnouncement(selectedAnnForEdit.id, {
+      category: editAnnCat,
+      title: editAnnTitle.trim(),
+      content: editAnnContent.trim()
+    });
+    setIsEditAnnOpen(false);
+    showToast(`Pengumuman "${editAnnTitle.trim()}" berhasil diperbarui!`, 'success');
+  };
+
+  // WhatsApp Brief default settings handlers
+  const handleSaveWaBriefSettings = (e) => {
+    e.preventDefault();
+    updateClassInfo({
+      waGreeting: waGreeting.trim(),
+      waBannerTitle: waBannerTitle.trim() || DEFAULT_WA_BANNER_TITLE,
+      waFooterNote: waFooterNote.trim(),
+      waClosing: waClosing.trim(),
+      waIncludeSchedule,
+      waIncludeTasks,
+      waIncludePiket,
+      waIncludeExams
+    });
+    showToast('Format default WhatsApp Brief berhasil disimpan! 📲', 'success');
+  };
+
+  const handleResetWaBriefSettings = () => {
+    setWaGreeting(DEFAULT_WA_GREETING);
+    setWaBannerTitle(DEFAULT_WA_BANNER_TITLE);
+    setWaFooterNote(DEFAULT_WA_FOOTER_NOTE);
+    setWaClosing(DEFAULT_WA_CLOSING);
+    setWaIncludeSchedule(true);
+    setWaIncludeTasks(true);
+    setWaIncludePiket(true);
+    setWaIncludeExams(true);
+
+    updateClassInfo({
+      waGreeting: DEFAULT_WA_GREETING,
+      waBannerTitle: DEFAULT_WA_BANNER_TITLE,
+      waFooterNote: DEFAULT_WA_FOOTER_NOTE,
+      waClosing: DEFAULT_WA_CLOSING,
+      waIncludeSchedule: true,
+      waIncludeTasks: true,
+      waIncludePiket: true,
+      waIncludeExams: true
+    });
+    showToast('Format WhatsApp Brief dikembalikan ke bawaan.', 'info');
+  };
+
+  // Dynamic preview text for WhatsApp Brief settings
+  const previewBriefText = useMemo(() => {
+    const lines = [];
+    if (waGreeting.trim()) {
+      lines.push(waGreeting.trim());
+      lines.push('');
+    }
+    lines.push(`📚 *${(waBannerTitle.trim() || DEFAULT_WA_BANNER_TITLE)} — BESOK*`);
+    lines.push(`🗓️ ${formatDateIndo(new Date(Date.now() + 86400000).toISOString().split('T')[0])}`);
+    lines.push(`━━━━━━━━━━━━━━━━━━`);
+
+    if (waIncludeSchedule) {
+      lines.push('');
+      lines.push(`📅 *JADWAL BESOK*`);
+      lines.push(`1. Bahasa Indonesia`);
+      lines.push(`2. Pemrograman Web`);
+    }
+
+    if (waIncludeTasks) {
+      lines.push('');
+      lines.push(`📝 *DEADLINE BESOK*`);
+      lines.push(`1. Pemrograman Web — Praktikum REST API`);
+    }
+
+    if (waIncludePiket) {
+      lines.push('');
+      lines.push(`🧹 *PIKET BESOK*`);
+      lines.push(`1. Ahmad Fikry Al Khair`);
+      lines.push(`2. Ardyansyah`);
+    }
+
+    if (waIncludeExams) {
+      lines.push('');
+      lines.push(`🎯 *UJIAN TERDEKAT*`);
+      lines.push(`1. Basis Data (Jumat, 2 Okt)`);
+    }
+
+    lines.push('');
+    lines.push(`━━━━━━━━━━━━━━━━━━`);
+    if (waFooterNote.trim()) {
+      lines.push(waFooterNote.trim());
+      lines.push('');
+    }
+    if (waClosing.trim()) {
+      lines.push(waClosing.trim());
+    }
+    return lines.join('\n');
+  }, [waGreeting, waBannerTitle, waFooterNote, waClosing, waIncludeSchedule, waIncludeTasks, waIncludePiket, waIncludeExams]);
 
   const handleCreatePeriod = (e) => {
     e.preventDefault();
@@ -846,7 +1070,7 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                       }}
                     >
                       {/* Info Utama: Mapel, Judul, Deadline */}
-                      <div style={{ flex: 1, minWidth: '220px' }}>
+                      <div style={{ flex: '1 1 180px', minWidth: 0, maxWidth: '100%' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                           <span className={`notion-tag ${tagClass}`} style={{ fontSize: '0.74rem' }}>
                             {task.subject}
@@ -864,21 +1088,22 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                           fontSize: '0.92rem',
                           fontWeight: 700,
                           color: 'var(--text-primary)',
-                          letterSpacing: '-0.01em'
+                          letterSpacing: '-0.01em',
+                          wordBreak: 'break-word'
                         }}>
                           {task.title}
                         </div>
                       </div>
 
-                      {/* Aksi Cepat: Salin Link / Info & Kirim ke WA */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+                      {/* Aksi Cepat: Salin Link / Info & Edit (Icon Only) & Kirim ke WA */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', maxWidth: '100%' }}>
                         {task.link ? (
                           <button
                             type="button"
                             onClick={() => handleCopyLink(task.link)}
                             className="btn btn-secondary btn-sm"
                             title="Salin tautan tugas"
-                            style={{ fontSize: '0.76rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
+                            style={{ fontSize: '0.76rem', gap: '0.3rem', padding: '0.35rem 0.6rem', whiteSpace: 'nowrap' }}
                           >
                             <Copy size={13} />
                             <span>Salin Link</span>
@@ -889,12 +1114,22 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                             onClick={() => handleCopyTaskInfo(task)}
                             className="btn btn-secondary btn-sm"
                             title="Salin informasi tugas"
-                            style={{ fontSize: '0.76rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
+                            style={{ fontSize: '0.76rem', gap: '0.3rem', padding: '0.35rem 0.6rem', whiteSpace: 'nowrap' }}
                           >
                             <Copy size={13} />
                             <span>Salin Info</span>
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditTask(task)}
+                          className="btn btn-ghost btn-sm"
+                          title="Edit Tugas"
+                          aria-label="Edit Tugas"
+                          style={{ color: 'var(--text-secondary)', padding: '0.35rem 0.45rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                        >
+                          <Edit3 size={14} />
+                        </button>
 
                         <button
                           type="button"
@@ -904,11 +1139,12 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                           style={{
                             fontSize: '0.76rem',
                             gap: '0.35rem',
-                            padding: '0.35rem 0.75rem',
+                            padding: '0.35rem 0.7rem',
                             backgroundColor: 'rgba(37, 211, 102, 0.1)',
                             color: '#15803D',
                             border: '1px solid rgba(34, 197, 94, 0.35)',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap'
                           }}
                         >
                           <MessageCircle size={13} color="#16A34A" />
@@ -950,7 +1186,7 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
             ) : (
               tasks.map(task => (
                 <div key={task.id} className="card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: '240px' }}>
+                  <div style={{ flex: '1 1 200px', minWidth: 0, maxWidth: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
                       <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 700 }}>{task.subject}</span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tenggat: {task.deadline}</span>
@@ -960,21 +1196,31 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                         </a>
                       )}
                     </div>
-                    <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: 'var(--text-primary)' }}>{task.title}</h4>
+                    <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.25rem 0', color: 'var(--text-primary)', wordBreak: 'break-word' }}>{task.title}</h4>
                     {task.description && (
-                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45 }}>{task.description}</p>
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.45, wordBreak: 'break-word' }}>{task.description}</p>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap', flexShrink: 0, maxWidth: '100%' }}>
                     <button
                       onClick={() => setIsWhatsAppModalOpen(true)}
                       className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.78rem', color: '#16A34A', gap: '0.35rem' }}
+                      style={{ fontSize: '0.78rem', color: '#16A34A', gap: '0.35rem', whiteSpace: 'nowrap' }}
                       title="Kirim info tugas ke WhatsApp Kelas"
                     >
                       <MessageCircle size={14} />
                       <span>Bagikan WA</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditTask(task)}
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--text-secondary)', padding: '0.4rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Edit Tugas"
+                      aria-label="Edit Tugas"
+                    >
+                      <Edit3 size={15} />
                     </button>
                     <button
                       onClick={() => {
@@ -1021,18 +1267,31 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                     <div style={{ fontSize: '0.92rem', fontWeight: 700 }}>{exam.title}</div>
                     {exam.scope && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Materi: {exam.scope}</div>}
                   </div>
-                  <button
-                    onClick={() => {
-                      if (confirm(`Hapus jadwal ujian ${exam.title}?`)) {
-                        deleteExam(exam.id);
-                        showToast('Jadwal ujian dihapus', 'info');
-                      }
-                    }}
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--danger)' }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditExam(exam)}
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--text-secondary)' }}
+                      title="Edit Jadwal Ujian"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Hapus jadwal ujian ${exam.title}?`)) {
+                          deleteExam(exam.id);
+                          showToast('Jadwal ujian dihapus', 'info');
+                        }
+                      }}
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--danger)' }}
+                      title="Hapus Jadwal Ujian"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1099,11 +1358,11 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
 
           {/* Selected Day Subjects */}
           <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.65rem' }}>
               <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>
                 Daftar Pelajaran — Hari {selectedDay}
               </h3>
-              <button onClick={() => setIsAddSubjectOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.3rem' }}>
+              <button onClick={() => setIsAddSubjectOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.3rem', whiteSpace: 'nowrap' }}>
                 <Plus size={14} />
                 <span>Tambah Jam Pelajaran</span>
               </button>
@@ -1118,20 +1377,22 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                   padding: '0.65rem 0.85rem',
                   backgroundColor: 'var(--bg)',
                   borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border)'
+                  border: '1px solid var(--border)',
+                  gap: '0.65rem',
+                  flexWrap: 'wrap'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <span style={{ fontWeight: 700, color: 'var(--text-muted)', width: '25px' }}>#{idx + 1}</span>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{sub.subject}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: '1 1 180px', minWidth: 0 }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text-muted)', width: '24px', flexShrink: 0 }}>#{idx + 1}</span>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', wordBreak: 'break-word', minWidth: 0 }}>{sub.subject}</div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: 'auto' }}>
+                    <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {sub.timeStart} - {sub.timeEnd}
                     </span>
                     <button
                       onClick={() => handleDeleteSubject(idx)}
                       className="btn btn-ghost btn-xs"
-                      style={{ color: 'var(--danger)' }}
+                      style={{ color: 'var(--danger)', padding: '0.25rem', flexShrink: 0 }}
                       title="Hapus jam ini"
                     >
                       <Trash2 size={14} />
@@ -1237,33 +1498,33 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
 
       {/* TAB 5: KEUANGAN & MATRIKS KAS */}
       {activeTab === 'cash' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
           {/* Top Cash Balance Info */}
-          <div className="card" style={{ padding: '1.15rem 1.35rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="card" style={{ padding: '1.4rem 1.6rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
             <div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Total Saldo Kas Terkumpul</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Total Saldo Kas Terkumpul</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.15rem 0' }}>
                 Rp {Number(cashStats.balance).toLocaleString('id-ID')}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 Pemasukan: <strong style={{ color: 'var(--tag-green-text)' }}>+Rp {Number(cashStats.income).toLocaleString('id-ID')}</strong> • Pengeluaran: <strong style={{ color: 'var(--danger)' }}>-Rp {Number(cashStats.expense).toLocaleString('id-ID')}</strong>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
               <button
                 onClick={() => {
                   setPeriodMonth(selectedDuesMonth || getCurrentMonthKey());
                   setIsAddPeriodOpen(true);
                 }}
                 className="btn btn-secondary btn-sm"
-                style={{ gap: '0.3rem' }}
+                style={{ gap: '0.35rem', whiteSpace: 'nowrap' }}
               >
                 <Plus size={14} />
                 <span>+ Periode Iuran</span>
               </button>
-              <button onClick={() => setIsAddTxOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.3rem' }}>
+              <button onClick={() => setIsAddTxOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.35rem', whiteSpace: 'nowrap' }}>
                 <Plus size={14} />
                 <span>Catat Transaksi</span>
               </button>
@@ -1271,21 +1532,21 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
           </div>
 
           {/* Dues Matrix Table */}
-          <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+          <div className="card" style={{ padding: '1.5rem 1.6rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.15rem', flexWrap: 'wrap', gap: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                   Matriks Iuran Kas
                 </h3>
                 {/* Mini Recap Banner (Data Real) */}
                 <div style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.45rem',
-                  padding: '0.25rem 0.65rem',
+                  gap: '0.5rem',
+                  padding: '0.35rem 0.75rem',
                   backgroundColor: 'var(--bg-hover)',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.76rem',
+                  fontSize: '0.8rem',
                   color: 'var(--text-secondary)',
                   border: '1px solid var(--border-subtle)'
                 }}>
@@ -1313,8 +1574,8 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'space-between', 
-                gap: '0.75rem', 
-                marginBottom: '1rem', 
+                gap: '1rem', 
+                marginBottom: '1.25rem', 
                 flexWrap: 'wrap' 
               }}
             >
@@ -1323,7 +1584,7 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                 onChange={(e) => setDuesSearchQuery(e.target.value)}
                 onClear={() => setDuesSearchQuery('')}
                 placeholder="Cari siswa di matriks..."
-                style={{ maxWidth: '280px', height: '36px' }}
+                style={{ maxWidth: '300px', height: '38px' }}
               />
               <FilterPills
                 options={[
@@ -1336,28 +1597,38 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
               />
             </div>
 
-            {/* Matrix Table with Sticky Columns */}
+            {/* Matrix Table with Zebra Striping & Sticky Weeks Header (Spacious cells) */}
             <div style={{ 
               overflowX: 'auto', 
               overflowY: 'auto',
               border: '1px solid var(--border)', 
               borderRadius: 'var(--radius-sm)',
-              maxHeight: '520px',
-              position: 'relative'
+              maxHeight: 'min(560px, 70vh)',
+              position: 'relative',
+              WebkitOverflowScrolling: 'touch'
             }}>
-              <table className="notion-table sticky-table-header" style={{ minWidth: '640px', borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
-                <thead>
-                  <tr>
-                    <th className="sticky-col-left-1" style={{ width: '48px', minWidth: '48px', textAlign: 'center', zIndex: 30 }}>#</th>
-                    <th className="sticky-col-left-2" style={{ minWidth: '150px', zIndex: 30 }}>Nama Siswa</th>
+              <table 
+                className="notion-table zebra-kas-table" 
+                style={{ 
+                  width: `${Math.max(700, 56 + 190 + monthlyDuesPeriods.length * 130)}px`, 
+                  minWidth: '100%', 
+                  tableLayout: 'fixed', 
+                  borderCollapse: 'separate', 
+                  borderSpacing: 0 
+                }}
+              >
+                <thead style={{ position: 'sticky', top: 0, zIndex: 25 }}>
+                  <tr style={{ backgroundColor: 'var(--bg)' }}>
+                    <th style={{ width: '56px', minWidth: '56px', maxWidth: '56px', textAlign: 'center', padding: '1rem 0.65rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>#</th>
+                    <th style={{ width: '190px', minWidth: '190px', maxWidth: '190px', textAlign: 'left', padding: '1rem 1.15rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>Nama Siswa</th>
                     {monthlyDuesPeriods.map(p => {
                       const periodPaidCount = (p.paidStudentIds || []).length;
                       const isAllPaid = totalMembers > 0 && periodPaidCount === totalMembers;
 
                       return (
-                        <th key={p.id} style={{ textAlign: 'center', minWidth: '110px', padding: '0.65rem 0.5rem' }}>
+                        <th key={p.id} style={{ width: '130px', minWidth: '130px', maxWidth: '130px', textAlign: 'center', padding: '1rem 0.85rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
-                            <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{p.name}</span>
+                            <span style={{ fontWeight: 700, fontSize: '0.86rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
                             <button
                               type="button"
                               onClick={() => setPeriodToDelete(p)}
@@ -1375,10 +1646,10 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                               onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--danger)'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = 'var(--text-muted)'; }}
                             >
-                              <Trash2 size={12} />
+                              <Trash2 size={13} />
                             </button>
                           </div>
-                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: '0.1rem 0' }}>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.35rem 0', fontWeight: 500, whiteSpace: 'nowrap' }}>
                             Rp {Number(p.amount || 0).toLocaleString('id-ID')}
                           </div>
                           {/* Aksi Cepat: Tandai Semua Lunas */}
@@ -1390,19 +1661,19 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                               background: isAllPaid ? 'rgba(22, 163, 74, 0.1)' : 'var(--bg-hover)',
                               border: `1px solid ${isAllPaid ? 'rgba(22, 163, 74, 0.25)' : 'var(--border)'}`,
                               borderRadius: 'var(--radius-xs)',
-                              padding: '0.15rem 0.4rem',
-                              fontSize: '0.68rem',
+                              padding: '0.22rem 0.55rem',
+                              fontSize: '0.72rem',
                               fontWeight: 600,
                               color: isAllPaid ? '#16A34A' : 'var(--text-secondary)',
                               cursor: isAllPaid ? 'default' : 'pointer',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '0.2rem',
-                              marginTop: '0.15rem'
+                              gap: '0.25rem',
+                              whiteSpace: 'nowrap'
                             }}
                             title={isAllPaid ? 'Seluruh siswa telah lunas' : `Tandai seluruh siswa lunas pada ${p.name}`}
                           >
-                            <CheckCircle2 size={10} />
+                            <CheckCircle2 size={11} />
                             <span>{isAllPaid ? 'Lunas Semua' : 'Tandai Semua'}</span>
                           </button>
                         </th>
@@ -1413,7 +1684,7 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                 <tbody>
                   {monthlyDuesPeriods.length === 0 ? (
                     <tr>
-                      <td colSpan={2} style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                      <td colSpan={2} style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
                         <EmptyState
                           title="Belum Ada Periode Kas"
                           description={`Belum ada periode kas pada bulan ${formatMonthLabel(selectedDuesMonth)}. Klik '+ Periode Iuran' untuk menambahkan periode baru.`}
@@ -1422,7 +1693,7 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                     </tr>
                   ) : filteredDuesMembers.length === 0 ? (
                     <tr>
-                      <td colSpan={2 + monthlyDuesPeriods.length} style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                      <td colSpan={2 + monthlyDuesPeriods.length} style={{ textAlign: 'center', padding: '3.5rem 1.5rem' }}>
                         <EmptyState
                           title="Siswa Tidak Ditemukan"
                           description={duesSearchQuery || duesStatusFilter !== 'all' ? "Tidak ada siswa yang sesuai dengan filter atau kata kunci pencarian." : "Belum ada siswa terdaftar."}
@@ -1430,46 +1701,69 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                       </td>
                     </tr>
                   ) : (
-                    filteredDuesMembers.map(m => (
-                      <tr key={m.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                        <td className="sticky-col-left-1" style={{ color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center' }}>
-                          {String(m.absentNo || 0).padStart(2, '0')}
-                        </td>
-                        <td className="sticky-col-left-2">
-                          <strong style={{ color: 'var(--text-primary)', fontSize: '0.86rem' }}>{m.name}</strong>
-                        </td>
-                        {monthlyDuesPeriods.map(p => {
-                          const isPaid = (p.paidStudentIds || []).includes(m.id);
-                          return (
-                            <td key={p.id} style={{ textAlign: 'center' }}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  toggleDuesPaid(p.id, m.id);
-                                  showToast(`${m.name} di ${p.name} diperbarui!`, 'success');
-                                }}
-                                style={{
-                                  width: '28px',
-                                  height: '28px',
-                                  borderRadius: 'var(--radius-xs)',
-                                  border: isPaid ? '1px solid var(--tag-green-text)' : '1px solid var(--border)',
-                                  backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'transparent',
-                                  color: isPaid ? 'var(--tag-green-text)' : 'transparent',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  transition: 'all var(--transition-fast)'
-                                }}
-                                title={`Klik untuk ganti status ${m.name} (${isPaid ? 'Lunas' : 'Belum'})`}
-                              >
-                                <Check size={14} strokeWidth={3} />
-                              </button>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))
+                    filteredDuesMembers.map((m, idx) => {
+                      const isOdd = idx % 2 === 1;
+                      return (
+                        <tr
+                          key={m.id}
+                          className={isOdd ? 'zebra-kas-row-odd' : 'zebra-kas-row-even'}
+                          style={{
+                            backgroundColor: isOdd ? 'var(--zebra-kas-odd)' : 'var(--zebra-kas-even)',
+                            borderBottom: '1px solid var(--border-subtle)'
+                          }}
+                        >
+                          <td style={{ width: '56px', minWidth: '56px', maxWidth: '56px', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.84rem', textAlign: 'center', padding: '0.95rem 0.65rem' }}>
+                            {String(m.absentNo || 0).padStart(2, '0')}
+                          </td>
+                          <td style={{ width: '190px', minWidth: '190px', maxWidth: '190px', padding: '0.95rem 1.15rem' }}>
+                            <strong
+                              className="kas-student-name"
+                              title={m.name}
+                              style={{
+                                display: 'block',
+                                width: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.9rem'
+                              }}
+                            >
+                              {m.name}
+                            </strong>
+                          </td>
+                          {monthlyDuesPeriods.map(p => {
+                            const isPaid = (p.paidStudentIds || []).includes(m.id);
+                            return (
+                              <td key={p.id} style={{ width: '130px', minWidth: '130px', maxWidth: '130px', textAlign: 'center', padding: '0.95rem 0.85rem' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    toggleDuesPaid(p.id, m.id);
+                                    showToast(`${m.name} di ${p.name} diperbarui!`, 'success');
+                                  }}
+                                  style={{
+                                    width: '30px',
+                                    height: '30px',
+                                    borderRadius: '5px',
+                                    border: isPaid ? '1px solid var(--tag-green-text)' : '1px solid var(--border)',
+                                    backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'transparent',
+                                    color: isPaid ? 'var(--tag-green-text)' : 'transparent',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                  title={`Klik untuk ganti status ${m.name} (${isPaid ? 'Lunas' : 'Belum'})`}
+                                >
+                                  <Check size={15} strokeWidth={2.2} />
+                                </button>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -1477,11 +1771,11 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
           </div>
 
           {/* Transactions Ledger */}
-          <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.85rem 0', color: 'var(--text-primary)' }}>
+          <div className="card" style={{ padding: '1.5rem 1.6rem' }}>
+            <h3 style={{ fontSize: '1.08rem', fontWeight: 800, margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>
               Buku Kas & Riwayat Transaksi
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {transactions.length === 0 ? (
                 <EmptyState
                   title="Belum Ada Transaksi"
@@ -1493,22 +1787,22 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '0.65rem 0.85rem',
+                    padding: '0.85rem 1.1rem',
                     backgroundColor: 'var(--bg-surface)',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border-subtle)',
-                    gap: '0.75rem'
+                    gap: '0.85rem'
                   }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
                         {tx.description}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                         {formatDateIndo(tx.date)} • {tx.category} • Dicatat: {tx.recordedBy}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                      <span style={{ fontWeight: 800, fontSize: '0.88rem', color: tx.type === 'income' ? 'var(--tag-green-text)' : 'var(--danger)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexShrink: 0 }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem', color: tx.type === 'income' ? 'var(--tag-green-text)' : 'var(--danger)' }}>
                         {tx.type === 'income' ? '+' : '-'}Rp {Number(tx.amount).toLocaleString('id-ID')}
                       </span>
                       <ActionMenu
@@ -1560,6 +1854,15 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                   </div>
 
                   <div style={{ display: 'flex', gap: '0.35rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditAnn(ann)}
+                      className="btn btn-ghost btn-xs"
+                      title="Edit Pengumuman"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      <Edit3 size={14} />
+                    </button>
                     <button
                       onClick={() => {
                         togglePinAnnouncement(ann.id);
@@ -2072,6 +2375,186 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
             </form>
           </div>
 
+          {/* CARD 2: PENGATURAN DEFAULT WHATSAPP BRIEF */}
+          <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
+            <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>Format Default WhatsApp Brief</h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                  Atur susunan template pesan ringkasan harian kelas yang otomatis terpasang saat membuka WhatsApp Brief.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsWhatsAppModalOpen(true)}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.78rem', gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
+              >
+                <MessageCircle size={14} />
+                <span>Buka Pratinjau WA</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+              {/* Salam Pembuka */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 700 }}>Salam Pembuka (Greeting)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: Assalamu'alaikum & selamat malam rekan-rekan! 👋"
+                  value={waGreeting}
+                  onChange={(e) => setWaGreeting(e.target.value)}
+                />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                  Kalimat awal yang muncul di baris paling atas pesan.
+                </span>
+              </div>
+
+              {/* Judul Banner & Tautan Info Web */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Judul Banner Header</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: PERSIAPAN KELAS"
+                    value={waBannerTitle}
+                    onChange={(e) => setWaBannerTitle(e.target.value)}
+                    required
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                    Tampil sebagai: 📚 *JUDUL BANNER — BESOK*
+                  </span>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Catatan / Tautan Aplikasi Web</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: 🌐 *Buka ClassHub untuk detail lengkap.*"
+                    value={waFooterNote}
+                    onChange={(e) => setWaFooterNote(e.target.value)}
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                    Tautan / pengingat portal web di bagian penutup.
+                  </span>
+                </div>
+              </div>
+
+              {/* Kalimat Penutup */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 700 }}>Pesan Penutup (Closing)</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  placeholder="Contoh: Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨"
+                  value={waClosing}
+                  onChange={(e) => setWaClosing(e.target.value)}
+                />
+              </div>
+
+              {/* Opsi Toggle Seksi Default */}
+              <div style={{ backgroundColor: 'var(--bg)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.6rem', color: 'var(--text-primary)' }}>
+                  Seksi yang Disertakan Secara Default:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.65rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeSchedule}
+                      onChange={(e) => setWaIncludeSchedule(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <span>📅 Jadwal Pembelajaran</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeTasks}
+                      onChange={(e) => setWaIncludeTasks(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <span>📝 Deadline Tugas</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludePiket}
+                      onChange={(e) => setWaIncludePiket(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <span>🧹 Petugas Piket Harian</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeExams}
+                      onChange={(e) => setWaIncludeExams(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+                    />
+                    <span>🎯 Pengingat Ujian Terdekat</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Pratinjau Hasil Format (Realtime):
+                  </span>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
+                    Live Preview
+                  </span>
+                </div>
+                <div style={{
+                  backgroundColor: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.85rem 1rem',
+                  maxHeight: '190px',
+                  overflowY: 'auto'
+                }}>
+                  <pre style={{
+                    margin: 0,
+                    fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+                    fontSize: '0.76rem',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    color: 'var(--text-primary)'
+                  }}>
+                    {previewBriefText}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.25rem' }}>
+                <button
+                  type="button"
+                  onClick={handleResetWaBriefSettings}
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: 'var(--text-muted)', fontSize: '0.78rem', gap: '0.3rem' }}
+                >
+                  <RotateCcw size={12} />
+                  <span>Reset ke Bawaan</span>
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ fontWeight: 700, padding: '0.6rem 1.25rem' }}
+                >
+                  Simpan Format WhatsApp
+                </button>
+              </div>
+            </form>
+          </div>
+
           {/* DANGER ZONE: RESET DATA CARD */}
           <div className="card" style={{ padding: '1.25rem 1.4rem', border: '1px solid var(--danger-border, #FCA5A5)', backgroundColor: 'var(--bg-surface)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
@@ -2186,6 +2669,72 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
         </form>
       </Modal>
 
+      {/* MODAL: EDIT TUGAS */}
+      <Modal isOpen={isEditTaskOpen} onClose={() => setIsEditTaskOpen(false)} title="Edit Tugas">
+        <form onSubmit={handleUpdateTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="form-group">
+            <label className="form-label">Mata Pelajaran</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: Pemrograman Web (PPLG)"
+              value={editTaskSubject}
+              onChange={(e) => setEditTaskSubject(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Judul Tugas</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: Pembuatan Rest API Login"
+              value={editTaskTitle}
+              onChange={(e) => setEditTaskTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Tenggat Waktu (Deadline)</label>
+            <input
+              type="datetime-local"
+              className="form-input"
+              value={editTaskDeadline}
+              onChange={(e) => setEditTaskDeadline(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Deskripsi & Instruksi</label>
+            <textarea
+              className="form-textarea"
+              rows={3}
+              placeholder="Jelaskan instruksi pengumpulan tugas..."
+              value={editTaskDesc}
+              onChange={(e) => setEditTaskDesc(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Link Classroom / Materi (Opsional)</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="https://classroom.google.com/..."
+              value={editTaskLink}
+              onChange={(e) => setEditTaskLink(e.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" onClick={() => setIsEditTaskOpen(false)} className="btn btn-secondary">
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" style={{ fontWeight: 700 }}>
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </Modal>
+
       {/* MODAL: TAMBAH UJIAN */}
       <Modal isOpen={isAddExamOpen} onClose={() => setIsAddExamOpen(false)} title="Tambah Jadwal Ujian">
         <form onSubmit={handleCreateExam} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -2234,6 +2783,62 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
           <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
             Simpan Jadwal Ujian
           </button>
+        </form>
+      </Modal>
+
+      {/* MODAL: EDIT UJIAN */}
+      <Modal isOpen={isEditExamOpen} onClose={() => setIsEditExamOpen(false)} title="Edit Jadwal Ujian">
+        <form onSubmit={handleUpdateExam} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="form-group">
+            <label className="form-label">Mata Pelajaran</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: Matematika Terapan"
+              value={editExamSubject}
+              onChange={(e) => setEditExamSubject(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Judul Ujian</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: PTS Ganjil Matriks & Linear"
+              value={editExamTitle}
+              onChange={(e) => setEditExamTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Tanggal & Waktu Ujian</label>
+            <input
+              type="datetime-local"
+              className="form-input"
+              value={editExamDate}
+              onChange={(e) => setEditExamDate(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Kisi-kisi / Cakupan Materi</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: Bab 1 sampai Bab 3"
+              value={editExamScope}
+              onChange={(e) => setEditExamScope(e.target.value)}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" onClick={() => setIsEditExamOpen(false)} className="btn btn-secondary">
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" style={{ fontWeight: 700 }}>
+              Simpan Perubahan
+            </button>
+          </div>
         </form>
       </Modal>
 
@@ -2489,6 +3094,55 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
           <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
             Publikasikan
           </button>
+        </form>
+      </Modal>
+
+      {/* MODAL: EDIT PENGUMUMAN */}
+      <Modal isOpen={isEditAnnOpen} onClose={() => setIsEditAnnOpen(false)} title="Edit Pengumuman">
+        <form onSubmit={handleUpdateAnn} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="form-group">
+            <label className="form-label">Kategori</label>
+            <select
+              className="form-select"
+              value={editAnnCat}
+              onChange={(e) => setEditAnnCat(e.target.value)}
+            >
+              <option value="penting">Penting</option>
+              <option value="akademik">Akademik</option>
+              <option value="kegiatan">Kegiatan</option>
+              <option value="keuangan">Keuangan</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Judul Pengumuman</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: Informasi Ujian Praktek Pekan Depan"
+              value={editAnnTitle}
+              onChange={(e) => setEditAnnTitle(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Isi Pengumuman</label>
+            <textarea
+              className="form-textarea"
+              rows={4}
+              placeholder="Tuliskan pesan lengkap untuk teman-teman sekelas..."
+              value={editAnnContent}
+              onChange={(e) => setEditAnnContent(e.target.value)}
+              required
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button type="button" onClick={() => setIsEditAnnOpen(false)} className="btn btn-secondary">
+              Batal
+            </button>
+            <button type="submit" className="btn btn-primary" style={{ fontWeight: 700 }}>
+              Simpan Perubahan
+            </button>
+          </div>
         </form>
       </Modal>
 

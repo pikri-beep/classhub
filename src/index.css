@@ -1832,3 +1832,134 @@ tr:hover .sticky-col-left-2 {
     width: 100% !important;
   }
 }
+
+/* ==========================================================================
+   Sleeping Box Pet (8-Bit Ambient Sleeping Cat & Z Z Z ZZ Floating Particles)
+   ========================================================================== */
+.live-state-row-layout {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.live-tracker-bottom-pet-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding-bottom: 2px;
+}
+
+@media (max-width: 640px) {
+  .live-state-row-layout {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+
+  .live-tracker-bottom-pet-wrapper {
+    margin-top: 0.25rem;
+    margin-bottom: -0.25rem;
+  }
+}
+
+.sleeping-box-pet-container,
+.sleeping-cat-pet-container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+.sleeping-z-stream {
+  position: absolute;
+  top: -16px;
+  right: 2px;
+  width: 40px;
+  height: 38px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.pixel-z {
+  position: absolute;
+  bottom: 0;
+  left: 6px;
+  font-family: 'Press Start 2P', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 800;
+  line-height: 1;
+  color: #D97706;
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  animation: sleepZDrift 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
+}
+
+[data-theme='dark'] .pixel-z {
+  color: #FBBF24;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+}
+
+.pixel-z.z-1 {
+  font-size: 8px;
+  animation-delay: 0s;
+}
+
+.pixel-z.z-2 {
+  font-size: 10px;
+  animation-delay: 0.8s;
+}
+
+.pixel-z.z-3 {
+  font-size: 11px;
+  animation-delay: 1.6s;
+}
+
+.pixel-z.z-4 {
+  font-size: 12px;
+  letter-spacing: -1px;
+  animation-delay: 2.4s;
+}
+
+@keyframes sleepZDrift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 4px) scale(0.6);
+  }
+  15% {
+    opacity: 0.85;
+    transform: translate(3px, -4px) scale(0.85);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translate(9px, -15px) scale(1);
+  }
+  80% {
+    opacity: 0.4;
+    transform: translate(15px, -26px) scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(20px, -34px) scale(1.3);
+  }
+}
+
+.sleeping-cat-wrapper,
+.sleeping-cat-body {
+  transform-origin: 20px 14px;
+  animation: sleepingCatBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes sleepingCatBreathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.2px) scaleY(1.02);
+  }
+}
+

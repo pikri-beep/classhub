@@ -37,6 +37,8 @@ export default function App() {
   // Admin view state (default: 'overview')
   const [adminTab, setAdminTab] = useState('overview');
   const [isAdminWhatsAppOpen, setIsAdminWhatsAppOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Admin Login modal state
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -114,16 +116,27 @@ export default function App() {
   if (isAdmin && !previewAsStudent) {
     return (
       <div className="app-layout">
-        {/* Left Desktop Sidebar for Admin */}
+        {/* Left Desktop Sidebar & Mobile Drawer for Admin */}
         <AdminSidebar
           activeTab={adminTab}
           setActiveTab={setAdminTab}
           onOpenWhatsApp={() => setIsAdminWhatsAppOpen(true)}
+          isMobileOpen={isMobileSidebarOpen}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
         />
 
         {/* Admin Main Content Wrapper */}
-        <div className="main-content-wrapper">
-          <Header activeView="admin" />
+        <div className={`main-content-wrapper ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+          <Header 
+            activeView="admin" 
+            activeTab={adminTab}
+            setActiveTab={setAdminTab}
+            onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
+            isMobileSidebarOpen={isMobileSidebarOpen}
+            isSidebarCollapsed={isSidebarCollapsed}
+            onToggleSidebarCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+          />
 
           <main className="page-container" style={{ padding: '1.25rem 1.75rem' }}>
             <AdminDashboardView

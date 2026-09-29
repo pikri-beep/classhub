@@ -110,8 +110,8 @@ export default function DashboardView({ onNavigate }) {
       {/* 1. PERSONAL GREETING & CONTEXT HEADER */}
       <div className="card" style={{
         padding: '1.25rem 1.4rem',
-        background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--primary-soft) 100%)',
-        borderColor: 'var(--primary-border)',
+        backgroundColor: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
         display: 'flex',
         flexDirection: 'column',
         gap: '0.75rem'

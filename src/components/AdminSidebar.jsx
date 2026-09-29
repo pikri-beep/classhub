@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -8,341 +8,425 @@ import {
   Users, 
   Megaphone, 
   MessageCircle, 
-  Eye, 
-  LogOut, 
   ShieldCheck,
-  Settings
+  Settings,
+  LogOut,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 
-export default function AdminSidebar({ activeTab, setActiveTab, onOpenWhatsApp }) {
-  const { currentUser, logout, setPreviewAsStudent } = useAuth();
+export default function AdminSidebar({ 
+  activeTab, 
+  setActiveTab, 
+  onOpenWhatsApp,
+  isMobileOpen = false,
+  onCloseMobile,
+  isCollapsed = false
+}) {
+  const { logout } = useAuth();
   const { data } = useStore();
 
-  const tasksCount = (data.tasks || []).length;
-  const annCount = (data.announcements || []).length;
-  const membersCount = (data.members || []).length;
+  const tasksCount = (data?.tasks || []).length;
+  const annCount = (data?.announcements || []).length;
 
-  const adminNavItems = [
-    { id: 'overview', label: 'Ringkasan & Statistik', icon: LayoutDashboard },
-    { id: 'tasks', label: 'Kelola Tugas', icon: BookOpen, badge: tasksCount },
-    { id: 'exams', label: 'Ujian & Agenda', icon: GraduationCap },
-    { id: 'schedules', label: 'Jadwal & Piket', icon: CalendarDays },
-    { id: 'cash', label: 'Keuangan & Matriks Kas', icon: Wallet },
-    { id: 'announcements', label: 'Pengumuman', icon: Megaphone, badge: annCount },
-    { id: 'members', label: 'Data Siswa & Jabatan', icon: Users, badge: membersCount },
-    { id: 'settings', label: 'Identitas & Pengaturan', icon: Settings }
+  // Navigation groupings as strictly requested
+  // Note: Student count is intentionally NOT treated as a notification badge
+  const navSections = [
+    {
+      title: 'UTAMA',
+      items: [
+        { id: 'overview', label: 'Ringkasan & Statistik', icon: LayoutDashboard }
+      ]
+    },
+    {
+      title: 'AKADEMIK',
+      items: [
+        { id: 'tasks', label: 'Kelola Tugas', icon: BookOpen, badge: tasksCount },
+        { id: 'exams', label: 'Ujian & Agenda', icon: GraduationCap },
+        { id: 'schedules', label: 'Jadwal & Piket', icon: CalendarDays }
+      ]
+    },
+    {
+      title: 'ADMINISTRASI',
+      items: [
+        { id: 'cash', label: 'Keuangan & Matriks Kas', icon: Wallet },
+        { id: 'members', label: 'Data Siswa & Jabatan', icon: Users }, // No notification badge
+        { id: 'announcements', label: 'Pengumuman', icon: Megaphone, badge: annCount }
+      ]
+    },
+    {
+      title: 'SISTEM',
+      items: [
+        { id: 'settings', label: 'Identitas & Pengaturan', icon: Settings }
+      ]
+    }
   ];
+
+  // Handle escape key to close mobile drawer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isMobileOpen && onCloseMobile) {
+        onCloseMobile();
+      }
+    };
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileOpen, onCloseMobile]);
+
+  const handleNavClick = (tabId) => {
+    setActiveTab(tabId);
+    if (isMobileOpen && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  // Shared inner content for desktop fixed, tablet collapsed, and mobile drawer
+  const renderSidebarContent = (isDrawer = false) => {
+    const showCompact = !isDrawer && isCollapsed;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        {/* Brand Header */}
+        <div style={{
+          height: 'var(--header-height)',
+          padding: showCompact ? '0 0.75rem' : '0 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: showCompact ? 'center' : 'space-between',
+          borderBottom: '1px solid var(--border)',
+          flexShrink: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
+            <div style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: 'var(--primary)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              {data?.classInfo?.logoUrl ? (
+                <img src={data.classInfo.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <ShieldCheck size={19} />
+              )}
+            </div>
+
+            {!showCompact && (
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  fontSize: '0.92rem',
+                  fontWeight: 800,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
+                  {data?.classInfo?.appName || 'ClassHub'} <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Admin</span>
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  {data?.classInfo?.name || 'XI PPLG'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Close button inside mobile drawer */}
+          {isDrawer && (
+            <button
+              type="button"
+              onClick={onCloseMobile}
+              aria-label="Tutup menu navigasi"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: 'var(--radius-xs)',
+                border: 'none',
+                backgroundColor: 'var(--bg-hover)',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0
+              }}
+            >
+              <X size={17} />
+            </button>
+          )}
+        </div>
+
+        {/* Grouped Admin Nav Sections */}
+        <nav style={{
+          padding: showCompact ? '0.75rem 0.35rem' : '0.85rem 0.65rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: showCompact ? '0.65rem' : '0.9rem',
+          flex: 1,
+          overflowY: 'auto'
+        }}>
+          {navSections.map(section => (
+            <div key={section.title} className="sidebar-nav-section">
+              {!showCompact && (
+                <div style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-muted)',
+                  padding: '0.15rem 0.65rem 0.35rem 0.65rem'
+                }}>
+                  {section.title}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                {section.items.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavClick(item.id)}
+                      title={showCompact ? item.label : undefined}
+                      style={{
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: showCompact ? 'center' : 'flex-start',
+                        gap: '0.65rem',
+                        padding: showCompact ? '0.6rem 0' : '0.52rem 0.75rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: 'none',
+                        backgroundColor: isActive ? 'var(--bg-hover)' : 'transparent',
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: '0.84rem',
+                        cursor: 'pointer',
+                        transition: 'all var(--transition-fast)',
+                        textAlign: 'left',
+                        width: '100%',
+                        minHeight: '38px'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      {/* Left Accent Indicator for Active State */}
+                      {isActive && (
+                        <span
+                          style={{
+                            position: 'absolute',
+                            left: 0,
+                            top: '6px',
+                            bottom: '6px',
+                            width: '3px',
+                            backgroundColor: 'var(--primary)',
+                            borderRadius: '0 2px 2px 0'
+                          }}
+                          aria-hidden="true"
+                        />
+                      )}
+
+                      <Icon 
+                        size={17} 
+                        color={isActive ? 'var(--primary)' : 'var(--text-muted)'} 
+                        strokeWidth={isActive ? 2.25 : 1.75}
+                        style={{ flexShrink: 0 }}
+                      />
+
+                      {!showCompact && (
+                        <span style={{
+                          flex: 1,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {item.label}
+                        </span>
+                      )}
+
+                      {/* Standardized notification badge */}
+                      {!showCompact && item.badge !== undefined && item.badge > 0 && (
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            fontVariantNumeric: 'tabular-nums',
+                            padding: '0.08rem 0.42rem',
+                            borderRadius: 'var(--radius-full)',
+                            backgroundColor: 'var(--bg-surface)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--text-muted)',
+                            lineHeight: 1.2
+                          }}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* WhatsApp Brief: Visually styled as an Integration / Action Box, NOT a standard nav item */}
+          <div style={{ marginTop: 'auto', paddingTop: '0.5rem' }}>
+            {!showCompact ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenWhatsApp) onOpenWhatsApp();
+                  if (isMobileOpen && onCloseMobile) onCloseMobile();
+                }}
+                className="btn btn-sm"
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                  color: '#16A34A',
+                  border: '1px solid rgba(22, 163, 74, 0.25)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(22, 163, 74, 0.15)';
+                  e.currentTarget.style.borderColor = 'rgba(22, 163, 74, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(22, 163, 74, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(22, 163, 74, 0.25)';
+                }}
+              >
+                <MessageCircle size={16} />
+                <span>Buka WhatsApp Brief</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (onOpenWhatsApp) onOpenWhatsApp();
+                }}
+                title="Buka WhatsApp Brief"
+                style={{
+                  width: '100%',
+                  height: '38px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid rgba(22, 163, 74, 0.25)',
+                  backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                  color: '#16A34A',
+                  cursor: 'pointer'
+                }}
+              >
+                <MessageCircle size={18} />
+              </button>
+            )}
+          </div>
+        </nav>
+
+        {/* Minimalist Logout / Exit Admin Footer */}
+        <div style={{
+          padding: showCompact ? '0.75rem 0.4rem' : '0.75rem 0.85rem',
+          borderTop: '1px solid var(--border)',
+          backgroundColor: 'var(--bg-sidebar)',
+          flexShrink: 0
+        }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (onCloseMobile) onCloseMobile();
+              logout();
+            }}
+            className="btn btn-secondary btn-sm"
+            title="Keluar dari sesi admin"
+            aria-label="Keluar dari sesi admin"
+            style={{
+              width: '100%',
+              fontSize: '0.8rem',
+              padding: showCompact ? '0.5rem 0' : '0.45rem 0.75rem',
+              color: 'var(--danger)',
+              borderColor: 'transparent',
+              backgroundColor: 'transparent',
+              gap: '0.45rem',
+              justifyContent: showCompact ? 'center' : 'flex-start',
+              fontWeight: 600,
+              minHeight: '36px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(196, 85, 77, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(196, 85, 77, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
+            }}
+          >
+            <LogOut size={15} />
+            {!showCompact && <span>Keluar dari Admin</span>}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
-    <aside className="desktop-sidebar" style={{ backgroundColor: 'var(--bg-sidebar)', borderRight: '1px solid var(--border)' }}>
-      {/* Brand Header with Admin Badge */}
-      <div style={{
-        padding: '1.25rem 1.25rem 1rem 1.25rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        borderBottom: '1px solid var(--border)'
-      }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'var(--primary)',
-          color: '#ffffff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 800,
-          fontSize: '0.95rem',
-          flexShrink: 0,
-          overflow: 'hidden'
-        }}>
-          {data?.classInfo?.logoUrl ? (
-            <img src={data.classInfo.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <ShieldCheck size={20} />
-          )}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {data?.classInfo?.appName || 'ClassHub'} Admin
-          </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700 }}>
-            {data?.classInfo?.name || 'Pusat Pengelolaan Kelas'}
-          </div>
-        </div>
-      </div>
-
-      {/* Admin Nav Items */}
-      <nav style={{
-        padding: '0.85rem 0.65rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.2rem',
-        flex: 1,
-        overflowY: 'auto'
-      }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', padding: '0.25rem 0.75rem 0.4rem 0.75rem' }}>
-          Menu Pengelolaan
-        </div>
-
-        {adminNavItems.map(item => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.65rem',
-                padding: '0.55rem 0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                backgroundColor: isActive ? 'var(--bg-hover)' : 'transparent',
-                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                transition: 'all var(--transition-fast)',
-                textAlign: 'left',
-                width: '100%'
-              }}
-            >
-              <Icon size={16} color={isActive ? 'var(--primary)' : 'var(--text-muted)'} />
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className="notion-tag notion-tag-gray" style={{ padding: '0.1rem 0.4rem', fontSize: '0.68rem' }}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-
-        {/* WhatsApp Tool Button */}
-        <button
-          onClick={onOpenWhatsApp}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.65rem',
-            padding: '0.55rem 0.75rem',
-            borderRadius: 'var(--radius-sm)',
-            border: 'none',
-            backgroundColor: 'transparent',
-            color: '#16A34A',
-            fontWeight: 600,
-            fontSize: '0.85rem',
-            cursor: 'pointer',
-            textAlign: 'left',
-            width: '100%',
-            marginTop: '0.25rem'
-          }}
-        >
-          <MessageCircle size={16} color="#16A34A" />
-          <span>WhatsApp Brief</span>
-        </button>
-
-        {/* Preview as Student Button */}
-        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
-          <button
-            onClick={() => setPreviewAsStudent(true)}
-            className="btn btn-secondary btn-sm"
-            style={{
-              width: '100%',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              gap: '0.4rem',
-              justifyContent: 'center',
-              backgroundColor: 'var(--primary-soft)',
-              borderColor: 'var(--primary-border)',
-              color: 'var(--primary)'
-            }}
-          >
-            <Eye size={14} />
-            <span>Lihat Tampilan Siswa</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Admin Profile Footer */}
-      <div style={{
-        padding: '0.85rem',
-        borderTop: '1px solid var(--border)',
-        backgroundColor: 'var(--bg-sidebar)'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.65rem',
-          padding: '0.5rem',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          marginBottom: '0.5rem'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--primary)',
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
-            fontSize: '0.78rem',
-            flexShrink: 0
-          }}>
-            AD
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{
-              fontSize: '0.82rem',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
-              {currentUser?.name || 'Administrator'}
-            </div>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              Master Admin / Wali Kelas
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={logout}
-          className="btn btn-secondary btn-sm"
-          style={{
-            width: '100%',
-            fontSize: '0.78rem',
-            padding: '0.45rem',
-            color: 'var(--danger)',
-            borderColor: 'var(--danger-border)',
-            gap: '0.4rem',
-            justifyContent: 'center',
-            fontWeight: 700
-          }}
-          title="Keluar dari Mode Admin"
-        >
-          <LogOut size={14} />
-          <span>Keluar dari Admin</span>
-        </button>
-      </div>
-    </aside>
-
-    {/* Mobile Admin Nav Strip (Visible only on mobile devices <= 768px) */}
-    <div className="admin-mobile-nav">
-      {adminNavItems.map(item => {
-        const Icon = item.icon;
-        const isActive = activeTab === item.id;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setActiveTab(item.id)}
-            className="btn btn-sm"
-            style={{
-              fontSize: '0.78rem',
-              fontWeight: isActive ? 700 : 500,
-              backgroundColor: isActive ? 'var(--primary-soft)' : 'transparent',
-              borderColor: isActive ? 'var(--primary-border)' : 'transparent',
-              color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
-              padding: '0.35rem 0.65rem',
-              gap: '0.35rem',
-              borderRadius: 'var(--radius-full)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            <Icon size={14} />
-            <span>{item.label.split(' ')[0]}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className="notion-tag notion-tag-gray" style={{ padding: '0.05rem 0.35rem', fontSize: '0.65rem' }}>
-                {item.badge}
-              </span>
-            )}
-          </button>
-        );
-      })}
-
-      <button
-        type="button"
-        onClick={() => setPreviewAsStudent(true)}
-        className="btn btn-sm"
-        style={{
-          fontSize: '0.78rem',
-          fontWeight: 700,
-          backgroundColor: 'var(--primary-soft)',
-          borderColor: 'var(--primary-border)',
-          color: 'var(--primary)',
-          padding: '0.35rem 0.65rem',
-          gap: '0.35rem',
-          borderRadius: 'var(--radius-full)',
-          whiteSpace: 'nowrap',
-          flexShrink: 0
+      {/* 1. Desktop Fixed / Collapsible Sidebar */}
+      <aside 
+        className={`desktop-sidebar ${isCollapsed ? 'collapsed' : ''}`}
+        style={{ 
+          backgroundColor: 'var(--bg-sidebar)', 
+          borderRight: '1px solid var(--border)' 
         }}
       >
-        <Eye size={14} />
-        <span>Mode Siswa</span>
-      </button>
+        {renderSidebarContent(false)}
+      </aside>
 
-      <button
-        type="button"
-        onClick={onOpenWhatsApp}
-        className="btn btn-sm"
-        style={{
-          fontSize: '0.78rem',
-          fontWeight: 700,
-          backgroundColor: '#DCFCE7',
-          borderColor: '#BBF7D0',
-          color: '#16A34A',
-          padding: '0.35rem 0.65rem',
-          gap: '0.35rem',
-          borderRadius: 'var(--radius-full)',
-          whiteSpace: 'nowrap',
-          flexShrink: 0
-        }}
+      {/* 2. Mobile Sidebar Drawer Overlay */}
+      <div
+        className={`admin-drawer-overlay ${isMobileOpen ? 'open' : ''}`}
+        onClick={onCloseMobile}
+        aria-hidden={!isMobileOpen}
+      />
+
+      {/* 3. Mobile Sidebar Drawer Canvas */}
+      <aside
+        className={`admin-drawer ${isMobileOpen ? 'open' : ''}`}
+        aria-label="Navigasi admin drawer mobile"
+        aria-hidden={!isMobileOpen}
       >
-        <MessageCircle size={14} />
-        <span>WhatsApp Brief</span>
-      </button>
-    </div>
-
-    <style>{`
-      @media (min-width: 769px) {
-        .admin-mobile-nav {
-          display: none !important;
-        }
-      }
-      @media (max-width: 768px) {
-        .admin-mobile-nav {
-          display: flex !important;
-          position: sticky;
-          top: var(--header-height);
-          z-index: 38;
-          background: var(--bg-surface);
-          border-bottom: 1px solid var(--border);
-          padding: 0.45rem 0.75rem;
-          gap: 0.35rem;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
-        .admin-mobile-nav::-webkit-scrollbar {
-          display: none;
-        }
-      }
-    `}</style>
+        {renderSidebarContent(true)}
+      </aside>
     </>
   );
 }

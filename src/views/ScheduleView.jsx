@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import { formatDateIndo } from '../lib/dateUtils';
 
 export default function ScheduleView() {
   const { currentUser, isAdmin } = useAuth();
@@ -33,8 +34,11 @@ export default function ScheduleView() {
   // Combine events, tasks, and exams
   const unifiedEvents = {};
   (data.events || []).forEach(ev => {
-    if (!unifiedEvents[ev.date]) unifiedEvents[ev.date] = [];
-    unifiedEvents[ev.date].push({ id: ev.id, title: ev.title, type: ev.type || 'event', desc: ev.desc });
+    const dStr = (ev.date || '').split('T')[0];
+    if (dStr) {
+      if (!unifiedEvents[dStr]) unifiedEvents[dStr] = [];
+      unifiedEvents[dStr].push({ id: ev.id, title: ev.title, type: ev.type || 'event', desc: ev.desc });
+    }
   });
 
   (data.exams || []).forEach(ex => {
@@ -52,6 +56,20 @@ export default function ScheduleView() {
       unifiedEvents[dStr].push({ id: tsk.id, title: `Deadline: ${tsk.title}`, type: 'task', desc: tsk.subject });
     }
   });
+
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+
+  const upcomingUnifiedList = Object.entries(unifiedEvents)
+    .filter(([dStr]) => {
+      const parts = dStr.split('-');
+      const d = parts.length === 3 
+        ? new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)) 
+        : new Date(dStr);
+      return !isNaN(d.getTime()) && d >= todayMidnight;
+    })
+    .sort(([a], [b]) => a.localeCompare(b))
+    .flatMap(([dateStr, items]) => items.map(item => ({ ...item, dateStr })));
 
   // Calendar cells calculation
   const firstDayIndex = new Date(displayedYear, displayedMonth, 1).getDay();
@@ -254,8 +272,9 @@ export default function ScheduleView() {
 
       {/* 4. CALENDAR CONTENT */}
       {activeSubTab === 'calendar' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-          {/* Calendar Grid */}
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            {/* Calendar Grid */}
           <div className="card" style={{ padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
@@ -345,7 +364,9 @@ export default function ScheduleView() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
               <div>
                 <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Agenda Tanggal</h4>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 600 }}>{selectedDateStr}</span>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 600 }}>
+                  {formatDateIndo(selectedDateStr, { withDay: true, monthFormat: 'long' })}
+                </span>
               </div>
               {isAdmin && (
                 <button onClick={() => setIsAddEventOpen(true)} className="btn btn-ghost btn-sm" style={{ gap: '0.25rem' }}>
@@ -387,14 +408,77 @@ export default function ScheduleView() {
             )}
           </div>
         </div>
-      )}
+
+        {/* Daftar Agenda Mendatang */}
+        {upcomingUnifiedList.length > 0 && (
+          <div className="card" style={{ marginTop: '1.25rem', padding: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CalendarDays size={15} style={{ color: 'var(--primary)' }} />
+                <span>Daftar Agenda Mendatang</span>
+              </h4>
+              <span className="notion-tag notion-tag-gray">{upcomingUnifiedList.length} Kegiatan</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.65rem' }}>
+              {upcomingUnifiedList.map((item, idx) => {
+                const isSelected = item.dateStr === selectedDateStr;
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setSelectedDateStr(item.dateStr);
+                      const parts = item.dateStr.split('-');
+                      if (parts.length === 3) {
+                        setDisplayedYear(parseInt(parts[0], 10));
+                        setDisplayedMonth(parseInt(parts[1], 10) - 1);
+                      }
+                    }}
+                    className="card"
+                    style={{
+                      padding: '0.75rem 0.85rem',
+                      cursor: 'pointer',
+                      border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border)',
+                      backgroundColor: isSelected ? 'var(--bg-hover)' : 'var(--bg-card)',
+                      transition: 'all var(--transition-fast)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.4rem', marginBottom: '0.3rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)' }}>
+                        {formatDateIndo(item.dateStr, { withDay: true, monthFormat: 'short' })}
+                      </span>
+                      <span className={`notion-tag ${item.type === 'exam' ? 'notion-tag-red' : (item.type === 'task' ? 'notion-tag-orange' : 'notion-tag-green')}`} style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem' }}>
+                        {item.type === 'exam' ? 'Ujian' : (item.type === 'task' ? 'Tugas' : 'Agenda')}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: item.desc ? '0.2rem' : 0 }}>
+                      {item.title}
+                    </div>
+                    {item.desc && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {item.desc}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
 
       {/* MODAL: ADD AGENDA EVENT */}
       <Modal isOpen={isAddEventOpen} onClose={() => setIsAddEventOpen(false)} title="Tambah Agenda Baru">
         <form onSubmit={handleCreateEvent}>
           <div className="form-group">
             <label className="form-label">Tanggal Terpilih</label>
-            <input type="text" className="form-input" value={selectedDateStr} disabled />
+            <input 
+              type="text" 
+              className="form-input" 
+              value={formatDateIndo(selectedDateStr, { withDay: true, monthFormat: 'long' })} 
+              disabled 
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Jenis Agenda</label>

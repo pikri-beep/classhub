@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  CalendarDays, 
-  Wallet, 
-  Users, 
-  Megaphone, 
-  MessageCircle, 
-  Plus, 
-  Trash2, 
-  Pin, 
-  PinOff, 
-  Eye, 
-  Check, 
-  X, 
-  Edit3, 
-  Key, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  CalendarDays,
+  Wallet,
+  Users,
+  Megaphone,
+  MessageCircle,
+  Plus,
+  Trash2,
+  Pin,
+  PinOff,
+  Eye,
+  Check,
+  X,
+  Edit3,
+  Key,
   Sparkles,
   TrendingUp,
   AlertCircle,
@@ -23,7 +23,11 @@ import {
   Settings,
   Upload,
   Camera,
-  RotateCcw
+  RotateCcw,
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -33,27 +37,40 @@ import Modal from '../components/Modal';
 import WhatsAppShareModal from '../components/WhatsAppShareModal';
 import { getPeriodMonth, formatMonthLabel, getAvailableMonths, getCurrentMonthKey } from '../lib/duesUtils';
 import MonthNavigator from '../components/MonthNavigator';
+import { formatDateIndo, formatCompactDateTime, getDeadlineStatus } from '../lib/dateUtils';
+import {
+  MetricCard,
+  ProgressBar,
+  EmptyState,
+  StatusBadge,
+  SearchInput,
+  FilterPills,
+  ActionMenu,
+  ConfirmDialog
+} from '../components/admin';
+import { getSubjectTagClass } from '../lib/subjectColors';
 
-export default function AdminDashboardView({ 
-  activeTab: propActiveTab, 
+export default function AdminDashboardView({
+  activeTab: propActiveTab,
   setActiveTab: propSetActiveTab,
   isWhatsAppOpen: propIsWhatsAppOpen,
   setIsWhatsAppOpen: propSetIsWhatsAppOpen
 }) {
   const { currentUser, setPreviewAsStudent } = useAuth();
-  const { 
-    data, 
-    addTask, 
-    deleteTask, 
-    addExam, 
-    deleteExam, 
-    addAnnouncement, 
-    togglePinAnnouncement, 
-    deleteAnnouncement, 
-    addTransaction, 
-    deleteTransaction, 
-    toggleDuesPaid, 
-    addEvent, 
+  const {
+    data,
+    addTask,
+    deleteTask,
+    addExam,
+    deleteExam,
+    addAnnouncement,
+    togglePinAnnouncement,
+    deleteAnnouncement,
+    addTransaction,
+    deleteTransaction,
+    toggleDuesPaid,
+    markAllDuesPaid,
+    addEvent,
     deleteEvent,
     updateSchedule,
     addDuesPeriod,
@@ -77,11 +94,12 @@ export default function AdminDashboardView({
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isAddAnnOpen, setIsAddAnnOpen] = useState(false);
-  
+
   const [internalIsWhatsAppOpen, setInternalIsWhatsAppOpen] = useState(false);
   const isWhatsAppModalOpen = propIsWhatsAppOpen !== undefined ? propIsWhatsAppOpen : internalIsWhatsAppOpen;
   const setIsWhatsAppModalOpen = propSetIsWhatsAppOpen !== undefined ? propSetIsWhatsAppOpen : setInternalIsWhatsAppOpen;
   const [isAddPeriodOpen, setIsAddPeriodOpen] = useState(false);
+
 
   // Task form state
   const [taskSubject, setTaskSubject] = useState('');
@@ -119,6 +137,13 @@ export default function AdminDashboardView({
   const [periodAmount, setPeriodAmount] = useState('5000');
   const [periodMonth, setPeriodMonth] = useState(getCurrentMonthKey());
   const [selectedDuesMonth, setSelectedDuesMonth] = useState(getCurrentMonthKey());
+
+  // Phase 4: Dues Matrix search, filter & confirmation states
+  const [duesSearchQuery, setDuesSearchQuery] = useState('');
+  const [duesStatusFilter, setDuesStatusFilter] = useState('all'); // 'all' | 'unpaid' | 'paid'
+  const [periodToMarkAllPaid, setPeriodToMarkAllPaid] = useState(null);
+  const [periodToDelete, setPeriodToDelete] = useState(null);
+  const [txToDelete, setTxToDelete] = useState(null);
 
   // Schedule editor state
   const [selectedDay, setSelectedDay] = useState('Senin');
@@ -178,18 +203,22 @@ export default function AdminDashboardView({
     showToast('Identitas dan pengaturan kelas berhasil disimpan! 🎉', 'success');
   };
 
-  // Member form state
+  // Member form state (Phase 3: Clean NISN, WhatsApp support, Search & Filter)
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isEditMemberOpen, setIsEditMemberOpen] = useState(false);
   const [selectedMemberForEdit, setSelectedMemberForEdit] = useState(null);
+  const [memberToDelete, setMemberToDelete] = useState(null);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [memberRoleFilter, setMemberRoleFilter] = useState('all'); // 'all' | 'admin' | 'member'
+
   const [studentAbsentNo, setStudentAbsentNo] = useState('');
   const [studentName, setStudentName] = useState('');
-  const [studentNisn, setStudentNisn] = useState('');
+  const [studentPhone, setStudentPhone] = useState('');
   const [studentRoleTitle, setStudentRoleTitle] = useState('Anggota');
 
   const [editMemberAbsentNo, setEditMemberAbsentNo] = useState('');
   const [editMemberName, setEditMemberName] = useState('');
-  const [editMemberNisn, setEditMemberNisn] = useState('');
+  const [editMemberPhone, setEditMemberPhone] = useState('');
   const [editMemberRoleTitle, setEditMemberRoleTitle] = useState('Anggota');
 
   const handleCreateMember = (e) => {
@@ -198,12 +227,12 @@ export default function AdminDashboardView({
     addMember({
       absentNo: Number(studentAbsentNo) || (members.length + 1),
       name: studentName.trim(),
-      nisn: studentNisn.trim(),
+      phone: studentPhone.trim(),
       roleTitle: studentRoleTitle.trim() || 'Anggota'
     });
     setIsAddMemberOpen(false);
     setStudentName('');
-    setStudentNisn('');
+    setStudentPhone('');
     showToast(`Siswa "${studentName.trim()}" berhasil ditambahkan! 🎉`, 'success');
   };
 
@@ -213,20 +242,120 @@ export default function AdminDashboardView({
     updateMember(selectedMemberForEdit.id, {
       absentNo: Number(editMemberAbsentNo),
       name: editMemberName.trim(),
-      nisn: editMemberNisn.trim(),
+      phone: editMemberPhone.trim(),
       roleTitle: editMemberRoleTitle.trim() || 'Anggota'
     });
     setIsEditMemberOpen(false);
     showToast(`Data siswa "${editMemberName.trim()}" diperbarui!`, 'success');
   };
 
-  const members = data.members || [];
-  const tasks = data.tasks || [];
-  const exams = data.exams || [];
-  const announcements = data.announcements || [];
-  const duesPeriods = data.cash.duesPeriods || [];
-  const transactions = data.cash.transactions || [];
-  const cashStats = getTotalCashBalance();
+  const members = data?.members || [];
+  const tasks = data?.tasks || [];
+  const exams = data?.exams || [];
+  const announcements = data?.announcements || [];
+  const duesPeriods = data?.cash?.duesPeriods || [];
+  const transactions = data?.cash?.transactions || [];
+  const cashStats = (typeof getTotalCashBalance === 'function' ? getTotalCashBalance() : null) || {
+    balance: data?.cash?.balance || 0,
+    income: 0,
+    expense: 0
+  };
+
+  // Overview Phase 2 calculations from real store data
+  const totalMembers = members.length;
+  const adminMembersCount = members.filter(m => m.role === 'admin' || (m.roleTitle && m.roleTitle !== 'Anggota')).length;
+  const regularMembersCount = totalMembers - adminMembersCount;
+
+  // Filtered members for Member Management (Phase 3)
+  const filteredMembers = useMemo(() => {
+    return members.filter(m => {
+      const q = memberSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+        m.name.toLowerCase().includes(q) ||
+        String(m.absentNo || '').includes(q) ||
+        (m.roleTitle || '').toLowerCase().includes(q) ||
+        (m.phone || '').includes(q);
+
+      const isAdminRole = m.role === 'admin' || (m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa');
+      const matchesFilter = memberRoleFilter === 'all'
+        ? true
+        : memberRoleFilter === 'admin'
+          ? isAdminRole
+          : !isAdminRole;
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [members, memberSearchQuery, memberRoleFilter]);
+
+  // Active month dues calculation
+  const currentMonthKey = getCurrentMonthKey();
+  const currentMonthPeriods = useMemo(() => {
+    return duesPeriods.filter(p => getPeriodMonth(p) === currentMonthKey);
+  }, [duesPeriods, currentMonthKey]);
+
+  const paidAllCount = useMemo(() => {
+    if (currentMonthPeriods.length === 0 || totalMembers === 0) return 0;
+    return members.filter(m => currentMonthPeriods.every(p => (p.paidStudentIds || []).includes(m.id))).length;
+  }, [members, currentMonthPeriods, totalMembers]);
+
+  const paidPercentage = totalMembers > 0 ? Math.round((paidAllCount / totalMembers) * 100) : 0;
+
+  // Tasks with deadline <= 48h
+  const urgentTasksCount = useMemo(() => {
+    const now = Date.now();
+    return tasks.filter(t => {
+      if (!t.deadline) return false;
+      const d = new Date(t.deadline).getTime();
+      const diffHours = (d - now) / (1000 * 60 * 60);
+      return diffHours >= 0 && diffHours <= 48;
+    }).length;
+  }, [tasks]);
+
+  // Today's schedule & piket
+  const DAYS_INDONESIAN = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const todayDayName = DAYS_INDONESIAN[new Date().getDay()];
+  const isWeekendToday = todayDayName === 'Minggu' || todayDayName === 'Sabtu';
+  const todaySchedule = data.schedules?.[todayDayName] || { subjects: [], piket: [] };
+  const todaySubjectsCount = (todaySchedule.subjects || []).length;
+  const todayPiketCount = (todaySchedule.piket || []).length;
+
+  const handleCopyLink = (link) => {
+    if (!link) return;
+    navigator.clipboard.writeText(link)
+      .then(() => showToast('Tautan tugas berhasil disalin! 📋', 'success'))
+      .catch(() => showToast('Gagal menyalin tautan tugas', 'error'));
+  };
+
+  const handleCopyTaskInfo = (task) => {
+    if (!task) return;
+    const deadlineLabel = task.deadline ? formatDateIndo(task.deadline, { withDay: true, monthFormat: 'short' }) : 'Segera';
+    const text = `📌 *${task.subject} — ${task.title}*\nTenggat: ${deadlineLabel}${task.description ? `\n\n${task.description}` : ''}`;
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('Informasi tugas berhasil disalin! 📋', 'success'))
+      .catch(() => showToast('Gagal menyalin informasi tugas', 'error'));
+  };
+
+  const handleSendTaskToWA = (task) => {
+    if (!task) return;
+    const deadlineLabel = task.deadline ? formatDateIndo(task.deadline, { withDay: true, monthFormat: 'short' }) : 'Segera';
+    const msg = `*📢 TUGAS KELAS — ${data?.classInfo?.name || 'XI PPLG'}*
+----------------------------------------
+*Mata Pelajaran:* ${task.subject}
+*Judul Tugas:* ${task.title}
+*Tenggat Waktu:* ${deadlineLabel}
+${task.description ? `\n*Petunjuk:*\n${task.description}\n` : ''}${task.link ? `\n*Link Pengumpulan:*\n${task.link}\n` : ''}
+Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
+
+    navigator.clipboard.writeText(msg)
+      .then(() => {
+        showToast('Format tugas WA disalin ke clipboard! 📋', 'success');
+        const encoded = encodeURIComponent(msg);
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+      })
+      .catch(() => {
+        showToast('Gagal menyalin format tugas', 'error');
+      });
+  };
 
   const availableDuesMonths = useMemo(() => {
     return getAvailableMonths(duesPeriods);
@@ -241,6 +370,41 @@ export default function AdminDashboardView({
   const monthlyDuesPeriods = useMemo(() => {
     return duesPeriods.filter(p => getPeriodMonth(p) === selectedDuesMonth);
   }, [duesPeriods, selectedDuesMonth]);
+
+  // Phase 4: Filtered members based on search and dues payment status
+  const filteredDuesMembers = useMemo(() => {
+    return members.filter(m => {
+      const q = duesSearchQuery.toLowerCase().trim();
+      const matchesSearch = !q ||
+        m.name.toLowerCase().includes(q) ||
+        String(m.absentNo || '').includes(q);
+
+      if (!matchesSearch) return false;
+
+      if (duesStatusFilter === 'all' || monthlyDuesPeriods.length === 0) {
+        return true;
+      }
+
+      const isPaidAllPeriods = monthlyDuesPeriods.length > 0 &&
+        monthlyDuesPeriods.every(p => (p.paidStudentIds || []).includes(m.id));
+
+      if (duesStatusFilter === 'paid') {
+        return isPaidAllPeriods;
+      } else if (duesStatusFilter === 'unpaid') {
+        return !isPaidAllPeriods;
+      }
+
+      return true;
+    });
+  }, [members, duesSearchQuery, duesStatusFilter, monthlyDuesPeriods]);
+
+  // Phase 4: Real recap stats for selected month
+  const selectedMonthPaidAllCount = useMemo(() => {
+    if (monthlyDuesPeriods.length === 0 || totalMembers === 0) return 0;
+    return members.filter(m => monthlyDuesPeriods.every(p => (p.paidStudentIds || []).includes(m.id))).length;
+  }, [members, monthlyDuesPeriods, totalMembers]);
+
+  const selectedMonthUnpaidCount = totalMembers - selectedMonthPaidAllCount;
 
   // Handlers
   const handleCreateTask = (e) => {
@@ -391,113 +555,376 @@ export default function AdminDashboardView({
 
   return (
     <div style={{ maxWidth: '1080px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      
-      {/* TAB 1: OVERVIEW & STATS */}
+
+      {/* TAB 1: OVERVIEW & STATS (ULTRA-MINIMALIS & TO-THE-POINT) */}
       {activeTab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
-          {/* Key Metrics Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
-            <div className="card" style={{ padding: '1rem 1.15rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total Siswa Terdaftar</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                {members.length} Siswa
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                Semua memiliki akses login PIN
-              </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+          {/* Header Action Bar: Title + 2 Main Actions ONLY */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            flexWrap: 'wrap'
+          }}>
+            <div>
+              <h1 style={{
+                fontSize: '1.35rem',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.025em',
+                margin: 0
+              }}>
+                Dashboard {data?.classInfo?.name || 'XI PPLG'}
+              </h1>
+              <p style={{
+                fontSize: '0.82rem',
+                color: 'var(--text-muted)',
+                margin: '0.2rem 0 0 0'
+              }}>
+                Pusat manajemen tugas cepat & ringkasan kelas.
+              </p>
             </div>
 
-            <div className="card" style={{ padding: '1rem 1.15rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Saldo Kas Kelas</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginTop: '0.25rem' }}>
-                Rp {Number(cashStats.balance).toLocaleString('id-ID')}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--tag-green-text)', marginTop: '0.25rem' }}>
-                +Rp {Number(cashStats.income).toLocaleString('id-ID')} pemasukan
-              </div>
-            </div>
+            {/* 2 Primary Actions: Buat Tugas (Solid Oranye) + WhatsApp Brief (Aksen Hijau WA) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setIsAddTaskOpen(true)}
+                style={{
+                  backgroundColor: '#EA580C',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '0.6rem 1.15rem',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: 700,
+                  fontSize: '0.86rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(234, 88, 12, 0.25)',
+                  transition: 'all var(--transition-fast)'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#C2410C'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EA580C'; e.currentTarget.style.transform = 'none'; }}
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                <span>Buat Tugas</span>
+              </button>
 
-            <div className="card" style={{ padding: '1rem 1.15rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Tugas Aktif</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '0.25rem' }}>
-                {tasks.length} Tugas
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                Perlu dikerjakan pekan ini
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: '1rem 1.15rem' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>Ujian Terdekat</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--danger)', marginTop: '0.35rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {exams[0]?.title || 'Tidak ada ujian'}
-              </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                {exams[0]?.examDate || '—'}
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Action Hub */}
-          <div className="card" style={{ padding: '1.25rem 1.35rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 0.85rem 0' }}>Tindakan Cepat Pengurus</h3>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm" style={{ gap: '0.3rem' }}>
-                <Plus size={14} />
-                <span>Buat Tugas Baru</span>
-              </button>
-              <button onClick={() => setIsAddExamOpen(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.3rem' }}>
-                <Plus size={14} />
-                <span>Tambah Ujian</span>
-              </button>
-              <button onClick={() => setIsAddTxOpen(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.3rem' }}>
-                <Plus size={14} />
-                <span>Catat Kas (Masuk/Keluar)</span>
-              </button>
-              <button onClick={() => setIsAddAnnOpen(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.3rem' }}>
-                <Plus size={14} />
-                <span>Tulis Pengumuman</span>
-              </button>
-              <button onClick={() => setIsWhatsAppModalOpen(true)} className="btn btn-secondary btn-sm" style={{ gap: '0.3rem', color: '#16A34A' }}>
-                <MessageCircle size={14} />
+              <button
+                type="button"
+                onClick={() => (propSetIsWhatsAppOpen ? propSetIsWhatsAppOpen(true) : setIsWhatsAppModalOpen(true))}
+                style={{
+                  backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                  color: '#15803D',
+                  border: '1px solid rgba(34, 197, 94, 0.35)',
+                  padding: '0.6rem 1.15rem',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: 700,
+                  fontSize: '0.86rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  cursor: 'pointer',
+                  transition: 'all var(--transition-fast)'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.18)'; e.currentTarget.style.borderColor = '#22C55E'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(37, 211, 102, 0.1)'; e.currentTarget.style.borderColor = 'rgba(34, 197, 94, 0.35)'; }}
+              >
+                <MessageCircle size={16} color="#16A34A" />
                 <span>WhatsApp Brief</span>
               </button>
             </div>
           </div>
 
-          {/* Quick Table: Active Tasks Progress */}
-          <div className="card" style={{ padding: '1.25rem 1.35rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Progres Pengumpulan Tugas Siswa</h3>
-              <button onClick={() => setActiveTab('tasks')} className="btn btn-ghost btn-xs">
-                Lihat Semua Tugas
+          {/* Kartu Statistik: Clean & Ringkas (3 Metrik Esensial, Tanpa Subteks Panjang) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem'
+          }}>
+            {/* Metrik 1: Total Siswa */}
+            <div
+              onClick={() => setActiveTab('members')}
+              style={{
+                padding: '1.25rem 1.4rem',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Total Siswa
+                </span>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'var(--bg)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--text-secondary)'
+                }}>
+                  <Users size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {totalMembers}
+              </div>
+            </div>
+
+            {/* Metrik 2: Saldo Kas */}
+            <div
+              onClick={() => setActiveTab('cash')}
+              style={{
+                padding: '1.25rem 1.4rem',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#16A34A'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Saldo Kas
+                </span>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#16A34A'
+                }}>
+                  <Wallet size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                Rp {Number(cashStats.balance).toLocaleString('id-ID')}
+              </div>
+            </div>
+
+            {/* Metrik 3: Tugas Aktif */}
+            <div
+              onClick={() => setActiveTab('tasks')}
+              style={{
+                padding: '1.25rem 1.4rem',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+                boxShadow: 'var(--shadow-sm)'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EA580C'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'none'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Tugas Aktif
+                </span>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-sm)',
+                  backgroundColor: 'rgba(234, 88, 12, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#EA580C'
+                }}>
+                  <BookOpen size={16} />
+                </div>
+              </div>
+              <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                {tasks.length}
+              </div>
+            </div>
+          </div>
+
+          {/* Daftar Tugas (Padat, Jelas, & Aksi Cepat) */}
+          <div style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.25rem 1.4rem',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '1rem',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                  Daftar Tugas
+                </h2>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  padding: '0.12rem 0.5rem',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'var(--bg)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)'
+                }}>
+                  {tasks.length}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('tasks')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  cursor: 'pointer',
+                  padding: '0.2rem 0.4rem',
+                  borderRadius: 'var(--radius-xs)'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              >
+                <span>Kelola Semua</span>
+                <ArrowRight size={13} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
-              {tasks.length === 0 ? (
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>
-                  Tidak ada tugas aktif saat ini.
-                </div>
-              ) : (
-                tasks.map(task => (
-                  <div key={task.id} style={{ padding: '0.65rem 0.85rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ minWidth: 0 }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)' }}>{task.subject}</span>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
+            {tasks.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title="Belum ada tugas aktif"
+                description="Buat tugas baru untuk dibagikan ke siswa atau dikirimkan via WhatsApp."
+                actionLabel="Buat Tugas"
+                onAction={() => setIsAddTaskOpen(true)}
+              />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {tasks.map(task => {
+                  const deadlineInfo = getDeadlineStatus(task.deadline);
+                  const tagClass = getSubjectTagClass(task.subject);
+
+                  return (
+                    <div
+                      key={task.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0.85rem 1rem',
+                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap',
+                        transition: 'border-color var(--transition-fast)'
+                      }}
+                    >
+                      {/* Info Utama: Mapel, Judul, Deadline */}
+                      <div style={{ flex: 1, minWidth: '220px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                          <span className={`notion-tag ${tagClass}`} style={{ fontSize: '0.74rem' }}>
+                            {task.subject}
+                          </span>
+                          <StatusBadge variant={deadlineInfo.urgency} size="sm">
+                            {deadlineInfo.label}
+                          </StatusBadge>
+                          {task.deadline && (
+                            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                              • {formatDateIndo(task.deadline, { withDay: false, monthFormat: 'short' })}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{
+                          fontSize: '0.92rem',
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          letterSpacing: '-0.01em'
+                        }}>
+                          {task.title}
+                        </div>
+                      </div>
+
+                      {/* Aksi Cepat: Salin Link / Info & Kirim ke WA */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+                        {task.link ? (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyLink(task.link)}
+                            className="btn btn-secondary btn-sm"
+                            title="Salin tautan tugas"
+                            style={{ fontSize: '0.76rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
+                          >
+                            <Copy size={13} />
+                            <span>Salin Link</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyTaskInfo(task)}
+                            className="btn btn-secondary btn-sm"
+                            title="Salin informasi tugas"
+                            style={{ fontSize: '0.76rem', gap: '0.35rem', padding: '0.35rem 0.65rem' }}
+                          >
+                            <Copy size={13} />
+                            <span>Salin Info</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleSendTaskToWA(task)}
+                          className="btn btn-sm"
+                          title="Kirim atau salin format tugas untuk WhatsApp"
+                          style={{
+                            fontSize: '0.76rem',
+                            gap: '0.35rem',
+                            padding: '0.35rem 0.75rem',
+                            backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                            color: '#15803D',
+                            border: '1px solid rgba(34, 197, 94, 0.35)',
+                            fontWeight: 600
+                          }}
+                        >
+                          <MessageCircle size={13} color="#16A34A" />
+                          <span>Kirim ke WA</span>
+                        </button>
+                      </div>
                     </div>
-                    <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', flexShrink: 0 }}>
-                      Tenggat: {task.deadline ? new Date(task.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : 'Tidak ada'}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
         </div>
       )}
+
 
       {/* TAB 2: KELOLA TUGAS */}
       {activeTab === 'tasks' && (
@@ -626,7 +1053,9 @@ export default function AdminDashboardView({
                 <div key={ev.id} className="card" style={{ padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{ev.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ev.date} {ev.desc && `• ${ev.desc}`}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {formatDateIndo(ev.date, { withDay: true, monthFormat: 'short' })} {ev.desc && `• ${ev.desc}`}
+                    </div>
                   </div>
                   <button
                     onClick={() => {
@@ -650,7 +1079,7 @@ export default function AdminDashboardView({
       {/* TAB 4: JADWAL & PIKET */}
       {activeTab === 'schedules' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          
+
           {/* Day Selector */}
           <div style={{ display: 'flex', gap: '0.35rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
             {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'].map(day => (
@@ -809,7 +1238,7 @@ export default function AdminDashboardView({
       {/* TAB 5: KEUANGAN & MATRIKS KAS */}
       {activeTab === 'cash' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
+
           {/* Top Cash Balance Info */}
           <div className="card" style={{ padding: '1.15rem 1.35rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
@@ -823,12 +1252,12 @@ export default function AdminDashboardView({
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button 
+              <button
                 onClick={() => {
                   setPeriodMonth(selectedDuesMonth || getCurrentMonthKey());
                   setIsAddPeriodOpen(true);
-                }} 
-                className="btn btn-secondary btn-sm" 
+                }}
+                className="btn btn-secondary btn-sm"
                 style={{ gap: '0.3rem' }}
               >
                 <Plus size={14} />
@@ -843,15 +1272,34 @@ export default function AdminDashboardView({
 
           {/* Dues Matrix Table */}
           <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <div>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Matriks Iuran Seluruh Siswa</h3>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
-                  Klik kotak centang pada setiap nama siswa untuk menandai lunas / belum.
-                </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Matriks Iuran Kas
+                </h3>
+                {/* Mini Recap Banner (Data Real) */}
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  padding: '0.25rem 0.65rem',
+                  backgroundColor: 'var(--bg-hover)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.76rem',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid var(--border-subtle)'
+                }}>
+                  <span style={{ fontWeight: 700, color: 'var(--tag-green-text)' }}>
+                    {selectedMonthPaidAllCount} Siswa Lunas
+                  </span>
+                  <span>•</span>
+                  <span style={{ fontWeight: 700, color: selectedMonthUnpaidCount > 0 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                    {selectedMonthUnpaidCount} Belum Lunas
+                  </span>
+                </div>
               </div>
 
-              {/* Month Navigator Ringkas */}
+              {/* Month Navigator */}
               <MonthNavigator
                 availableMonths={availableDuesMonths}
                 selectedMonth={selectedDuesMonth}
@@ -859,60 +1307,137 @@ export default function AdminDashboardView({
               />
             </div>
 
-            <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-              <table className="notion-table" style={{ minWidth: '600px' }}>
+            {/* Search & Filter Bar */}
+            <div 
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between', 
+                gap: '0.75rem', 
+                marginBottom: '1rem', 
+                flexWrap: 'wrap' 
+              }}
+            >
+              <SearchInput
+                value={duesSearchQuery}
+                onChange={(e) => setDuesSearchQuery(e.target.value)}
+                onClear={() => setDuesSearchQuery('')}
+                placeholder="Cari siswa di matriks..."
+                style={{ maxWidth: '280px', height: '36px' }}
+              />
+              <FilterPills
+                options={[
+                  { value: 'all', label: 'Semua' },
+                  { value: 'unpaid', label: 'Belum Lunas' },
+                  { value: 'paid', label: 'Sudah Lunas' }
+                ]}
+                activeValue={duesStatusFilter}
+                onChange={setDuesStatusFilter}
+              />
+            </div>
+
+            {/* Matrix Table with Sticky Columns */}
+            <div style={{ 
+              overflowX: 'auto', 
+              overflowY: 'auto',
+              border: '1px solid var(--border)', 
+              borderRadius: 'var(--radius-sm)',
+              maxHeight: '520px',
+              position: 'relative'
+            }}>
+              <table className="notion-table sticky-table-header" style={{ minWidth: '640px', borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: '40px' }}>#</th>
-                    <th>Nama Siswa</th>
-                    {monthlyDuesPeriods.map(p => (
-                      <th key={p.id} style={{ textAlign: 'center', minWidth: '95px' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
-                          <span>{p.name}</span>
+                    <th className="sticky-col-left-1" style={{ width: '48px', minWidth: '48px', textAlign: 'center', zIndex: 30 }}>#</th>
+                    <th className="sticky-col-left-2" style={{ minWidth: '150px', zIndex: 30 }}>Nama Siswa</th>
+                    {monthlyDuesPeriods.map(p => {
+                      const periodPaidCount = (p.paidStudentIds || []).length;
+                      const isAllPaid = totalMembers > 0 && periodPaidCount === totalMembers;
+
+                      return (
+                        <th key={p.id} style={{ textAlign: 'center', minWidth: '110px', padding: '0.65rem 0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                            <span style={{ fontWeight: 700, fontSize: '0.82rem' }}>{p.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setPeriodToDelete(p)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                padding: '2px',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                opacity: 0.5
+                              }}
+                              title={`Hapus periode ${p.name}`}
+                              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--danger)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', margin: '0.1rem 0' }}>
+                            Rp {Number(p.amount || 0).toLocaleString('id-ID')}
+                          </div>
+                          {/* Aksi Cepat: Tandai Semua Lunas */}
                           <button
                             type="button"
-                            onClick={() => {
-                              if (confirm(`Hapus periode "${p.name}"? Data centang iuran pada periode ini akan ikut terhapus.`)) {
-                                deleteDuesPeriod(p.id);
-                                showToast(`Periode ${p.name} dihapus.`, 'info');
-                              }
-                            }}
+                            disabled={isAllPaid}
+                            onClick={() => setPeriodToMarkAllPaid(p)}
                             style={{
-                              background: 'transparent',
-                              border: 'none',
-                              padding: '2px',
-                              cursor: 'pointer',
-                              color: 'var(--text-muted)',
+                              background: isAllPaid ? 'rgba(22, 163, 74, 0.1)' : 'var(--bg-hover)',
+                              border: `1px solid ${isAllPaid ? 'rgba(22, 163, 74, 0.25)' : 'var(--border)'}`,
+                              borderRadius: 'var(--radius-xs)',
+                              padding: '0.15rem 0.4rem',
+                              fontSize: '0.68rem',
+                              fontWeight: 600,
+                              color: isAllPaid ? '#16A34A' : 'var(--text-secondary)',
+                              cursor: isAllPaid ? 'default' : 'pointer',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              opacity: 0.6
+                              gap: '0.2rem',
+                              marginTop: '0.15rem'
                             }}
-                            title="Hapus periode"
-                            onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = 'var(--danger)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                            title={isAllPaid ? 'Seluruh siswa telah lunas' : `Tandai seluruh siswa lunas pada ${p.name}`}
                           >
-                            <Trash2 size={12} />
+                            <CheckCircle2 size={10} />
+                            <span>{isAllPaid ? 'Lunas Semua' : 'Tandai Semua'}</span>
                           </button>
-                        </div>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 400, color: 'var(--text-muted)' }}>
-                          Rp {Number(p.amount || 0).toLocaleString('id-ID')}
-                        </div>
-                      </th>
-                    ))}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody>
                   {monthlyDuesPeriods.length === 0 ? (
                     <tr>
-                      <td colSpan={2} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        Belum ada periode kas di bulan {formatMonthLabel(selectedDuesMonth)}. Klik "+ Periode Iuran" untuk membuat periode.
+                      <td colSpan={2} style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                        <EmptyState
+                          title="Belum Ada Periode Kas"
+                          description={`Belum ada periode kas pada bulan ${formatMonthLabel(selectedDuesMonth)}. Klik '+ Periode Iuran' untuk menambahkan periode baru.`}
+                        />
+                      </td>
+                    </tr>
+                  ) : filteredDuesMembers.length === 0 ? (
+                    <tr>
+                      <td colSpan={2 + monthlyDuesPeriods.length} style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                        <EmptyState
+                          title="Siswa Tidak Ditemukan"
+                          description={duesSearchQuery || duesStatusFilter !== 'all' ? "Tidak ada siswa yang sesuai dengan filter atau kata kunci pencarian." : "Belum ada siswa terdaftar."}
+                        />
                       </td>
                     </tr>
                   ) : (
-                    members.map(m => (
-                      <tr key={m.id}>
-                        <td style={{ color: 'var(--text-muted)' }}>{m.absentNo}</td>
-                        <td><strong>{m.name}</strong></td>
+                    filteredDuesMembers.map(m => (
+                      <tr key={m.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td className="sticky-col-left-1" style={{ color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.82rem', textAlign: 'center' }}>
+                          {String(m.absentNo || 0).padStart(2, '0')}
+                        </td>
+                        <td className="sticky-col-left-2">
+                          <strong style={{ color: 'var(--text-primary)', fontSize: '0.86rem' }}>{m.name}</strong>
+                        </td>
                         {monthlyDuesPeriods.map(p => {
                           const isPaid = (p.paidStudentIds || []).includes(m.id);
                           return (
@@ -921,21 +1446,22 @@ export default function AdminDashboardView({
                                 type="button"
                                 onClick={() => {
                                   toggleDuesPaid(p.id, m.id);
-                                  showToast(`Status ${m.name} di ${p.name} diperbarui!`, 'success');
+                                  showToast(`${m.name} di ${p.name} diperbarui!`, 'success');
                                 }}
                                 style={{
-                                  width: '26px',
-                                  height: '26px',
-                                  borderRadius: '4px',
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: 'var(--radius-xs)',
                                   border: isPaid ? '1px solid var(--tag-green-text)' : '1px solid var(--border)',
                                   backgroundColor: isPaid ? 'var(--tag-green-bg)' : 'transparent',
                                   color: isPaid ? 'var(--tag-green-text)' : 'transparent',
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  justifyContent: 'center'
+                                  justifyContent: 'center',
+                                  transition: 'all var(--transition-fast)'
                                 }}
-                                title={`Klik untuk ganti status ${m.name}`}
+                                title={`Klik untuk ganti status ${m.name} (${isPaid ? 'Lunas' : 'Belum'})`}
                               >
                                 <Check size={14} strokeWidth={3} />
                               </button>
@@ -952,43 +1478,54 @@ export default function AdminDashboardView({
 
           {/* Transactions Ledger */}
           <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-            <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: '0 0 0.85rem 0' }}>Buku Kas & Riwayat Transaksi</h3>
+            <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 0.85rem 0', color: 'var(--text-primary)' }}>
+              Buku Kas & Riwayat Transaksi
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              {transactions.map(tx => (
-                <div key={tx.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.65rem 0.85rem',
-                  backgroundColor: 'var(--bg)',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-subtle)'
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{tx.description}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                      {tx.date} • Kategori: {tx.category} • Dicatat: {tx.recordedBy}
+              {transactions.length === 0 ? (
+                <EmptyState
+                  title="Belum Ada Transaksi"
+                  description="Klik 'Catat Transaksi' untuk menambahkan pemasukan atau pengeluaran kas."
+                />
+              ) : (
+                transactions.map(tx => (
+                  <div key={tx.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.65rem 0.85rem',
+                    backgroundColor: 'var(--bg-surface)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)',
+                    gap: '0.75rem'
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                        {tx.description}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                        {formatDateIndo(tx.date)} • {tx.category} • Dicatat: {tx.recordedBy}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.88rem', color: tx.type === 'income' ? 'var(--tag-green-text)' : 'var(--danger)' }}>
+                        {tx.type === 'income' ? '+' : '-'}Rp {Number(tx.amount).toLocaleString('id-ID')}
+                      </span>
+                      <ActionMenu
+                        align="right"
+                        items={[
+                          {
+                            label: 'Hapus Transaksi',
+                            icon: <Trash2 size={14} />,
+                            variant: 'danger',
+                            onClick: () => setTxToDelete(tx)
+                          }
+                        ]}
+                      />
                     </div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontWeight: 800, color: tx.type === 'income' ? 'var(--tag-green-text)' : 'var(--danger)' }}>
-                      {tx.type === 'income' ? '+' : '-'}Rp {Number(tx.amount).toLocaleString('id-ID')}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Hapus transaksi "${tx.description}"?`)) {
-                          deleteTransaction(tx.id);
-                          showToast('Transaksi dihapus.', 'info');
-                        }
-                      }}
-                      className="btn btn-ghost btn-xs"
-                      style={{ color: 'var(--danger)' }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -1058,108 +1595,163 @@ export default function AdminDashboardView({
         </div>
       )}
 
-      {/* TAB 7: DATA SISWA & PIN */}
+      {/* TAB 7: DATA SISWA & JABATAN */}
       {activeTab === 'members' && (
         <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div>
-              <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0 }}>Daftar Siswa & Struktur Kelas</h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
-                Data resmi seluruh anggota kelas dan peran kepengurusan yang tampil pada portal publik.
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
-                {members.length} Siswa Terdaftar
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setStudentAbsentNo(members.length + 1);
-                  setStudentName('');
-                  setStudentNisn('');
-                  setStudentRoleTitle('Anggota');
-                  setIsAddMemberOpen(true);
-                }}
-                className="btn btn-primary btn-sm"
-                style={{ fontWeight: 700, gap: '0.35rem' }}
-              >
-                <Plus size={14} />
-                <span>+ Input Siswa Baru</span>
-              </button>
-            </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <h3 style={{ fontSize: '1.02rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+              Data Siswa & Jabatan
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                setStudentAbsentNo(members.length + 1);
+                setStudentName('');
+                setStudentPhone('');
+                setStudentRoleTitle('Anggota');
+                setIsAddMemberOpen(true);
+              }}
+              className="btn btn-primary btn-sm"
+              style={{
+                fontWeight: 700,
+                gap: '0.35rem',
+                backgroundColor: '#EA580C',
+                borderColor: '#EA580C',
+                color: '#FFFFFF'
+              }}
+            >
+              <Plus size={15} />
+              <span>Tambah Siswa</span>
+            </button>
           </div>
 
-          <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-            <table className="notion-table">
+          {/* Search & Filter Controls */}
+          <div
+            className="admin-members-filter-bar"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+              flexWrap: 'wrap'
+            }}
+          >
+            <SearchInput
+              value={memberSearchQuery}
+              onChange={(e) => setMemberSearchQuery(e.target.value)}
+              onClear={() => setMemberSearchQuery('')}
+              placeholder="Cari nama, absen, jabatan..."
+              style={{ maxWidth: '280px', height: '36px' }}
+            />
+            <FilterPills
+              options={[
+                { value: 'all', label: 'Semua' },
+                { value: 'admin', label: 'Pengurus' },
+                { value: 'member', label: 'Siswa' }
+              ]}
+              activeValue={memberRoleFilter}
+              onChange={setMemberRoleFilter}
+            />
+          </div>
+
+          {/* 1. Desktop View: Spacious, refined table */}
+          <div className="admin-members-desktop-view" style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+            <table className="notion-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr>
-                  <th style={{ width: '45px', textAlign: 'center' }}>#</th>
-                  <th>Nama Siswa</th>
-                  <th>NISN</th>
-                  <th>Jabatan / Peran Kelas</th>
-                  <th style={{ width: '80px', textAlign: 'center' }}>Aksi</th>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ width: '45px', textAlign: 'center', padding: '0.75rem 0.85rem' }}>#</th>
+                  <th style={{ padding: '0.75rem 0.85rem' }}>Nama Siswa</th>
+                  <th style={{ padding: '0.75rem 0.85rem' }}>WhatsApp</th>
+                  <th style={{ padding: '0.75rem 0.85rem' }}>Jabatan</th>
+                  <th style={{ width: '60px', textAlign: 'center', padding: '0.75rem 0.85rem' }}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {members.length === 0 ? (
+                {filteredMembers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
-                      Belum ada siswa terdaftar. Klik "+ Input Siswa Baru" untuk menambahkan.
+                    <td colSpan={5} style={{ padding: '2.5rem 1rem' }}>
+                      <EmptyState
+                        title={memberSearchQuery || memberRoleFilter !== 'all' ? "Siswa Tidak Ditemukan" : "Belum Ada Siswa"}
+                        description={memberSearchQuery || memberRoleFilter !== 'all' ? `Tidak ada siswa yang cocok dengan filter atau kata kunci "${memberSearchQuery}".` : "Belum ada siswa terdaftar. Klik '+ Input Siswa' untuk menambahkan."}
+                      />
                     </td>
                   </tr>
                 ) : (
-                  members.map(m => {
+                  filteredMembers.map(m => {
                     const hasSpecialRole = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
+                    const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
+                    const waFormatted = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+
                     return (
-                      <tr key={m.id}>
-                        <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)' }}>
+                      <tr key={m.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                        <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--text-muted)', padding: '0.85rem' }}>
                           {String(m.absentNo || 0).padStart(2, '0')}
                         </td>
-                        <td>
-                          <strong style={{ color: 'var(--text-primary)' }}>{m.name}</strong>
+                        <td style={{ padding: '0.85rem' }}>
+                          <strong style={{ color: 'var(--text-primary)', fontSize: '0.88rem' }}>{m.name}</strong>
                         </td>
-                        <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>
-                          {m.nisn || '-'}
-                        </td>
-                        <td>
-                          <span className={`notion-tag ${hasSpecialRole ? 'notion-tag-orange' : 'notion-tag-gray'}`} style={{ fontWeight: hasSpecialRole ? 700 : 500 }}>
-                            {m.roleTitle || 'Siswa'}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedMemberForEdit(m);
-                                setEditMemberAbsentNo(m.absentNo || '');
-                                setEditMemberName(m.name || '');
-                                setEditMemberNisn(m.nisn || '');
-                                setEditMemberRoleTitle(m.roleTitle || 'Anggota');
-                                setIsEditMemberOpen(true);
+                        <td style={{ padding: '0.85rem' }}>
+                          {m.phone ? (
+                            <a
+                              href={`https://wa.me/${waFormatted}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                color: '#16a34a',
+                                fontWeight: 600,
+                                fontSize: '0.82rem',
+                                textDecoration: 'none',
+                                backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                                padding: '0.2rem 0.55rem',
+                                borderRadius: 'var(--radius-sm)',
+                                border: '1px solid rgba(22, 163, 74, 0.2)'
                               }}
-                              className="btn btn-ghost btn-sm"
-                              style={{ padding: '0.2rem 0.35rem', color: 'var(--text-secondary)' }}
-                              title="Edit Data Siswa"
+                              title={`Chat WhatsApp dengan ${m.name}`}
                             >
-                              <Edit3 size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (confirm(`Hapus siswa "${m.name}" dari data kelas?`)) {
-                                  deleteMember(m.id);
-                                  showToast(`Siswa "${m.name}" telah dihapus.`, 'info');
+                              <Phone size={12} strokeWidth={2.5} />
+                              <span>{m.phone}</span>
+                            </a>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '0.85rem' }}>
+                          {hasSpecialRole ? (
+                            <span className="notion-tag notion-tag-orange" style={{ fontWeight: 700, fontSize: '0.78rem' }}>
+                              {m.roleTitle}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '0.85rem' }}>
+                          <ActionMenu
+                            align="right"
+                            items={[
+                              {
+                                label: 'Edit Data',
+                                icon: <Edit3 size={14} />,
+                                onClick: () => {
+                                  setSelectedMemberForEdit(m);
+                                  setEditMemberAbsentNo(m.absentNo || '');
+                                  setEditMemberName(m.name || '');
+                                  setEditMemberPhone(m.phone || '');
+                                  setEditMemberRoleTitle(m.roleTitle || 'Anggota');
+                                  setIsEditMemberOpen(true);
                                 }
-                              }}
-                              className="btn btn-ghost btn-sm"
-                              style={{ padding: '0.2rem 0.35rem', color: 'var(--danger)' }}
-                              title="Hapus Siswa"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
+                              },
+                              {
+                                label: 'Hapus Siswa',
+                                icon: <Trash2 size={14} />,
+                                variant: 'danger',
+                                onClick: () => setMemberToDelete(m)
+                              }
+                            ]}
+                          />
                         </td>
                       </tr>
                     );
@@ -1168,13 +1760,148 @@ export default function AdminDashboardView({
               </tbody>
             </table>
           </div>
+
+          {/* 2. Mobile View: Responsive vertical Card List */}
+          <div className="admin-members-mobile-view">
+            {filteredMembers.length === 0 ? (
+              <EmptyState
+                title={memberSearchQuery || memberRoleFilter !== 'all' ? "Siswa Tidak Ditemukan" : "Belum Ada Siswa"}
+                description={memberSearchQuery || memberRoleFilter !== 'all' ? `Tidak ada siswa yang cocok dengan filter atau kata kunci "${memberSearchQuery}".` : "Belum ada siswa terdaftar. Klik '+ Input Siswa' untuk menambahkan."}
+              />
+            ) : (
+              filteredMembers.map(m => {
+                const hasSpecialRole = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa';
+                const cleanPhone = (m.phone || '').replace(/[^0-9]/g, '');
+                const waFormatted = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+
+                return (
+                  <div
+                    key={m.id}
+                    className="card admin-student-mobile-card"
+                    style={{
+                      padding: '0.85rem 1rem',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      boxShadow: 'var(--shadow-xs)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.75rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0, flex: 1 }}>
+                      {/* Nomor Absen kecil di sudut/badge */}
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--bg-hover)',
+                        color: 'var(--text-secondary)',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        #{String(m.absentNo || 0).padStart(2, '0')}
+                      </div>
+
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        {/* Nama Siswa tebal */}
+                        <div style={{
+                          fontSize: '0.92rem',
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          lineHeight: 1.3
+                        }}>
+                          {m.name}
+                        </div>
+
+                        {/* Badge Jabatan (jika pengurus) */}
+                        {hasSpecialRole && (
+                          <div style={{ marginTop: '0.2rem' }}>
+                            <span
+                              className="notion-tag notion-tag-orange"
+                              style={{
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                padding: '0.12rem 0.45rem'
+                              }}
+                            >
+                              {m.roleTitle}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tombol cepat WhatsApp & Menu opsi tiga titik */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+                      {m.phone && (
+                        <a
+                          href={`https://wa.me/${waFormatted}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Chat WhatsApp dengan ${m.name}`}
+                          style={{
+                            width: '34px',
+                            height: '34px',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            border: '1px solid rgba(22, 163, 74, 0.25)',
+                            color: '#16A34A',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textDecoration: 'none',
+                            transition: 'all var(--transition-fast)'
+                          }}
+                          title={`Chat WhatsApp dengan ${m.name}`}
+                        >
+                          <Phone size={15} strokeWidth={2.2} />
+                        </a>
+                      )}
+                      <ActionMenu
+                        align="right"
+                        items={[
+                          {
+                            label: 'Edit Data',
+                            icon: <Edit3 size={14} />,
+                            onClick: () => {
+                              setSelectedMemberForEdit(m);
+                              setEditMemberAbsentNo(m.absentNo || '');
+                              setEditMemberName(m.name || '');
+                              setEditMemberPhone(m.phone || '');
+                              setEditMemberRoleTitle(m.roleTitle || 'Anggota');
+                              setIsEditMemberOpen(true);
+                            }
+                          },
+                          {
+                            label: 'Hapus Siswa',
+                            icon: <Trash2 size={14} />,
+                            variant: 'danger',
+                            onClick: () => setMemberToDelete(m)
+                          }
+                        ]}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
 
       {/* TAB 8: IDENTITAS KELAS & PENGATURAN */}
       {activeTab === 'settings' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
+
           {/* Class Identity & Logo Form Card */}
           <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
             <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
@@ -1213,7 +1940,7 @@ export default function AdminDashboardView({
                   <label style={{ fontSize: '0.85rem', fontWeight: 700, display: 'block', marginBottom: '0.35rem' }}>
                     Logo / Foto Kelas (Ikon Web & Header)
                   </label>
-                  
+
                   <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
                     <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: '0.35rem' }}>
                       <Upload size={14} />
@@ -1797,13 +2524,13 @@ export default function AdminDashboardView({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">NISN (Opsional)</label>
+              <label className="form-label">No. WhatsApp (Opsional)</label>
               <input
-                type="text"
+                type="tel"
                 className="form-input"
-                placeholder="0078129381"
-                value={studentNisn}
-                onChange={(e) => setStudentNisn(e.target.value)}
+                placeholder="Contoh: 08123456789"
+                value={studentPhone}
+                onChange={(e) => setStudentPhone(e.target.value)}
               />
             </div>
 
@@ -1867,12 +2594,13 @@ export default function AdminDashboardView({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">NISN</label>
+              <label className="form-label">No. WhatsApp (Opsional)</label>
               <input
-                type="text"
+                type="tel"
                 className="form-input"
-                value={editMemberNisn}
-                onChange={(e) => setEditMemberNisn(e.target.value)}
+                placeholder="Contoh: 08123456789"
+                value={editMemberPhone}
+                onChange={(e) => setEditMemberPhone(e.target.value)}
               />
             </div>
 
@@ -1906,6 +2634,76 @@ export default function AdminDashboardView({
           </div>
         </form>
       </Modal>
+
+
+
+      {/* CONFIRM DIALOG: HAPUS SISWA */}
+      <ConfirmDialog
+        isOpen={Boolean(memberToDelete)}
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={() => {
+          if (memberToDelete) {
+            deleteMember(memberToDelete.id);
+            showToast(`Siswa "${memberToDelete.name}" telah dihapus dari kelas.`, 'info');
+            setMemberToDelete(null);
+          }
+        }}
+        title="Hapus Data Siswa"
+        message={`Apakah Anda yakin ingin menghapus "${memberToDelete?.name}" (No. Absen ${memberToDelete?.absentNo}) dari daftar kelas?`}
+        confirmLabel="Hapus Siswa"
+        variant="danger"
+      />
+
+      {/* CONFIRM DIALOG: TANDAI SEMUA LUNAS PERIODE */}
+      <ConfirmDialog
+        isOpen={Boolean(periodToMarkAllPaid)}
+        onClose={() => setPeriodToMarkAllPaid(null)}
+        onConfirm={() => {
+          if (periodToMarkAllPaid) {
+            markAllDuesPaid(periodToMarkAllPaid.id);
+            showToast(`Seluruh siswa berhasil ditandai lunas pada ${periodToMarkAllPaid.name}.`, 'success');
+            setPeriodToMarkAllPaid(null);
+          }
+        }}
+        title="Tandai Semua Lunas"
+        message={`Apakah Anda yakin ingin menandai seluruh ${members.length} siswa lunas untuk periode "${periodToMarkAllPaid?.name}"?`}
+        confirmLabel="Tandai Lunas Semua"
+        variant="warning"
+      />
+
+      {/* CONFIRM DIALOG: HAPUS PERIODE IURAN */}
+      <ConfirmDialog
+        isOpen={Boolean(periodToDelete)}
+        onClose={() => setPeriodToDelete(null)}
+        onConfirm={() => {
+          if (periodToDelete) {
+            deleteDuesPeriod(periodToDelete.id);
+            showToast(`Periode "${periodToDelete.name}" telah dihapus.`, 'info');
+            setPeriodToDelete(null);
+          }
+        }}
+        title="Hapus Periode Iuran"
+        message={`Apakah Anda yakin ingin menghapus periode "${periodToDelete?.name}"? Riwayat centang iuran pada periode ini akan ikut terhapus.`}
+        confirmLabel="Hapus Periode"
+        variant="danger"
+      />
+
+      {/* CONFIRM DIALOG: HAPUS TRANSAKSI KAS */}
+      <ConfirmDialog
+        isOpen={Boolean(txToDelete)}
+        onClose={() => setTxToDelete(null)}
+        onConfirm={() => {
+          if (txToDelete) {
+            deleteTransaction(txToDelete.id);
+            showToast(`Transaksi "${txToDelete.description}" telah dihapus.`, 'info');
+            setTxToDelete(null);
+          }
+        }}
+        title="Hapus Catatan Transaksi"
+        message={`Apakah Anda yakin ingin menghapus catatan transaksi "${txToDelete?.description}" senilai Rp ${Number(txToDelete?.amount || 0).toLocaleString('id-ID')}?`}
+        confirmLabel="Hapus Transaksi"
+        variant="danger"
+      />
 
       {/* MODAL: WHATSAPP SMART SHARE */}
       <WhatsAppShareModal

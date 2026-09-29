@@ -16,41 +16,41 @@ const DEFAULT_SEED_DATA = {
     logoUrl: '/pwa-512x512.png'
   },
   members: [
-    { id: 'std-1', absentNo: 1, nisn: '006819201', name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AF' },
-    { id: 'std-2', absentNo: 2, nisn: '006819202', name: 'Ardyansyah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AR' },
-    { id: 'std-3', absentNo: 3, nisn: '006819203', name: 'Arvin Putra Pratama', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AP' },
-    { id: 'std-4', absentNo: 4, nisn: '006819204', name: 'Arwan Putra Nusantara', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AN' },
-    { id: 'std-5', absentNo: 5, nisn: '006819205', name: 'Ayasy Radlliyan', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AR' },
-    { id: 'std-6', absentNo: 6, nisn: '006819206', name: "Azman Rif'at Siregar", role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AS' },
-    { id: 'std-7', absentNo: 7, nisn: '006819207', name: 'Bayu Havilah Dias', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'BD' },
-    { id: 'std-8', absentNo: 8, nisn: '006819208', name: 'Derly Rayyan Aqly', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'DA' },
-    { id: 'std-9', absentNo: 9, nisn: '006819209', name: 'Dhaffa Alhabsy', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'DH' },
-    { id: 'std-10', absentNo: 10, nisn: '006819210', name: 'Faturrahman Ilhami Dema', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FD' },
-    { id: 'std-11', absentNo: 11, nisn: '006819211', name: 'Fauzan Zuhri', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FZ' },
-    { id: 'std-12', absentNo: 12, nisn: '006819212', name: 'Feyoland Obrian Aldanys', role: 'admin', roleTitle: 'Wakil Ketua', pin: '1234', avatarText: 'FO' },
-    { id: 'std-13', absentNo: 13, nisn: '006819213', name: 'Lion Aslam Maulana', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'LM' },
-    { id: 'std-14', absentNo: 14, nisn: '006819214', name: 'Lutfiya Ghania Nashita', role: 'admin', roleTitle: 'Sekretaris 1', pin: '1234', avatarText: 'LN' },
-    { id: 'std-15', absentNo: 15, nisn: '006819215', name: 'Mehsa Oktarina', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'MO' },
-    { id: 'std-16', absentNo: 16, nisn: '006819216', name: 'M. Aidil Fitriansyah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'AF' },
-    { id: 'std-17', absentNo: 17, nisn: '006819217', name: 'M. Fahri Fatihul Aqso', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'FA' },
-    { id: 'std-18', absentNo: 18, nisn: '006819218', name: 'M. Ihsan Alldaffa', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'IA' },
-    { id: 'std-19', absentNo: 19, nisn: '006819219', name: 'M. Rafa Fadhillah', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RF' },
-    { id: 'std-20', absentNo: 20, nisn: '006819220', name: 'M. Rama Sylva', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RS' },
-    { id: 'std-21', absentNo: 21, nisn: '006819221', name: 'M. Reyhan Elsirajy', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RE' },
-    { id: 'std-22', absentNo: 22, nisn: '006819222', name: 'M. Reyhan Julvianto', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RJ' },
-    { id: 'std-23', absentNo: 23, nisn: '006819223', name: 'Nadine Misya Utami', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'NU' },
-    { id: 'std-24', absentNo: 24, nisn: '006819224', name: 'Nurrohmat Gilang Utama', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'NG' },
-    { id: 'std-25', absentNo: 25, nisn: '006819225', name: 'Pira Aditia', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'PA' },
-    { id: 'std-26', absentNo: 26, nisn: '006819226', name: 'Rani Aprilia', role: 'admin', roleTitle: 'Bendahara 1', pin: '1234', avatarText: 'RA' },
-    { id: 'std-27', absentNo: 27, nisn: '006819227', name: 'Ridho Abdillah Kalim', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'RK' },
-    { id: 'std-28', absentNo: 28, nisn: '006819228', name: 'Salwa Azzahra', role: 'admin', roleTitle: 'Bendahara 2', pin: '1234', avatarText: 'SA' },
-    { id: 'std-29', absentNo: 29, nisn: '006819229', name: 'Satria Azka Pratama P.', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SP' },
-    { id: 'std-30', absentNo: 30, nisn: '006819230', name: 'Shainajwa Checilia', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SC' },
-    { id: 'std-31', absentNo: 31, nisn: '006819231', name: 'Siva Inka Pratami', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'SP' },
-    { id: 'std-32', absentNo: 32, nisn: '006819232', name: 'Vania Artanti', role: 'admin', roleTitle: 'Sekretaris 2', pin: '1234', avatarText: 'VA' },
-    { id: 'std-33', absentNo: 33, nisn: '006819233', name: 'Wahyu Iscoki', role: 'admin', roleTitle: 'Ketua Kelas', pin: '1234', avatarText: 'WI' },
-    { id: 'std-34', absentNo: 34, nisn: '006819234', name: 'Widiansyah Wida S.', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'WW' },
-    { id: 'std-35', absentNo: 35, nisn: '006819235', name: 'Yoga Adi Permana', role: 'member', roleTitle: 'Anggota', pin: '1234', avatarText: 'YP' }
+    { id: 'std-1', absentNo: 1, name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', avatarText: 'AF', phone: '' },
+    { id: 'std-2', absentNo: 2, name: 'Ardyansyah', role: 'member', roleTitle: 'Anggota', avatarText: 'AR', phone: '' },
+    { id: 'std-3', absentNo: 3, name: 'Arvin Putra Pratama', role: 'member', roleTitle: 'Anggota', avatarText: 'AP', phone: '' },
+    { id: 'std-4', absentNo: 4, name: 'Arwan Putra Nusantara', role: 'member', roleTitle: 'Anggota', avatarText: 'AN', phone: '' },
+    { id: 'std-5', absentNo: 5, name: 'Ayasy Radlliyan', role: 'member', roleTitle: 'Anggota', avatarText: 'AR', phone: '' },
+    { id: 'std-6', absentNo: 6, name: "Azman Rif'at Siregar", role: 'member', roleTitle: 'Anggota', avatarText: 'AS', phone: '' },
+    { id: 'std-7', absentNo: 7, name: 'Bayu Havilah Dias', role: 'member', roleTitle: 'Anggota', avatarText: 'BD', phone: '' },
+    { id: 'std-8', absentNo: 8, name: 'Derly Rayyan Aqly', role: 'member', roleTitle: 'Anggota', avatarText: 'DA', phone: '' },
+    { id: 'std-9', absentNo: 9, name: 'Dhaffa Alhabsy', role: 'member', roleTitle: 'Anggota', avatarText: 'DH', phone: '' },
+    { id: 'std-10', absentNo: 10, name: 'Faturrahman Ilhami Dema', role: 'member', roleTitle: 'Anggota', avatarText: 'FD', phone: '' },
+    { id: 'std-11', absentNo: 11, name: 'Fauzan Zuhri', role: 'member', roleTitle: 'Anggota', avatarText: 'FZ', phone: '' },
+    { id: 'std-12', absentNo: 12, name: 'Feyoland Obrian Aldanys', role: 'admin', roleTitle: 'Wakil Ketua', avatarText: 'FO', phone: '' },
+    { id: 'std-13', absentNo: 13, name: 'Lion Aslam Maulana', role: 'member', roleTitle: 'Anggota', avatarText: 'LM', phone: '' },
+    { id: 'std-14', absentNo: 14, name: 'Lutfiya Ghania Nashita', role: 'admin', roleTitle: 'Sekretaris 1', avatarText: 'LN', phone: '' },
+    { id: 'std-15', absentNo: 15, name: 'Mehsa Oktarina', role: 'member', roleTitle: 'Anggota', avatarText: 'MO', phone: '' },
+    { id: 'std-16', absentNo: 16, name: 'M. Aidil Fitriansyah', role: 'member', roleTitle: 'Anggota', avatarText: 'AF', phone: '' },
+    { id: 'std-17', absentNo: 17, name: 'M. Fahri Fatihul Aqso', role: 'member', roleTitle: 'Anggota', avatarText: 'FA', phone: '' },
+    { id: 'std-18', absentNo: 18, name: 'M. Ihsan Alldaffa', role: 'member', roleTitle: 'Anggota', avatarText: 'IA', phone: '' },
+    { id: 'std-19', absentNo: 19, name: 'M. Rafa Fadhillah', role: 'member', roleTitle: 'Anggota', avatarText: 'RF', phone: '' },
+    { id: 'std-20', absentNo: 20, name: 'M. Rama Sylva', role: 'member', roleTitle: 'Anggota', avatarText: 'RS', phone: '' },
+    { id: 'std-21', absentNo: 21, name: 'M. Reyhan Elsirajy', role: 'member', roleTitle: 'Anggota', avatarText: 'RE', phone: '' },
+    { id: 'std-22', absentNo: 22, name: 'M. Reyhan Julvianto', role: 'member', roleTitle: 'Anggota', avatarText: 'RJ', phone: '' },
+    { id: 'std-23', absentNo: 23, name: 'Nadine Misya Utami', role: 'member', roleTitle: 'Anggota', avatarText: 'NU', phone: '' },
+    { id: 'std-24', absentNo: 24, name: 'Nurrohmat Gilang Utama', role: 'member', roleTitle: 'Anggota', avatarText: 'NG', phone: '' },
+    { id: 'std-25', absentNo: 25, name: 'Pira Aditia', role: 'member', roleTitle: 'Anggota', avatarText: 'PA', phone: '' },
+    { id: 'std-26', absentNo: 26, name: 'Rani Aprilia', role: 'admin', roleTitle: 'Bendahara 1', avatarText: 'RA', phone: '' },
+    { id: 'std-27', absentNo: 27, name: 'Ridho Abdillah Kalim', role: 'member', roleTitle: 'Anggota', avatarText: 'RK', phone: '' },
+    { id: 'std-28', absentNo: 28, name: 'Salwa Azzahra', role: 'admin', roleTitle: 'Bendahara 2', avatarText: 'SA', phone: '' },
+    { id: 'std-29', absentNo: 29, name: 'Satria Azka Pratama P.', role: 'member', roleTitle: 'Anggota', avatarText: 'SP', phone: '' },
+    { id: 'std-30', absentNo: 30, name: 'Shainajwa Checilia', role: 'member', roleTitle: 'Anggota', avatarText: 'SC', phone: '' },
+    { id: 'std-31', absentNo: 31, name: 'Siva Inka Pratami', role: 'member', roleTitle: 'Anggota', avatarText: 'SP', phone: '' },
+    { id: 'std-32', absentNo: 32, name: 'Vania Artanti', role: 'admin', roleTitle: 'Sekretaris 2', avatarText: 'VA', phone: '' },
+    { id: 'std-33', absentNo: 33, name: 'Wahyu Iscoki', role: 'admin', roleTitle: 'Ketua Kelas', avatarText: 'WI', phone: '' },
+    { id: 'std-34', absentNo: 34, name: 'Widiansyah Wida S.', role: 'member', roleTitle: 'Anggota', avatarText: 'WW', phone: '' },
+    { id: 'std-35', absentNo: 35, name: 'Yoga Adi Permana', role: 'member', roleTitle: 'Anggota', avatarText: 'YP', phone: '' }
   ],
   announcements: [
     {
@@ -248,7 +248,16 @@ const sanitizeData = (raw) => {
       ...(raw.classInfo || {}),
       logoUrl: raw.classInfo?.logoUrl || DEFAULT_SEED_DATA.classInfo.logoUrl
     },
-    members: Array.isArray(raw.members) ? raw.members : DEFAULT_SEED_DATA.members,
+    members: (Array.isArray(raw.members) ? raw.members : DEFAULT_SEED_DATA.members).map(m => {
+      if (m && typeof m === 'object') {
+        const { pin, nisn, ...cleaned } = m;
+        return {
+          ...cleaned,
+          phone: cleaned.phone || ''
+        };
+      }
+      return m;
+    }),
     tasks: Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks,
     announcements: Array.isArray(raw.announcements) ? raw.announcements : DEFAULT_SEED_DATA.announcements,
     exams: Array.isArray(raw.exams) ? raw.exams : DEFAULT_SEED_DATA.exams,
@@ -604,6 +613,39 @@ export function StoreProvider({ children }) {
     });
   };
 
+  const markAllDuesPaid = (periodId) => {
+    commitData(prev => {
+      const allStudentIds = (prev.members || []).map(m => m.id);
+      let newlyPaidCount = 0;
+      const period = (prev.cash.duesPeriods || []).find(p => p.id === periodId);
+      if (!period) return prev;
+
+      const previouslyPaidSet = new Set(period.paidStudentIds || []);
+      allStudentIds.forEach(id => {
+        if (!previouslyPaidSet.has(id)) {
+          newlyPaidCount++;
+        }
+      });
+
+      const updatedPeriods = (prev.cash.duesPeriods || []).map(p => {
+        if (p.id !== periodId) return p;
+        return { ...p, paidStudentIds: allStudentIds };
+      });
+
+      const duesAmt = Number(period.amount || prev.cash.duesAmount || 10000);
+      const updatedBalance = prev.cash.balance + (newlyPaidCount * duesAmt);
+
+      return {
+        ...prev,
+        cash: {
+          ...prev.cash,
+          balance: updatedBalance,
+          duesPeriods: updatedPeriods
+        }
+      };
+    });
+  };
+
   const addEvent = (event) => {
     const newEvent = {
       id: `ev-${Date.now()}`,
@@ -632,22 +674,14 @@ export function StoreProvider({ children }) {
     }));
   };
 
-  const updateMemberPin = (memberId, newPin) => {
-    commitData(prev => ({
-      ...prev,
-      members: prev.members.map(m => m.id === memberId ? { ...m, pin: newPin } : m)
-    }));
-  };
-
   const addMember = (member) => {
     const newMember = {
       id: `std-${Date.now()}`,
       absentNo: Number(member.absentNo) || (data.members.length + 1),
-      nisn: (member.nisn || '').trim(),
       name: member.name.trim(),
+      phone: (member.phone || '').trim(),
       role: member.roleTitle && ['Ketua Kelas', 'Wakil Ketua', 'Bendahara', 'Sekretaris'].some(r => member.roleTitle.includes(r)) ? 'admin' : 'member',
       roleTitle: member.roleTitle || 'Anggota',
-      pin: '1234',
       avatarText: (member.name || 'S').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase(),
       ...member
     };
@@ -753,11 +787,11 @@ export function StoreProvider({ children }) {
 
   // Derived financial stats
   const getTotalCashBalance = () => {
-    const txs = data.cash.transactions || [];
+    const txs = data?.cash?.transactions || [];
     const income = txs.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
     const expense = txs.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
     return {
-      balance: data.cash.balance,
+      balance: data?.cash?.balance ?? 0,
       income,
       expense
     };
@@ -779,10 +813,10 @@ export function StoreProvider({ children }) {
       addTransaction,
       deleteTransaction,
       toggleDuesPaid,
+      markAllDuesPaid,
       addEvent,
       deleteEvent,
       updateSchedule,
-      updateMemberPin,
       addMember,
       updateMember,
       deleteMember,

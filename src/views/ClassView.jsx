@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera } from 'lucide-react';
+import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
@@ -15,6 +15,7 @@ export default function ClassView() {
   const [currentCategory, setCurrentCategory] = useState('all');
   const [annSearch, setAnnSearch] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
+  const [expandedAnnId, setExpandedAnnId] = useState(null);
 
   // Add announcement modal
   const [isAddAnnOpen, setIsAddAnnOpen] = useState(false);
@@ -124,8 +125,8 @@ export default function ClassView() {
         justifyContent: 'space-between',
         flexWrap: 'wrap',
         gap: '1rem',
-        background: 'linear-gradient(135deg, var(--bg-surface) 0%, var(--primary-soft) 100%)',
-        borderColor: 'var(--primary-border)'
+        backgroundColor: 'var(--bg-surface)',
+        border: '1px solid var(--border)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0 }}>
           {/* Class Logo / Photo */}
@@ -134,7 +135,7 @@ export default function ClassView() {
             height: '64px',
             borderRadius: 'var(--radius-md)',
             backgroundColor: 'var(--bg-surface)',
-            border: '2px solid var(--border)',
+            border: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -157,14 +158,13 @@ export default function ClassView() {
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.7rem', fontWeight: 700 }}>
-                {classInfo.appName || 'ClassHub'}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Tahun Ajaran {classInfo.academicYear || '2026/2027'}
-              </span>
-            </div>
+            {classInfo.academicYear && (
+              <div style={{ marginBottom: '0.2rem' }}>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
+                  Tahun Ajaran {classInfo.academicYear}
+                </span>
+              </div>
+            )}
 
             <h2 style={{
               fontSize: '1.3rem',
@@ -179,26 +179,9 @@ export default function ClassView() {
               {classInfo.name || 'XI PPLG'}
             </h2>
 
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              {classInfo.school && classInfo.school !== '-' && (
-                <>
-                  <span>🏫 {classInfo.school}</span>
-                  <span>•</span>
-                </>
-              )}
-              {classInfo.homeroomTeacher && classInfo.homeroomTeacher !== '-' && (
-                <>
-                  <span>👨‍🏫 Wali: {classInfo.homeroomTeacher}</span>
-                  <span>•</span>
-                </>
-              )}
-              {classInfo.academicYear && (
-                <>
-                  <span>📅 {classInfo.academicYear}</span>
-                  <span>•</span>
-                </>
-              )}
-              <span>👥 {members.length} Siswa</span>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Users size={13} style={{ color: 'var(--text-muted)' }} />
+              <span>{members.length} Siswa Terdaftar</span>
             </div>
           </div>
         </div>
@@ -313,85 +296,105 @@ export default function ClassView() {
               Belum ada pengumuman yang sesuai filter.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
               {filteredAnnouncements.map(ann => {
                 const dateObj = new Date(ann.createdAt);
                 const dateStr = !isNaN(dateObj.getTime())
                   ? dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
                   : '';
+                const isExpanded = expandedAnnId === ann.id;
 
                 return (
                   <div
                     key={ann.id}
-                    className="card"
+                    className="clean-task-card"
                     style={{
-                      padding: '1.15rem 1.25rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.5rem',
-                      position: 'relative',
-                      borderLeft: ann.isPinned ? '4px solid var(--primary)' : '1px solid var(--border)'
+                      padding: '0.85rem 1rem',
+                      borderLeft: ann.isPinned ? '3px solid var(--primary)' : '1px solid var(--border)'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-                        {ann.isPinned && (
-                          <span className="notion-tag" style={{ fontSize: '0.7rem', fontWeight: 700, gap: '0.25rem', backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-border)' }}>
-                            <Pin size={11} /> Disematkan
+                    <div className="clean-task-main">
+                      <div
+                        style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                        onClick={() => setExpandedAnnId(isExpanded ? null : ann.id)}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
+                          {ann.isPinned && (
+                            <span className="notion-tag" style={{ fontSize: '0.68rem', fontWeight: 700, gap: '0.25rem', backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', border: '1px solid var(--primary-border)' }}>
+                              <Pin size={10} /> Disematkan
+                            </span>
+                          )}
+                          <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', textTransform: 'capitalize' }}>
+                            {ann.category || 'Warta'}
                           </span>
-                        )}
-                        <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.7rem', textTransform: 'capitalize' }}>
-                          {ann.category || 'Warta'}
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          {dateStr}
-                        </span>
+                          <span style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                            {dateStr}
+                          </span>
+                        </div>
+
+                        <div className="clean-task-title">
+                          {ann.title}
+                        </div>
                       </div>
 
-                      {isAdmin && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                          <button
-                            onClick={() => togglePinAnnouncement(ann.id)}
-                            className="btn btn-ghost btn-sm"
-                            style={{ padding: '0.25rem 0.4rem', color: ann.isPinned ? 'var(--primary)' : 'var(--text-muted)' }}
-                            title={ann.isPinned ? 'Lepas Sematan' : 'Sematkan Pengumuman'}
-                          >
-                            {ann.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (confirm('Hapus pengumuman ini?')) {
-                                deleteAnnouncement(ann.id);
-                                showToast('Pengumuman dihapus.', 'info');
-                              }
-                            }}
-                            className="btn btn-ghost btn-sm"
-                            style={{ padding: '0.25rem 0.4rem', color: 'var(--danger)' }}
-                            title="Hapus Pengumuman"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                      {/* Quick actions (Pin, Delete, Chevron toggle) */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        {isAdmin && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => togglePinAnnouncement(ann.id)}
+                              className="btn btn-ghost btn-xs"
+                              style={{ padding: '0.25rem', color: ann.isPinned ? 'var(--primary)' : 'var(--text-muted)' }}
+                              title={ann.isPinned ? 'Lepas Sematan' : 'Sematkan Pengumuman'}
+                            >
+                              {ann.isPinned ? <PinOff size={14} /> : <Pin size={14} />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm('Hapus pengumuman ini?')) {
+                                  deleteAnnouncement(ann.id);
+                                  showToast('Pengumuman dihapus.', 'info');
+                                }
+                              }}
+                              className="btn btn-ghost btn-xs"
+                              style={{ color: 'var(--danger)', padding: '0.25rem' }}
+                              title="Hapus Pengumuman"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedAnnId(isExpanded ? null : ann.id)}
+                          className="btn btn-ghost btn-xs"
+                          style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                          title={isExpanded ? 'Tutup isi pengumuman' : 'Lihat isi pengumuman'}
+                        >
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Progressive Disclosure Body (Accordion) */}
+                    {isExpanded && (
+                      <div className="clean-task-details">
+                        <p style={{
+                          fontSize: '0.85rem',
+                          color: 'var(--text-secondary)',
+                          lineHeight: 1.6,
+                          margin: '0 0 0.5rem 0',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {ann.content}
+                        </p>
+                        <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
+                          Ditulis oleh: <strong style={{ color: 'var(--text-primary)' }}>{ann.author || 'Pengurus Kelas'}</strong>
                         </div>
-                      )}
-                    </div>
-
-                    <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                      {ann.title}
-                    </h3>
-
-                    <p style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--text-secondary)',
-                      lineHeight: 1.55,
-                      margin: 0,
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {ann.content}
-                    </p>
-
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                      Ditulis oleh: <strong>{ann.author || 'Pengurus Kelas'}</strong>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -403,60 +406,6 @@ export default function ClassView() {
       {/* 4. CLASSMATES ROSTER */}
       {activeTab === 'members' && (
         <div>
-          {/* Highlight Pengurus Inti Kelas */}
-          {!memberSearch && (
-            <div className="card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', background: 'var(--card)' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-                <Users size={16} color="var(--primary)" />
-                <span>Pengurus Inti Kelas</span>
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: '0.65rem'
-              }}>
-                {members.filter(m => m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa').map(officer => (
-                  <div 
-                    key={officer.id}
-                    style={{
-                      padding: '0.65rem 0.85rem',
-                      backgroundColor: 'var(--primary-soft)',
-                      border: '1px solid var(--primary-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.65rem'
-                    }}
-                  >
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: 'var(--radius-full)',
-                      backgroundColor: 'var(--primary)',
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 800,
-                      fontSize: '0.75rem',
-                      flexShrink: 0
-                    }}>
-                      {officer.avatarText || officer.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        {officer.roleTitle}
-                      </div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {officer.name}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
             <input
               type="text"
@@ -478,67 +427,51 @@ export default function ClassView() {
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
               gap: '0.65rem'
             }}>
               {filteredMembers.map((m, idx) => {
                 const absentNum = String(m.absentNo || idx + 1).padStart(2, '0');
-                const role = m.roleTitle && m.roleTitle !== 'Anggota' && m.roleTitle !== 'Siswa' ? m.roleTitle : null;
 
                 return (
                   <div
                     key={m.id}
                     className="card"
+                    title={m.name}
                     style={{
-                      padding: '0.75rem 1rem',
+                      padding: '0.65rem 0.85rem',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '0.75rem',
+                      gap: '0.65rem',
                       borderRadius: 'var(--radius-sm)',
                       boxShadow: 'none',
-                      border: '1px solid var(--border)'
+                      border: '1px solid var(--border)',
+                      minHeight: '44px'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
-                      <span style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 800,
-                        color: 'var(--text-muted)',
-                        backgroundColor: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        padding: '0.2rem 0.45rem',
-                        borderRadius: 'var(--radius-xs)',
-                        flexShrink: 0
-                      }}>
-                        #{absentNum}
-                      </span>
-                      <strong style={{
-                        fontSize: '0.88rem',
-                        fontWeight: 600,
-                        color: 'var(--text-primary)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {m.name}
-                      </strong>
-                    </div>
-
-                    {role && (
-                      <span
-                        className="notion-tag notion-tag-gray"
-                        style={{
-                          fontSize: '0.7rem',
-                          padding: '0.15rem 0.5rem',
-                          borderRadius: 'var(--radius-full)',
-                          flexShrink: 0,
-                          fontWeight: 600
-                        }}
-                      >
-                        {role}
-                      </span>
-                    )}
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 800,
+                      color: 'var(--text-muted)',
+                      backgroundColor: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      padding: '0.2rem 0.45rem',
+                      borderRadius: 'var(--radius-xs)',
+                      flexShrink: 0
+                    }}>
+                      #{absentNum}
+                    </span>
+                    <span style={{
+                      fontSize: '0.86rem',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.35,
+                      wordBreak: 'break-word',
+                      minWidth: 0,
+                      flex: 1
+                    }}>
+                      {m.name}
+                    </span>
                   </div>
                 );
               })}

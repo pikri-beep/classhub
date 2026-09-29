@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
-import WhatsAppShareModal from '../components/WhatsAppShareModal';
+import { formatDateIndo } from '../lib/dateUtils';
 
 export default function AcademicView() {
   const { currentUser, isAdmin } = useAuth();
@@ -12,14 +12,13 @@ export default function AcademicView() {
   const { showToast } = useToast();
 
   const [activeSubTab, setActiveSubTab] = useState('tasks');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [subjectFilter, setSubjectFilter] = useState('all');
   const [expandedTaskId, setExpandedTaskId] = useState(null);
+  const [expandedExamId, setExpandedExamId] = useState(null);
 
   // Modals
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [isAddExamOpen, setIsAddExamOpen] = useState(false);
-  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   // New task form state
   const [taskSubject, setTaskSubject] = useState('');
@@ -36,34 +35,12 @@ export default function AcademicView() {
 
   const tasks = data.tasks || [];
   const exams = data.exams || [];
-  const totalStudents = (data.members || []).length;
   const subjects = ['all', ...new Set(tasks.map(t => t.subject))];
 
   const filteredTasks = tasks.filter(task => {
     if (subjectFilter !== 'all' && task.subject !== subjectFilter) return false;
-
-    const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const isTodo = !isDone;
-
-    if (statusFilter === 'todo' && !isTodo) return false;
-    if (statusFilter === 'done' && !isDone) return false;
-
     return true;
   });
-
-  const monthsMap = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
-  const handleToggleTaskDone = (task) => {
-    const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const next = isDone ? 'todo' : 'done';
-
-    updateTaskStatus(task.id, currentUser.id, next);
-    if (!isDone) {
-      showToast('Tugas diselesaikan! 🎉', 'success');
-    } else {
-      showToast('Tugas ditandai belum selesai', 'info');
-    }
-  };
 
   const handleCreateTask = (e) => {
     e.preventDefault();
@@ -132,35 +109,21 @@ export default function AcademicView() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
-          {activeSubTab === 'tasks' && isAdmin && (
-            <button
-              onClick={() => setIsWhatsAppModalOpen(true)}
-              className="btn btn-secondary btn-sm"
-              style={{ gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
-              title="Salin dan bagikan rekap tugas aktif ke WhatsApp (Khusus Pengurus)"
-            >
-              <MessageCircle size={15} />
-              <span>WhatsApp Brief</span>
-            </button>
-          )}
-
-          {isAdmin && (
-            <div>
-              {activeSubTab === 'tasks' ? (
-                <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
-                  <Plus size={15} />
-                  <span>+ Tambah Tugas</span>
-                </button>
-              ) : (
-                <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
-                  <Plus size={15} />
-                  <span>+ Jadwalkan Ujian</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        {isAdmin && (
+          <div>
+            {activeSubTab === 'tasks' ? (
+              <button onClick={() => setIsAddTaskOpen(true)} className="btn btn-primary btn-sm">
+                <Plus size={15} />
+                <span>+ Tambah Tugas</span>
+              </button>
+            ) : (
+              <button onClick={() => setIsAddExamOpen(true)} className="btn btn-primary btn-sm">
+                <Plus size={15} />
+                <span>+ Jadwalkan Ujian</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 3. TASKS CONTENT */}
@@ -175,25 +138,13 @@ export default function AcademicView() {
             gap: '0.75rem',
             marginBottom: '1rem'
           }}>
-            <div className="clean-filter-chips">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`clean-filter-chip ${statusFilter === 'all' ? 'active' : ''}`}
-              >
-                Semua ({tasks.length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('todo')}
-                className={`clean-filter-chip ${statusFilter === 'todo' ? 'active' : ''}`}
-              >
-                Belum Selesai ({tasks.filter(t => !(t.completedStudentIds || []).includes(currentUser.id)).length})
-              </button>
-              <button
-                onClick={() => setStatusFilter('done')}
-                className={`clean-filter-chip ${statusFilter === 'done' ? 'active' : ''}`}
-              >
-                Selesai ({tasks.filter(t => (t.completedStudentIds || []).includes(currentUser.id)).length})
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Daftar Tugas
+              </span>
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem' }}>
+                {filteredTasks.length} Tugas
+              </span>
             </div>
 
             <select
@@ -209,7 +160,7 @@ export default function AcademicView() {
             </select>
           </div>
 
-          {/* Tasks Database Table (Desktop) & Cards (Mobile) */}
+          {/* Tasks List View (Clean Cards with Dropdown Accordion) */}
           {filteredTasks.length === 0 ? (
             <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
               <p style={{ fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Tidak ada tugas ditemukan</p>
@@ -218,247 +169,96 @@ export default function AcademicView() {
               </p>
             </div>
           ) : (
-            <>
-              {/* Desktop Database Table */}
-              <div className="notion-table-wrapper desktop-only-table">
-                <table className="notion-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '45px', textAlign: 'center' }}>✓</th>
-                      <th>Tugas & Deskripsi</th>
-                      <th style={{ width: '150px' }}>Mata Pelajaran</th>
-                      <th style={{ width: '130px' }}>Tenggat</th>
-                      <th style={{ width: '140px' }}>Status Saya</th>
-                      <th style={{ width: '110px' }}>Progres Kelas</th>
-                      {isAdmin && <th style={{ width: '50px', textAlign: 'center' }}>Aksi</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTasks.map(task => {
-                      const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-                      const doneCount = (task.completedStudentIds || []).length;
-                      const donePercent = Math.round((doneCount / totalStudents) * 100);
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '1.5rem' }}>
+              {filteredTasks.map(task => {
+                const dObj = new Date(task.deadline);
+                const dateStr = formatDateIndo(task.deadline, { withDay: false, monthFormat: 'short' });
+                const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
+                const isExpanded = expandedTaskId === task.id;
+                const hasDetails = Boolean(task.description || task.link);
 
-                      const dObj = new Date(task.deadline);
-                      const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
-                      const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
-
-                      return (
-                        <tr key={task.id}>
-                          {/* Checkbox */}
-                          <td style={{ textAlign: 'center' }}>
-                            <div
-                              className="notion-todo-checkbox"
-                              onClick={() => handleToggleTaskDone(task)}
-                              style={{
-                                margin: '0 auto',
-                                backgroundColor: isDone ? 'var(--primary)' : 'var(--bg-surface)',
-                                borderColor: isDone ? 'var(--primary)' : 'var(--border-focus)',
-                                color: '#fff',
-                                cursor: 'pointer'
-                              }}
-                              title="Klik untuk menandai selesai/belum"
-                            >
-                              {isDone && <Check size={12} strokeWidth={3} />}
-                            </div>
-                          </td>
-
-                          {/* Title & Desc */}
-                          <td>
-                            <div style={{
-                              fontWeight: 600,
-                              color: isDone ? 'var(--text-muted)' : 'var(--text-primary)',
-                              textDecoration: isDone ? 'line-through' : 'none'
-                            }}>
-                              {task.title}
-                            </div>
-                            {task.description && (
-                              <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.2rem', lineHeight: 1.4 }}>
-                                {task.description}
-                              </div>
-                            )}
-                            {task.link && (
-                              <a
-                                href={task.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  fontSize: '0.78rem',
-                                  color: 'var(--primary)',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem',
-                                  marginTop: '0.25rem'
-                                }}
-                              >
-                                <ExternalLink size={12} />
-                                <span>Tautan Pengumpulan</span>
-                              </a>
-                            )}
-                          </td>
-
-                          {/* Subject */}
-                          <td>
-                            <span className="notion-tag notion-tag-gray">{task.subject}</span>
-                          </td>
-
-                          {/* Deadline */}
-                          <td>
-                            <span style={{
-                              color: isNear ? 'var(--danger)' : 'var(--text-secondary)',
-                              fontWeight: isNear ? 700 : 'normal'
-                            }}>
-                              {dateStr}
-                            </span>
-                          </td>
-
-                          {/* Status Button (Binary) */}
-                          <td>
-                            <button
-                              onClick={() => handleToggleTaskDone(task)}
-                              className={`notion-tag ${isDone ? 'notion-tag-green' : 'notion-tag-gray'}`}
-                              style={{ border: 'none', cursor: 'pointer' }}
-                              title="Klik untuk mengganti status"
-                            >
-                              {isDone ? '✓ Selesai' : '○ Belum'}
-                            </button>
-                          </td>
-
-                          {/* Class Progress */}
-                          <td style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                            {doneCount}/{totalStudents} ({donePercent}%)
-                          </td>
-
-                          {/* Admin Action */}
-                          {isAdmin && (
-                            <td style={{ textAlign: 'center' }}>
-                              <button
-                                onClick={() => {
-                                  if (confirm('Hapus tugas ini?')) {
-                                    deleteTask(task.id);
-                                    showToast('Tugas berhasil dihapus', 'info');
-                                  }
-                                }}
-                                className="btn-ghost"
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
-                                title="Hapus Tugas"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card List View (Clean with Progressive Disclosure Accordion) */}
-              <div className="mobile-only-cards" style={{ marginBottom: '1.5rem' }}>
-                {filteredTasks.map(task => {
-                  const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-                  const doneCount = (task.completedStudentIds || []).length;
-                  const donePercent = Math.round((doneCount / totalStudents) * 100);
-
-                  const dObj = new Date(task.deadline);
-                  const dateStr = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
-                  const isNear = !isNaN(dObj) && (dObj - new Date()) > 0 && (dObj - new Date()) < 86400000 * 3;
-                  const isExpanded = expandedTaskId === task.id;
-                  const hasDetails = Boolean(task.description || task.link);
-
-                  return (
-                    <div key={task.id} className={`clean-task-card ${isDone ? 'completed' : ''}`}>
-                      <div className="clean-task-main">
-                        {/* Checkbox */}
-                        <div
-                          className="clean-todo-checkbox"
-                          onClick={() => handleToggleTaskDone(task)}
-                          title="Tandai selesai"
-                        >
-                          {isDone && <Check size={12} strokeWidth={3} />}
+                return (
+                  <div key={task.id} className="clean-task-card">
+                    <div className="clean-task-main">
+                      {/* Title & Tags */}
+                      <div
+                        style={{ flex: 1, minWidth: 0, cursor: hasDetails ? 'pointer' : 'default' }}
+                        onClick={() => hasDetails && setExpandedTaskId(isExpanded ? null : task.id)}
+                      >
+                        <div className="clean-task-title">
+                          {task.title}
                         </div>
-
-                        {/* Title & Tags */}
-                        <div
-                          style={{ flex: 1, minWidth: 0, cursor: hasDetails ? 'pointer' : 'default' }}
-                          onClick={() => hasDetails && setExpandedTaskId(isExpanded ? null : task.id)}
-                        >
-                          <div className={`clean-task-title ${isDone ? 'completed' : ''}`}>
-                            {task.title}
-                          </div>
-                          <div className="clean-task-tags">
-                            <span className="clean-tag-subject">{task.subject}</span>
-                            <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
-                              {dateStr}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Quick actions (Expand toggle & delete) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                          {hasDetails && (
-                            <button
-                              onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
-                              className="btn btn-ghost btn-xs"
-                              style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
-                              title={isExpanded ? 'Tutup rincian' : 'Lihat rincian'}
-                            >
-                              {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                            </button>
-                          )}
-                          {isAdmin && (
-                            <button
-                              onClick={() => {
-                                if (confirm('Hapus tugas ini?')) {
-                                  deleteTask(task.id);
-                                  showToast('Tugas berhasil dihapus', 'info');
-                                }
-                              }}
-                              className="btn-ghost btn-xs"
-                              style={{ color: 'var(--danger)', padding: '0.25rem' }}
-                              title="Hapus Tugas"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
+                        <div className="clean-task-tags">
+                          <span className="clean-tag-subject">{task.subject}</span>
+                          <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
+                            <Calendar size={11} style={{ marginRight: '0.2rem' }} />
+                            {dateStr}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Progressive Disclosure Body (Accordion) */}
-                      {isExpanded && hasDetails && (
-                        <div className="clean-task-details">
-                          {task.description && (
-                            <p className="clean-task-desc">{task.description}</p>
-                          )}
-                          {task.link && (
-                            <a
-                              href={task.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="clean-task-link"
-                            >
-                              <ExternalLink size={12} />
-                              <span>Buka Tautan Pengumpulan</span>
-                            </a>
-                          )}
-                          <div className="clean-task-progress-note">
-                            Progres kelas: {doneCount}/{totalStudents} ({donePercent}% siswa sudah selesai)
-                          </div>
-                        </div>
-                      )}
+                      {/* Quick actions (Chevron toggle & delete) */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        {hasDetails && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                            className="btn btn-ghost btn-xs"
+                            style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                            title={isExpanded ? 'Tutup rincian' : 'Lihat rincian'}
+                          >
+                            {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Hapus tugas ini?')) {
+                                deleteTask(task.id);
+                                showToast('Tugas berhasil dihapus', 'info');
+                              }
+                            }}
+                            className="btn-ghost btn-xs"
+                            style={{ color: 'var(--danger)', padding: '0.25rem' }}
+                            title="Hapus Tugas"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </>
+
+                    {/* Progressive Disclosure Body (Accordion) */}
+                    {isExpanded && hasDetails && (
+                      <div className="clean-task-details">
+                        {task.description && (
+                          <p className="clean-task-desc">{task.description}</p>
+                        )}
+                        {task.link && (
+                          <a
+                            href={task.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="clean-task-link"
+                          >
+                            <ExternalLink size={12} />
+                            <span>Buka Tautan Pengumpulan</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
 
       {/* 4. EXAMS CONTENT */}
       {activeSubTab === 'exams' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           {exams.length === 0 ? (
             <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
               <p style={{ fontWeight: 700, margin: 0 }}>Belum ada jadwal ujian</p>
@@ -468,13 +268,12 @@ export default function AcademicView() {
             </div>
           ) : (
             exams.map(exam => {
+              const dateFormatted = formatDateIndo(exam.examDate, { withDay: true, monthFormat: 'short' });
               const dateObj = new Date(exam.examDate);
-              const dateFormatted = !isNaN(dateObj)
-                ? `${dateObj.getDate()} ${monthsMap[dateObj.getMonth()]} ${dateObj.getFullYear()} • ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} WIB`
-                : exam.examDate;
-
               const diffMs = !isNaN(dateObj) ? dateObj - new Date() : 0;
               const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+              const isExamExpanded = expandedExamId === exam.id;
+              const hasScope = Boolean(exam.scope);
 
               let tagClass = 'notion-tag-gray';
               let urgencyText = `${diffDays} hari lagi`;
@@ -496,50 +295,73 @@ export default function AcademicView() {
               }
 
               return (
-                <div key={exam.id} className="card" style={{ padding: '1.25rem 1.4rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
-                        <span className="notion-tag notion-tag-gray">{exam.subject}</span>
-                        <span className={`notion-tag ${tagClass}`} style={{ fontWeight: 700 }}>{urgencyText}</span>
-                      </div>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.35rem 0' }}>
+                <div key={exam.id} className="clean-task-card" style={{ padding: '0.85rem 1rem' }}>
+                  <div className="clean-task-main">
+                    <div
+                      style={{ flex: 1, minWidth: 0, cursor: hasScope ? 'pointer' : 'default' }}
+                      onClick={() => hasScope && setExpandedExamId(isExamExpanded ? null : exam.id)}
+                    >
+                      <div className="clean-task-title">
                         {exam.title}
-                      </h3>
-                      <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                        <span>📅 {dateFormatted}</span>
+                      </div>
+                      <div className="clean-task-tags">
+                        <span className="clean-tag-subject">{exam.subject}</span>
+                        <span className={`clean-tag-deadline ${diffDays <= 2 ? 'urgent' : ''}`}>
+                          {urgencyText}
+                        </span>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginLeft: '0.25rem' }}>
+                          <Calendar size={12} />
+                          <span>{dateFormatted}</span>
+                        </span>
                       </div>
                     </div>
 
-                    {isAdmin && (
-                      <button
-                        onClick={() => {
-                          if (confirm('Hapus jadwal ujian ini?')) {
-                            deleteExam(exam.id);
-                            showToast('Jadwal ujian dihapus', 'info');
-                          }
-                        }}
-                        className="btn-ghost"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', padding: '4px' }}
-                        title="Hapus Ujian"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    )}
+                    {/* Quick actions (Expand toggle & delete) */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      {hasScope && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedExamId(isExamExpanded ? null : exam.id)}
+                          className="btn btn-ghost btn-xs"
+                          style={{ padding: '0.25rem', color: 'var(--text-muted)' }}
+                          title={isExamExpanded ? 'Tutup kisi-kisi' : 'Lihat kisi-kisi'}
+                        >
+                          {isExamExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        </button>
+                      )}
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm('Hapus jadwal ujian ini?')) {
+                              deleteExam(exam.id);
+                              showToast('Jadwal ujian dihapus', 'info');
+                            }
+                          }}
+                          className="btn-ghost btn-xs"
+                          style={{ color: 'var(--danger)', padding: '0.25rem' }}
+                          title="Hapus Ujian"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {exam.scope && (
-                    <div style={{
-                      marginTop: '0.75rem',
-                      padding: '0.65rem 0.85rem',
-                      backgroundColor: 'var(--callout-bg)',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border)',
-                      fontSize: '0.8125rem',
-                      color: 'var(--text-secondary)',
-                      lineHeight: 1.5
-                    }}>
-                      <strong style={{ color: 'var(--text-primary)' }}>Kisi-kisi & Cakupan:</strong> {exam.scope}
+                  {/* Accordion Body for Exam Scope */}
+                  {isExamExpanded && hasScope && (
+                    <div className="clean-task-details">
+                      <div style={{
+                        padding: '0.65rem 0.85rem',
+                        backgroundColor: 'var(--callout-bg)',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border)',
+                        fontSize: '0.8125rem',
+                        color: 'var(--text-secondary)',
+                        lineHeight: 1.5
+                      }}>
+                        <strong style={{ color: 'var(--text-primary)' }}>Kisi-kisi & Cakupan:</strong> {exam.scope}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -672,15 +494,6 @@ export default function AcademicView() {
           </div>
         </form>
       </Modal>
-
-      {/* WHATSAPP RECAP MODAL */}
-      <WhatsAppShareModal
-        isOpen={isWhatsAppModalOpen}
-        onClose={() => setIsWhatsAppModalOpen(false)}
-        tasks={tasks}
-        classInfo={data.classInfo}
-        currentUser={currentUser}
-      />
     </div>
   );
 }

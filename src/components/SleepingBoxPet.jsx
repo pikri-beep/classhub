@@ -3,33 +3,42 @@ import React from 'react';
 export default function SleepingBoxPet() {
   return (
     <div 
-      className="sleeping-box-pet-container"
-      aria-label="Kucing tidur di dalam box"
+      className="sleeping-cat-pet-container"
+      aria-label="Kucing oranye tidur pulas di lantai"
       style={{
         position: 'relative',
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'center',
         userSelect: 'none',
-        pointerEvents: 'none',
-        width: '66px',
-        height: '52px'
+        pointerEvents: 'none'
       }}
     >
-      {/* FLOATING 8-BIT Z Z Z ZZ SLEEP PARTICLES */}
-      <div className="sleeping-z-stream">
+      {/* FLOATING SLEEP PARTICLES (z z z zz) DRIFTING FROM SNOUT */}
+      <div 
+        className="sleeping-z-stream" 
+        style={{ 
+          position: 'absolute',
+          top: '-14px', 
+          left: '4px',
+          width: '36px',
+          height: '36px',
+          pointerEvents: 'none',
+          overflow: 'visible'
+        }}
+      >
         <span className="pixel-z z-1">z</span>
         <span className="pixel-z z-2">z</span>
         <span className="pixel-z z-3">z</span>
         <span className="pixel-z z-4">zz</span>
       </div>
 
-      {/* PIXEL ART SLEEPING CAT IN CARDBOARD BOX */}
+      {/* PIXEL ART SLEEPING GINGER CAT (MATCHING REFERENCE IMAGE 100%) */}
       <div className="sleeping-cat-wrapper">
         <svg
-          width="56"
-          height="42"
-          viewBox="0 0 32 24"
+          width="78"
+          height="46"
+          viewBox="0 0 39 23"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
           style={{
@@ -38,87 +47,285 @@ export default function SleepingBoxPet() {
             display: 'block'
           }}
         >
-          {/* =========================================
-              BAGIAN 1: KUCING TIDUR PIXEL 8-BIT
-             ========================================= */}
-          <g className="sleeping-cat-body">
-            {/* Telinga Kiri (Rebah santai ke kiri) */}
-            <rect x="7" y="3" width="2" height="2" fill="#D97706" />
-            <rect x="6" y="4" width="2" height="2" fill="#D97706" />
-            <rect x="8" y="4" width="2" height="2" fill="#FCA5A5" />
-
-            {/* Telinga Kanan (Rebah santai ke kanan) */}
-            <rect x="22" y="3" width="2" height="2" fill="#D97706" />
-            <rect x="23" y="4" width="2" height="2" fill="#D97706" />
-            <rect x="21" y="4" width="2" height="2" fill="#FCA5A5" />
-
-            {/* Kepala Kucing (Posisi menunduk santai) */}
-            <rect x="8" y="4" width="15" height="8" fill="#F59E0B" />
-            <rect x="7" y="5" width="17" height="6" fill="#F59E0B" />
-            <rect x="6" y="6" width="19" height="4" fill="#F59E0B" />
-
-            {/* Belang Pixel Kepala */}
-            <rect x="14" y="3" width="3" height="3" fill="#B45309" />
-            <rect x="12" y="4" width="1" height="2" fill="#B45309" />
-            <rect x="18" y="4" width="1" height="2" fill="#B45309" />
-
-            {/* Moncong / Pipi Bawah Krem */}
-            <rect x="10" y="8" width="11" height="3" fill="#FEF3C7" />
-            <rect x="11" y="9" width="9" height="2" fill="#FEF3C7" />
-
-            {/* Hidung Pink Kecil */}
-            <rect x="15" y="8" width="1" height="1" fill="#F43F5E" />
-
-            {/* Mata Tidur Merem Pixel (Garis Santai) */}
-            <rect x="9" y="7" width="3" height="1" fill="#451A03" />
-            <rect x="19" y="7" width="3" height="1" fill="#451A03" />
-
-            {/* Rona Pipi Merah Lembut (Blush) */}
-            <rect x="7" y="8" width="2" height="1" fill="#FDA4AF" />
-            <rect x="22" y="8" width="2" height="1" fill="#FDA4AF" />
+          {/* Main Orange Fur Body */}
+          <g fill="#EA580C" className="cat-layer-main">
+            <rect x="23" y="1" width="2" height="1" />
+            <rect x="27" y="1" width="1" height="1" />
+            <rect x="19" y="2" width="2" height="1" />
+            <rect x="23" y="2" width="3" height="1" />
+            <rect x="27" y="2" width="3" height="1" />
+            <rect x="16" y="3" width="1" height="1" />
+            <rect x="19" y="3" width="3" height="1" />
+            <rect x="24" y="3" width="2" height="1" />
+            <rect x="28" y="3" width="2" height="1" />
+            <rect x="32" y="3" width="1" height="1" />
+            <rect x="10" y="4" width="1" height="1" />
+            <rect x="16" y="4" width="2" height="1" />
+            <rect x="20" y="4" width="3" height="1" />
+            <rect x="24" y="4" width="3" height="1" />
+            <rect x="28" y="4" width="3" height="1" />
+            <rect x="32" y="4" width="2" height="1" />
+            <rect x="10" y="5" width="2" height="1" />
+            <rect x="14" y="5" width="5" height="1" />
+            <rect x="20" y="5" width="3" height="1" />
+            <rect x="24" y="5" width="3" height="1" />
+            <rect x="28" y="5" width="4" height="1" />
+            <rect x="33" y="5" width="2" height="1" />
+            <rect x="10" y="6" width="2" height="1" />
+            <rect x="14" y="6" width="2" height="1" />
+            <rect x="17" y="6" width="2" height="1" />
+            <rect x="20" y="6" width="4" height="1" />
+            <rect x="25" y="6" width="3" height="1" />
+            <rect x="29" y="6" width="7" height="1" />
+            <rect x="7" y="7" width="2" height="1" />
+            <rect x="10" y="7" width="3" height="1" />
+            <rect x="15" y="7" width="5" height="1" />
+            <rect x="21" y="7" width="3" height="1" />
+            <rect x="25" y="7" width="3" height="1" />
+            <rect x="29" y="7" width="3" height="1" />
+            <rect x="33" y="7" width="3" height="1" />
+            <rect x="6" y="8" width="8" height="1" />
+            <rect x="15" y="8" width="6" height="1" />
+            <rect x="22" y="8" width="3" height="1" />
+            <rect x="26" y="8" width="7" height="1" />
+            <rect x="34" y="8" width="3" height="1" />
+            <rect x="5" y="9" width="4" height="1" />
+            <rect x="10" y="9" width="19" height="1" />
+            <rect x="30" y="9" width="3" height="1" />
+            <rect x="35" y="9" width="2" height="1" />
+            <rect x="4" y="10" width="4" height="1" />
+            <rect x="9" y="10" width="2" height="1" />
+            <rect x="12" y="10" width="21" height="1" />
+            <rect x="35" y="10" width="2" height="1" />
+            <rect x="1" y="11" width="7" height="1" />
+            <rect x="9" y="11" width="1" height="1" />
+            <rect x="11" y="11" width="2" height="1" />
+            <rect x="14" y="11" width="5" height="1" />
+            <rect x="20" y="11" width="8" height="1" />
+            <rect x="29" y="11" width="5" height="1" />
+            <rect x="36" y="11" width="1" height="1" />
+            <rect x="2" y="12" width="5" height="1" />
+            <rect x="8" y="12" width="4" height="1" />
+            <rect x="14" y="12" width="5" height="1" />
+            <rect x="21" y="12" width="6" height="1" />
+            <rect x="29" y="12" width="5" height="1" />
+            <rect x="36" y="12" width="1" height="1" />
+            <rect x="4" y="13" width="1" height="1" />
+            <rect x="7" y="13" width="1" height="1" />
+            <rect x="9" y="13" width="2" height="1" />
+            <rect x="13" y="13" width="5" height="1" />
+            <rect x="30" y="13" width="4" height="1" />
+            <rect x="36" y="13" width="1" height="1" />
+            <rect x="13" y="14" width="5" height="1" />
+            <rect x="31" y="14" width="3" height="1" />
+            <rect x="36" y="14" width="1" height="1" />
+            <rect x="14" y="15" width="3" height="1" />
+            <rect x="32" y="15" width="1" height="1" />
+            <rect x="36" y="15" width="1" height="1" />
+            <rect x="15" y="16" width="2" height="1" />
+            <rect x="36" y="16" width="1" height="1" />
+            <rect x="15" y="17" width="2" height="1" />
+            <rect x="36" y="17" width="1" height="1" />
+            <rect x="15" y="18" width="1" height="1" />
+            <rect x="36" y="18" width="1" height="1" />
+            <rect x="15" y="19" width="1" height="1" />
+            <rect x="36" y="19" width="1" height="1" />
+            <rect x="15" y="20" width="1" height="1" />
+            <rect x="36" y="20" width="1" height="1" />
+            <rect x="14" y="21" width="1" height="1" />
+            <rect x="36" y="21" width="1" height="1" />
           </g>
 
-          {/* =========================================
-              BAGIAN 2: KARDUS BOX PIXEL 8-BIT
-             ========================================= */}
-          {/* Lubang Dalam Box */}
-          <rect x="4" y="9" width="23" height="3" fill="#451A03" />
+          {/* Light Orange Stripes / Highlights */}
+          <g fill="#FB923C" className="cat-layer-stripes">
+            <rect x="21" y="1" width="2" height="1" />
+            <rect x="25" y="1" width="2" height="1" />
+            <rect x="18" y="2" width="1" height="1" />
+            <rect x="21" y="2" width="2" height="1" />
+            <rect x="26" y="2" width="1" height="1" />
+            <rect x="30" y="2" width="1" height="1" />
+            <rect x="17" y="3" width="2" height="1" />
+            <rect x="22" y="3" width="2" height="1" />
+            <rect x="26" y="3" width="2" height="1" />
+            <rect x="30" y="3" width="2" height="1" />
+            <rect x="15" y="4" width="1" height="1" />
+            <rect x="18" y="4" width="2" height="1" />
+            <rect x="23" y="4" width="1" height="1" />
+            <rect x="27" y="4" width="1" height="1" />
+            <rect x="31" y="4" width="1" height="1" />
+            <rect x="19" y="5" width="1" height="1" />
+            <rect x="23" y="5" width="1" height="1" />
+            <rect x="27" y="5" width="1" height="1" />
+            <rect x="32" y="5" width="1" height="1" />
+            <rect x="16" y="6" width="1" height="1" />
+            <rect x="19" y="6" width="1" height="1" />
+            <rect x="24" y="6" width="1" height="1" />
+            <rect x="28" y="6" width="1" height="1" />
+            <rect x="20" y="7" width="1" height="1" />
+            <rect x="24" y="7" width="1" height="1" />
+            <rect x="28" y="7" width="1" height="1" />
+            <rect x="32" y="7" width="1" height="1" />
+            <rect x="21" y="8" width="1" height="1" />
+            <rect x="25" y="8" width="1" height="1" />
+            <rect x="33" y="8" width="1" height="1" />
+            <rect x="29" y="9" width="1" height="1" />
+            <rect x="34" y="9" width="1" height="1" />
+            <rect x="34" y="10" width="1" height="1" />
+            <rect x="6" y="13" width="1" height="1" />
+          </g>
 
-          {/* Badan Kardus Depan */}
-          <rect x="3" y="11" width="25" height="12" fill="#B45309" />
-          <rect x="4" y="12" width="23" height="10" fill="#D97706" />
+          {/* Darker Underbelly & Inner Shadows */}
+          <g fill="#B43B0E" className="cat-layer-shadow">
+            <rect x="9" y="5" width="1" height="1" />
+            <rect x="9" y="6" width="1" height="1" />
+            <rect x="9" y="7" width="1" height="1" />
+            <rect x="14" y="7" width="1" height="1" />
+            <rect x="14" y="8" width="1" height="1" />
+            <rect x="11" y="11" width="1" height="1" />
+            <rect x="19" y="11" width="1" height="1" />
+            <rect x="28" y="11" width="1" height="1" />
+            <rect x="35" y="11" width="1" height="1" />
+            <rect x="12" y="12" width="1" height="1" />
+            <rect x="19" y="12" width="1" height="1" />
+            <rect x="27" y="12" width="1" height="1" />
+            <rect x="35" y="12" width="1" height="1" />
+            <rect x="3" y="13" width="1" height="1" />
+            <rect x="8" y="13" width="1" height="1" />
+            <rect x="12" y="13" width="1" height="1" />
+            <rect x="18" y="13" width="1" height="1" />
+            <rect x="20" y="13" width="9" height="1" />
+            <rect x="35" y="13" width="1" height="1" />
+            <rect x="1" y="14" width="2" height="1" />
+            <rect x="4" y="14" width="4" height="1" />
+            <rect x="12" y="14" width="1" height="1" />
+            <rect x="18" y="14" width="1" height="1" />
+            <rect x="23" y="14" width="2" height="1" />
+            <rect x="34" y="14" width="2" height="1" />
+            <rect x="37" y="14" width="1" height="1" />
+            <rect x="13" y="16" width="1" height="1" />
+            <rect x="34" y="16" width="2" height="1" />
+            <rect x="37" y="16" width="1" height="1" />
+            <rect x="33" y="17" width="2" height="1" />
+            <rect x="37" y="17" width="1" height="1" />
+            <rect x="33" y="18" width="1" height="1" />
+            <rect x="37" y="18" width="1" height="1" />
+            <rect x="33" y="19" width="1" height="1" />
+            <rect x="37" y="19" width="1" height="1" />
+            <rect x="33" y="20" width="1" height="1" />
+            <rect x="37" y="20" width="1" height="1" />
+            <rect x="33" y="21" width="1" height="1" />
+            <rect x="37" y="21" width="1" height="1" />
+          </g>
 
-          {/* Highlight & Shadow Kardus */}
-          <rect x="4" y="12" width="23" height="1" fill="#FBBF24" />
-          <rect x="4" y="13" width="1" height="9" fill="#FBBF24" />
-          <rect x="26" y="12" width="1" height="10" fill="#92400E" />
-          <rect x="4" y="21" width="23" height="1" fill="#78350F" />
+          {/* Pink Cheeks / Nose Accent */}
+          <g fill="#F472B6" className="cat-layer-pink">
+            <rect x="8" y="11" width="1" height="1" />
+            <rect x="5" y="13" width="1" height="1" />
+          </g>
 
-          {/* Lakban Kotak */}
-          <rect x="14" y="11" width="3" height="11" fill="#FDE68A" />
-          <rect x="14" y="11" width="1" height="11" fill="#F59E0B" />
-
-          {/* Sayap Box Terbuka Kiri & Kanan */}
-          <polygon points="3,11 0,9 3,9" fill="#F59E0B" />
-          <polygon points="28,11 31,9 28,9" fill="#B45309" />
-
-          {/* Dua Cakar Putih Nyaman Menempel di Bibir Box */}
-          <rect x="9" y="10" width="3" height="2" fill="#FEF3C7" />
-          <rect x="19" y="10" width="3" height="2" fill="#FEF3C7" />
-
-          {/* Label Mini Kotak "zZ" */}
-          <rect x="8" y="16" width="3" height="1" fill="#92400E" />
-          <rect x="9" y="17" width="1" height="1" fill="#92400E" />
-          <rect x="8" y="18" width="3" height="1" fill="#92400E" />
+          {/* Crisp Black 8-Bit Pixel Outline */}
+          <g fill="#1A181B" className="cat-layer-outline">
+            <rect x="21" y="0" width="7" height="1" />
+            <rect x="18" y="1" width="3" height="1" />
+            <rect x="28" y="1" width="3" height="1" />
+            <rect x="16" y="2" width="2" height="1" />
+            <rect x="31" y="2" width="2" height="1" />
+            <rect x="10" y="3" width="1" height="1" />
+            <rect x="15" y="3" width="1" height="1" />
+            <rect x="33" y="3" width="1" height="1" />
+            <rect x="9" y="4" width="1" height="1" />
+            <rect x="11" y="4" width="1" height="1" />
+            <rect x="14" y="4" width="1" height="1" />
+            <rect x="34" y="4" width="1" height="1" />
+            <rect x="8" y="5" width="1" height="1" />
+            <rect x="12" y="5" width="2" height="1" />
+            <rect x="35" y="5" width="1" height="1" />
+            <rect x="6" y="6" width="3" height="1" />
+            <rect x="12" y="6" width="1" height="1" />
+            <rect x="36" y="6" width="1" height="1" />
+            <rect x="5" y="7" width="1" height="1" />
+            <rect x="13" y="7" width="1" height="1" />
+            <rect x="36" y="7" width="1" height="1" />
+            <rect x="4" y="8" width="1" height="1" />
+            <rect x="37" y="8" width="1" height="1" />
+            <rect x="3" y="9" width="1" height="1" />
+            <rect x="8" y="9" width="1" height="1" />
+            <rect x="33" y="9" width="1" height="1" />
+            <rect x="37" y="9" width="1" height="1" />
+            <rect x="0" y="10" width="3" height="1" />
+            <rect x="8" y="10" width="1" height="1" />
+            <rect x="11" y="10" width="1" height="1" />
+            <rect x="33" y="10" width="1" height="1" />
+            <rect x="37" y="10" width="1" height="1" />
+            <rect x="0" y="11" width="1" height="1" />
+            <rect x="10" y="11" width="1" height="1" />
+            <rect x="34" y="11" width="1" height="1" />
+            <rect x="37" y="11" width="1" height="1" />
+            <rect x="1" y="12" width="1" height="1" />
+            <rect x="7" y="12" width="1" height="1" />
+            <rect x="13" y="12" width="1" height="1" />
+            <rect x="20" y="12" width="1" height="1" />
+            <rect x="27" y="12" width="1" height="1" />
+            <rect x="34" y="12" width="1" height="1" />
+            <rect x="37" y="12" width="1" height="1" />
+            <rect x="2" y="13" width="1" height="1" />
+            <rect x="4" y="13" width="1" height="1" />
+            <rect x="19" y="13" width="1" height="1" />
+            <rect x="29" y="13" width="1" height="1" />
+            <rect x="34" y="13" width="1" height="1" />
+            <rect x="37" y="13" width="1" height="1" />
+            <rect x="3" y="14" width="1" height="1" />
+            <rect x="8" y="14" width="3" height="1" />
+            <rect x="19" y="14" width="4" height="1" />
+            <rect x="25" y="14" width="5" height="1" />
+            <rect x="37" y="14" width="1" height="1" />
+            <rect x="6" y="15" width="1" height="1" />
+            <rect x="13" y="15" width="1" height="1" />
+            <rect x="17" y="15" width="1" height="1" />
+            <rect x="31" y="15" width="1" height="1" />
+            <rect x="33" y="15" width="3" height="1" />
+            <rect x="37" y="15" width="1" height="1" />
+            <rect x="5" y="16" width="1" height="1" />
+            <rect x="17" y="16" width="1" height="1" />
+            <rect x="32" y="16" width="2" height="1" />
+            <rect x="37" y="16" width="1" height="1" />
+            <rect x="14" y="17" width="1" height="1" />
+            <rect x="17" y="17" width="1" height="1" />
+            <rect x="32" y="17" width="1" height="1" />
+            <rect x="35" y="17" width="1" height="1" />
+            <rect x="37" y="17" width="1" height="1" />
+            <rect x="14" y="18" width="1" height="1" />
+            <rect x="16" y="18" width="2" height="1" />
+            <rect x="32" y="18" width="1" height="1" />
+            <rect x="35" y="18" width="1" height="1" />
+            <rect x="37" y="18" width="1" height="1" />
+            <rect x="14" y="19" width="1" height="1" />
+            <rect x="16" y="19" width="1" height="1" />
+            <rect x="32" y="19" width="1" height="1" />
+            <rect x="35" y="19" width="1" height="1" />
+            <rect x="37" y="19" width="1" height="1" />
+            <rect x="14" y="20" width="1" height="1" />
+            <rect x="16" y="20" width="1" height="1" />
+            <rect x="32" y="20" width="1" height="1" />
+            <rect x="35" y="20" width="1" height="1" />
+            <rect x="37" y="20" width="1" height="1" />
+            <rect x="13" y="21" width="1" height="1" />
+            <rect x="15" y="21" width="1" height="1" />
+            <rect x="32" y="21" width="1" height="1" />
+            <rect x="35" y="21" width="1" height="1" />
+            <rect x="14" y="22" width="1" height="1" />
+            <rect x="32" y="22" width="1" height="1" />
+            <rect x="35" y="22" width="2" height="1" />
+          </g>
         </svg>
       </div>
 
-      {/* Bayangan Halus di Lantai Kartu */}
+      {/* Gentle shadow underneath resting paws */}
       <div
         style={{
-          width: '46px',
-          height: '3px',
-          backgroundColor: 'rgba(0, 0, 0, 0.12)',
+          width: '68px',
+          height: '2px',
+          backgroundColor: 'rgba(0, 0, 0, 0.08)',
           borderRadius: '50%',
           marginTop: '-1px'
         }}
@@ -126,3 +333,5 @@ export default function SleepingBoxPet() {
     </div>
   );
 }
+
+export { SleepingBoxPet as SleepingCatPet };

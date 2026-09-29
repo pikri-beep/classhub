@@ -1864,7 +1864,8 @@ tr:hover .sticky-col-left-2 {
   }
 }
 
-.sleeping-box-pet-container {
+.sleeping-box-pet-container,
+.sleeping-cat-pet-container {
   position: relative;
   display: inline-flex;
   flex-direction: column;
@@ -1947,8 +1948,9 @@ tr:hover .sticky-col-left-2 {
   }
 }
 
+.sleeping-cat-wrapper,
 .sleeping-cat-body {
-  transform-origin: 16px 12px;
+  transform-origin: 20px 14px;
   animation: sleepingCatBreathe 3.2s ease-in-out infinite;
 }
 

@@ -4,12 +4,12 @@ import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function BottomDock({ activeView, onViewChange }) {
-  const { data } = useStore();
+  const { data, personalDoneTasks = [] } = useStore();
   const { currentUser } = useAuth();
 
-  // Count unfinished tasks for badge
+  // Count unfinished tasks for badge (personal to current device/browser)
   const pendingTasksCount = (data?.tasks || []).filter(task => {
-    return !(task.completedStudentIds || []).includes(currentUser?.id);
+    return !personalDoneTasks.includes(task.id);
   }).length;
 
   const dockItems = [

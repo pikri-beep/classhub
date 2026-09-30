@@ -20,7 +20,7 @@ import Modal from '../components/Modal';
 
 export default function DashboardView({ onNavigate }) {
   const { currentUser } = useAuth();
-  const { data, updateTaskStatus } = useStore();
+  const { data, updateTaskStatus, personalDoneTasks = [], togglePersonalTask } = useStore();
   const { showToast } = useToast();
 
   const [selectedTaskDetail, setSelectedTaskDetail] = useState(null);
@@ -40,9 +40,9 @@ export default function DashboardView({ onNavigate }) {
     currentUser.name.toLowerCase().includes(name.toLowerCase())
   );
 
-  // Tasks data
+  // Tasks data - uses personalDoneTasks for individual student checklist
   const tasks = data.tasks || [];
-  const myPendingTasks = tasks.filter(t => !(t.completedStudentIds || []).includes(currentUser.id));
+  const myPendingTasks = tasks.filter(t => !personalDoneTasks.includes(t.id));
 
   // Upcoming Exams & Events
   const upcomingExams = [...(data.exams || [])]
@@ -62,12 +62,15 @@ export default function DashboardView({ onNavigate }) {
   const announcements = data.announcements || [];
   const pinnedAnnouncement = announcements.find(a => a.isPinned) || announcements[0];
 
-  // Toggle task completion
+  // Toggle task completion (personal to this device/browser)
   const handleToggleTask = (task, e) => {
     e?.stopPropagation();
-    const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const newStatus = isDone ? 'todo' : 'done';
-    updateTaskStatus(task.id, currentUser.id, newStatus);
+    const isDone = personalDoneTasks.includes(task.id);
+    if (togglePersonalTask) {
+      togglePersonalTask(task.id);
+    } else {
+      updateTaskStatus(task.id, currentUser.id, isDone ? 'todo' : 'done');
+    }
 
     if (!isDone) {
       showToast('Tugas selesai! Kerja bagus 🎉', 'success');
@@ -265,7 +268,7 @@ export default function DashboardView({ onNavigate }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
             {tasks.map(task => {
-              const isDone = (task.completedStudentIds || []).includes(currentUser?.id);
+              const isDone = personalDoneTasks.includes(task.id);
               const dObj = new Date(task.deadline);
               const deadlineFormatted = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
               const daysLeft = getDaysUntil(task.deadline);
@@ -485,7 +488,7 @@ export default function DashboardView({ onNavigate }) {
               >
                 <Check size={14} />
                 <span>
-                  {(selectedTaskDetail.completedStudentIds || []).includes(currentUser?.id) 
+                  {personalDoneTasks.includes(selectedTaskDetail.id) 
                     ? 'Tandai Belum Selesai' 
                     : 'Tandai Sudah Selesai'}
                 </span>

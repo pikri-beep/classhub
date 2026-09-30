@@ -27,7 +27,8 @@ import {
   ArrowRight,
   CheckCircle2,
   Copy,
-  Phone
+  Phone,
+  Utensils
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
@@ -97,6 +98,9 @@ export default function AdminDashboardView({
     addEvent,
     deleteEvent,
     updateSchedule,
+    addMbgMember,
+    removeMbgMember,
+    resetMbgToDefault,
     addDuesPeriod,
     deleteDuesPeriod,
     getTotalCashBalance,
@@ -1489,6 +1493,134 @@ Mohon untuk dikerjakan tepat waktu. Semangat rekan-rekan! 🙏`;
                     ))
                   }
                 </select>
+              </div>
+            </div>
+
+            {/* Piket MBG (Makan Bergizi Gratis) Team Editor for Selected Day */}
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Utensils size={16} color="var(--primary)" />
+                  <div>
+                    <h4 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                      Regu Piket MBG — Hari {selectedDay} (Total 6 Siswa)
+                    </h4>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', margin: '0.15rem 0 0 0' }}>
+                      Kelola 3 petugas pengambil dan 3 petugas pengembali paket makanan MBG untuk hari {selectedDay}.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Kembalikan jadwal Piket MBG ke default 6 siswa per hari?')) {
+                      resetMbgToDefault();
+                      showToast('Jadwal Piket MBG di-reset ke default', 'info');
+                    }
+                  }}
+                  className="btn btn-ghost btn-xs"
+                  style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}
+                >
+                  Reset Default
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                {/* 1. Pengambil */}
+                <div style={{ backgroundColor: 'var(--bg)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Utensils size={13} />
+                      <span>Tim Pengambil (11.30 WIB)</span>
+                    </span>
+                    <span className="notion-tag notion-tag-orange" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
+                      {(data.piketMbg?.[selectedDay]?.ambil || []).length} / 3 Siswa
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.65rem', minHeight: '32px', alignItems: 'center' }}>
+                    {(data.piketMbg?.[selectedDay]?.ambil || []).length === 0 ? (
+                      <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ada pengambil.</span>
+                    ) : (
+                      (data.piketMbg?.[selectedDay]?.ambil || []).map(name => (
+                        <span key={name} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.2rem 0.55rem', fontSize: '0.78rem', fontWeight: 600, borderRadius: 'var(--radius-full)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                          <span>{name}</span>
+                          <button type="button" onClick={() => removeMbgMember(selectedDay, 'ambil', name)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-muted)' }}>
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+
+                  <select
+                    className="form-input"
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addMbgMember(selectedDay, 'ambil', e.target.value);
+                        showToast(`${e.target.value} ditambahkan ke Pengambil MBG`, 'success');
+                      }
+                    }}
+                    style={{ fontSize: '0.8rem', cursor: 'pointer', padding: '0.35rem 0.55rem' }}
+                  >
+                    <option value="">+ Tambah Petugas Pengambil...</option>
+                    {members
+                      .filter(m => !(data.piketMbg?.[selectedDay]?.ambil || []).includes(m.name))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(m => (
+                        <option key={m.id} value={m.name}>#{m.absentNo} - {m.name}</option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* 2. Pengembali */}
+                <div style={{ backgroundColor: 'var(--bg)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#059669', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <RotateCcw size={13} />
+                      <span>Tim Pengembali (12.30 WIB)</span>
+                    </span>
+                    <span className="notion-tag notion-tag-green" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
+                      {(data.piketMbg?.[selectedDay]?.balikin || []).length} / 3 Siswa
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.65rem', minHeight: '32px', alignItems: 'center' }}>
+                    {(data.piketMbg?.[selectedDay]?.balikin || []).length === 0 ? (
+                      <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Belum ada pengembali.</span>
+                    ) : (
+                      (data.piketMbg?.[selectedDay]?.balikin || []).map(name => (
+                        <span key={name} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.2rem 0.55rem', fontSize: '0.78rem', fontWeight: 600, borderRadius: 'var(--radius-full)', backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                          <span>{name}</span>
+                          <button type="button" onClick={() => removeMbgMember(selectedDay, 'balikin', name)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-muted)' }}>
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+
+                  <select
+                    className="form-input"
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addMbgMember(selectedDay, 'balikin', e.target.value);
+                        showToast(`${e.target.value} ditambahkan ke Pengembali MBG`, 'success');
+                      }
+                    }}
+                    style={{ fontSize: '0.8rem', cursor: 'pointer', padding: '0.35rem 0.55rem' }}
+                  >
+                    <option value="">+ Tambah Petugas Pengembali...</option>
+                    {members
+                      .filter(m => !(data.piketMbg?.[selectedDay]?.balikin || []).includes(m.name))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(m => (
+                        <option key={m.id} value={m.name}>#{m.absentNo} - {m.name}</option>
+                      ))}
+                  </select>
+                </div>
               </div>
             </div>
 

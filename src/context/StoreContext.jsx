@@ -223,6 +223,28 @@ const DEFAULT_SEED_DATA = {
       ]
     }
   },
+  piketMbg: {
+    Senin: {
+      ambil: ['Ahmad Fikry Al Khair', 'Ardyansyah', 'Arvin Putra Pratama'],
+      balikin: ['Arwan Putra Nusantara', 'Ayasy Radlliyan', "Azman Rif'at Siregar"]
+    },
+    Selasa: {
+      ambil: ['Bayu Havilah Dias', 'Derly Rayyan Aqly', 'Dhaffa Alhabsy'],
+      balikin: ['Faturrahman Ilhami Dema', 'Fauzan Zuhri', 'Feyoland Obrian Aldanys']
+    },
+    Rabu: {
+      ambil: ['Lion Aslam Maulana', 'Lutfiya Ghania Nashita', 'Mehsa Oktarina'],
+      balikin: ['M. Aidil Fitriansyah', 'M. Fahri Fatihul Aqso', 'M. Ihsan Alldaffa']
+    },
+    Kamis: {
+      ambil: ['M. Rafa Fadhillah', 'M. Rama Sylva', 'M. Reyhan Elsirajy'],
+      balikin: ['M. Reyhan Julvianto', 'Nadine Misya Utami', 'Nurrohmat Gilang Utama']
+    },
+    Jumat: {
+      ambil: ['Pira Aditia', 'Rani Aprilia', 'Ridho Abdillah Kalim'],
+      balikin: ['Salwa Azzahra', 'Satria Azka Pratama P.', 'Shainajwa Checilia']
+    }
+  },
   events: [
     { id: 'ev-1', title: 'Tryout Simulasi Sertifikasi PPLG', date: '2026-10-05', type: 'exam', desc: 'Simulasi kompetensi software development' },
     { id: 'ev-2', title: 'Kunjungan Industri / Webinar Tech', date: '2026-10-12', type: 'event', desc: 'Sesi bersama praktisi industri teknologi' },
@@ -271,6 +293,21 @@ const sanitizeData = (raw) => {
     exams: Array.isArray(raw.exams) ? raw.exams : DEFAULT_SEED_DATA.exams,
     events: Array.isArray(raw.events) ? raw.events : DEFAULT_SEED_DATA.events,
     schedules: raw.schedules && typeof raw.schedules === 'object' ? raw.schedules : DEFAULT_SEED_DATA.schedules,
+    piketMbg: (() => {
+      const defaultMbg = DEFAULT_SEED_DATA.piketMbg;
+      const rawMbg = (raw && raw.piketMbg && typeof raw.piketMbg === 'object') ? raw.piketMbg : {};
+      const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+      const result = {};
+      days.forEach(day => {
+        const dayRaw = rawMbg[day] || {};
+        const dayDef = defaultMbg[day] || { ambil: [], balikin: [] };
+        result[day] = {
+          ambil: Array.isArray(dayRaw.ambil) && dayRaw.ambil.length > 0 ? dayRaw.ambil : dayDef.ambil,
+          balikin: Array.isArray(dayRaw.balikin) && dayRaw.balikin.length > 0 ? dayRaw.balikin : dayDef.balikin
+        };
+      });
+      return result;
+    })(),
     cash: {
       ...DEFAULT_SEED_DATA.cash,
       ...(raw.cash || {}),
@@ -470,6 +507,14 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  // Toggle personal task checklist (stored locally per browser/device)
+  const togglePersonalTask = (taskId) => {
+    setPersonalDoneTasks(prev => {
+      const exists = prev.includes(taskId);
+      return exists ? prev.filter(id => id !== taskId) : [...prev, taskId];
+    });
+  };
+
   // Update task completion (supports personal toggle for student or specific studentId)
   const updateTaskStatus = (taskId, studentId, status) => {
     // If it's a student (public-student or specific student), track in personal storage too
@@ -477,6 +522,11 @@ export function StoreProvider({ children }) {
       setPersonalDoneTasks(prev => Array.from(new Set([...prev, taskId])));
     } else {
       setPersonalDoneTasks(prev => prev.filter(id => id !== taskId));
+    }
+
+    // For public student checklist, do not broadcast/commit to shared cloud database
+    if (studentId === 'public-student') {
+      return;
     }
 
     commitData(prev => ({
@@ -709,6 +759,61 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const updateMbgSchedule = (day, newMbgData) => {
+    commitData(prev => ({
+      ...prev,
+      piketMbg: {
+        ...(prev.piketMbg || {}),
+        [day]: {
+          ambil: newMbgData.ambil || [],
+          balikin: newMbgData.balikin || []
+        }
+      }
+    }));
+  };
+
+  const addMbgMember = (day, type, name) => {
+    commitData(prev => {
+      const currentDay = prev.piketMbg?.[day] || { ambil: [], balikin: [] };
+      const currentList = currentDay[type] || [];
+      if (currentList.includes(name)) return prev;
+      return {
+        ...prev,
+        piketMbg: {
+          ...(prev.piketMbg || {}),
+          [day]: {
+            ...currentDay,
+            [type]: [...currentList, name]
+          }
+        }
+      };
+    });
+  };
+
+  const removeMbgMember = (day, type, name) => {
+    commitData(prev => {
+      const currentDay = prev.piketMbg?.[day] || { ambil: [], balikin: [] };
+      const currentList = currentDay[type] || [];
+      return {
+        ...prev,
+        piketMbg: {
+          ...(prev.piketMbg || {}),
+          [day]: {
+            ...currentDay,
+            [type]: currentList.filter(n => n !== name)
+          }
+        }
+      };
+    });
+  };
+
+  const resetMbgToDefault = () => {
+    commitData(prev => ({
+      ...prev,
+      piketMbg: DEFAULT_SEED_DATA.piketMbg
+    }));
+  };
+
   const addMember = (member) => {
     const newMember = {
       id: `std-${Date.now()}`,
@@ -837,6 +942,7 @@ export function StoreProvider({ children }) {
       data,
       syncStatus,
       personalDoneTasks,
+      togglePersonalTask,
       addTask,
       updateTask,
       deleteTask,
@@ -855,6 +961,10 @@ export function StoreProvider({ children }) {
       addEvent,
       deleteEvent,
       updateSchedule,
+      updateMbgSchedule,
+      addMbgMember,
+      removeMbgMember,
+      resetMbgToDefault,
       addMember,
       updateMember,
       deleteMember,

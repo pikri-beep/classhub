@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
   });
 
   const [previewAsStudent, setPreviewAsStudent] = useState(false);
+  const [adminPreviewBypass, setAdminPreviewBypass] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(0);
 
@@ -118,6 +119,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setIsAdminLoggedIn(false);
     setPreviewAsStudent(false);
+    setAdminPreviewBypass(false);
     try {
       localStorage.removeItem(ADMIN_AUTH_KEY);
       if (window.location.hash && window.location.hash.toLowerCase().includes('admin')) {
@@ -129,14 +131,18 @@ export function AuthProvider({ children }) {
   const currentUser = isAdminLoggedIn ? ADMIN_USER : PUBLIC_CLASS_USER;
   const isAuthenticated = true;
   const isAdmin = isAdminLoggedIn;
+  const isEffectiveAdmin = isAdmin && (!previewAsStudent || adminPreviewBypass);
 
   return (
     <AuthContext.Provider value={{
       currentUser,
       isAuthenticated,
       isAdmin,
+      isEffectiveAdmin,
       previewAsStudent,
       setPreviewAsStudent,
+      adminPreviewBypass,
+      setAdminPreviewBypass,
       loginAsAdmin,
       logout
     }}>

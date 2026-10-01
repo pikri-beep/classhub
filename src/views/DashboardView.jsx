@@ -19,8 +19,8 @@ import LiveClassTracker from '../components/LiveClassTracker';
 import Modal from '../components/Modal';
 
 export default function DashboardView({ onNavigate }) {
-  const { currentUser } = useAuth();
-  const { data, updateTaskStatus } = useStore();
+  const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
+  const { data, personalDoneTasks = [], togglePersonalTask } = useStore();
   const { showToast } = useToast();
 
   const [selectedTaskDetail, setSelectedTaskDetail] = useState(null);
@@ -40,9 +40,34 @@ export default function DashboardView({ onNavigate }) {
     currentUser.name.toLowerCase().includes(name.toLowerCase())
   );
 
-  // Tasks data
+  // Tasks data - uses personalDoneTasks for device checklist and isCompleted for admin status
   const tasks = data.tasks || [];
-  const myPendingTasks = tasks.filter(t => !(t.completedStudentIds || []).includes(currentUser.id));
+  const pendingTasks = tasks.filter(t => !t.isCompleted && !personalDoneTasks.includes(t.id));
+
+  // Toggle task completion (personal to this device)
+  const handleToggleTask = (task, e) => {
+    e?.stopPropagation();
+    if (task.isCompleted) {
+      showToast('Tugas ini sudah selesai untuk seluruh kelas (oleh Admin) ✨', 'info');
+      return;
+    }
+    const isDone = personalDoneTasks.includes(task.id);
+    if (togglePersonalTask) {
+      togglePersonalTask(task.id);
+    }
+    if (!isDone) {
+      showToast('Tugas selesai di perangkatmu! Kerja bagus 🎉', 'success');
+      if (pendingTasks.length <= 1) {
+        confetti({
+          particleCount: 90,
+          spread: 75,
+          origin: { y: 0.6 }
+        });
+      }
+    } else {
+      showToast('Tugas ditandai belum selesai di perangkat ini', 'info');
+    }
+  };
 
   // Upcoming Exams & Events
   const upcomingExams = [...(data.exams || [])]
@@ -62,26 +87,6 @@ export default function DashboardView({ onNavigate }) {
   const announcements = data.announcements || [];
   const pinnedAnnouncement = announcements.find(a => a.isPinned) || announcements[0];
 
-  // Toggle task completion
-  const handleToggleTask = (task, e) => {
-    e?.stopPropagation();
-    const isDone = (task.completedStudentIds || []).includes(currentUser.id);
-    const newStatus = isDone ? 'todo' : 'done';
-    updateTaskStatus(task.id, currentUser.id, newStatus);
-
-    if (!isDone) {
-      showToast('Tugas selesai! Kerja bagus 🎉', 'success');
-      if (myPendingTasks.length === 1) {
-        confetti({
-          particleCount: 90,
-          spread: 75,
-          origin: { y: 0.6 }
-        });
-      }
-    } else {
-      showToast('Tugas ditandai belum selesai', 'info');
-    }
-  };
 
   // Calculate days until date helper & color
   const getExamUrgency = (dateStr) => {
@@ -242,7 +247,7 @@ export default function DashboardView({ onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <CheckCircle2 size={16} color="var(--primary)" />
             <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>
-              Perlu Dikerjakan ({myPendingTasks.length})
+              Perlu Dikerjakan ({pendingTasks.length})
             </h3>
           </div>
 
@@ -265,7 +270,8 @@ export default function DashboardView({ onNavigate }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
             {tasks.map(task => {
-              const isDone = (task.completedStudentIds || []).includes(currentUser?.id);
+              const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
+              const isGloballyDone = Boolean(task.isCompleted);
               const dObj = new Date(task.deadline);
               const deadlineFormatted = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
               const daysLeft = getDaysUntil(task.deadline);
@@ -283,14 +289,26 @@ export default function DashboardView({ onNavigate }) {
                     className="clean-todo-checkbox"
                     onClick={(e) => handleToggleTask(task, e)}
                     aria-label={`Tandai tugas ${task.title}`}
+                    title={isGloballyDone ? 'Selesai oleh Admin' : isDone ? 'Batal tandai selesai' : 'Tandai selesai di perangkat ini'}
+                    style={{
+                      cursor: isGloballyDone ? 'default' : 'pointer',
+                      backgroundColor: isDone ? 'rgba(34, 197, 94, 0.15)' : 'var(--bg-subtle, rgba(0,0,0,0.04))',
+                      color: isDone ? '#16A34A' : 'var(--text-muted)',
+                      border: isDone ? '1px solid #22C55E' : '1px solid var(--border)'
+                    }}
                   >
                     {isDone && <Check size={12} strokeWidth={3} />}
                   </button>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="clean-todo-text">{task.title}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                      {task.subject}
+                    <div className="clean-todo-text" style={{ textDecoration: isDone ? 'line-through' : 'none' }}>
+                      {task.title}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <span>{task.subject}</span>
+                      {isGloballyDone && (
+                        <span style={{ color: '#16A34A', fontWeight: 600 }}>• Selesai (Admin)</span>
+                      )}
                     </div>
                   </div>
 
@@ -404,13 +422,18 @@ export default function DashboardView({ onNavigate }) {
       </div>
 
       {/* 6. PENGUMUMAN TERKINI */}
-      {pinnedAnnouncement && (
+      {pinnedAnnouncement && (data?.pageAccess?.announcements?.isEnabled !== false || isEffectiveAdmin) && (
         <div className="card" style={{ padding: '1.25rem 1.4rem', borderLeft: '3px solid var(--primary)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
               <span className="notion-tag notion-tag-gray" style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 700 }}>
                 {pinnedAnnouncement.category || 'Info'}
               </span>
+              {isEffectiveAdmin && data?.pageAccess?.announcements?.isEnabled === false && (
+                <span className="notion-tag notion-tag-red" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
+                  Nonaktif untuk Siswa
+                </span>
+              )}
             </div>
             <button 
               onClick={() => onNavigate('class')}
@@ -473,23 +496,32 @@ export default function DashboardView({ onNavigate }) {
               </a>
             )}
 
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                onClick={() => {
-                  handleToggleTask(selectedTaskDetail);
-                  setSelectedTaskDetail(null);
-                }}
-                className="btn btn-primary btn-sm"
-                style={{ gap: '0.35rem' }}
+                onClick={() => setSelectedTaskDetail(null)}
+                className="btn btn-secondary btn-sm"
               >
-                <Check size={14} />
-                <span>
-                  {(selectedTaskDetail.completedStudentIds || []).includes(currentUser?.id) 
-                    ? 'Tandai Belum Selesai' 
-                    : 'Tandai Sudah Selesai'}
-                </span>
+                Tutup
               </button>
+              {!selectedTaskDetail.isCompleted && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleToggleTask(selectedTaskDetail);
+                    setSelectedTaskDetail(null);
+                  }}
+                  className="btn btn-primary btn-sm"
+                  style={{ gap: '0.35rem' }}
+                >
+                  <Check size={14} />
+                  <span>
+                    {personalDoneTasks.includes(selectedTaskDetail.id)
+                      ? 'Tandai Belum Selesai (di HP ini)'
+                      : 'Tandai Sudah Selesai (di HP ini)'}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         )}

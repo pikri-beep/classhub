@@ -4,6 +4,23 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 const STORAGE_KEY = 'classhub_data_v2';
 const PERSONAL_TASKS_KEY = 'classhub_personal_done_tasks_v2';
 
+export const TASK_AUTO_DELETE_DAYS = 7;
+export const TASK_AUTO_DELETE_MS = TASK_AUTO_DELETE_DAYS * 24 * 60 * 60 * 1000;
+
+export const purgeExpiredCompletedTasks = (tasksList = []) => {
+  if (!Array.isArray(tasksList)) return [];
+  const now = Date.now();
+  return tasksList.filter(task => {
+    if (task && task.isCompleted && task.completedAt) {
+      const completedTime = new Date(task.completedAt).getTime();
+      if (!isNaN(completedTime) && (now - completedTime) > TASK_AUTO_DELETE_MS) {
+        return false; // auto hapus setelah 1 minggu (7 hari)
+      }
+    }
+    return true;
+  });
+};
+
 const DEFAULT_SEED_DATA = {
   classInfo: {
     name: 'XI PPLG',
@@ -97,8 +114,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-09-28T23:59:00',
       description: 'Implementasikan form handling dan endpoint API. Unggah link repositori GitHub ke form pengumpulan.',
       link: 'https://classroom.google.com',
-      completedStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'],
-      inProgressStudentIds: ['std-11', 'std-1']
+      isCompleted: false,
+      completedAt: null
     },
     {
       id: 'tsk-2',
@@ -107,8 +124,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-09-30T15:00:00',
       description: 'Buat diagram ERD dan query DDL (CREATE TABLE) beserta relasi foreign key untuk sistem akademik.',
       link: '',
-      completedStudentIds: ['std-33', 'std-11', 'std-12'],
-      inProgressStudentIds: ['std-14', 'std-26']
+      isCompleted: false,
+      completedAt: null
     },
     {
       id: 'tsk-3',
@@ -117,8 +134,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-10-02T15:30:00',
       description: 'Rancang modul antarmuka interaktif dan integrasikan elemen multimedia sesuai spesifikasi tugas.',
       link: '',
-      completedStudentIds: [],
-      inProgressStudentIds: ['std-33']
+      isCompleted: false,
+      completedAt: null
     }
   ],
   exams: [
@@ -223,6 +240,28 @@ const DEFAULT_SEED_DATA = {
       ]
     }
   },
+  piketMbg: {
+    Senin: {
+      ambil: ['Ahmad Fikry Al Khair', 'Ardyansyah', 'Arvin Putra Pratama'],
+      balikin: ['Arwan Putra Nusantara', 'Ayasy Radlliyan', "Azman Rif'at Siregar"]
+    },
+    Selasa: {
+      ambil: ['Bayu Havilah Dias', 'Derly Rayyan Aqly', 'Dhaffa Alhabsy'],
+      balikin: ['Faturrahman Ilhami Dema', 'Fauzan Zuhri', 'Feyoland Obrian Aldanys']
+    },
+    Rabu: {
+      ambil: ['Lion Aslam Maulana', 'Lutfiya Ghania Nashita', 'Mehsa Oktarina'],
+      balikin: ['M. Aidil Fitriansyah', 'M. Fahri Fatihul Aqso', 'M. Ihsan Alldaffa']
+    },
+    Kamis: {
+      ambil: ['M. Rafa Fadhillah', 'M. Rama Sylva', 'M. Reyhan Elsirajy'],
+      balikin: ['M. Reyhan Julvianto', 'Nadine Misya Utami', 'Nurrohmat Gilang Utama']
+    },
+    Jumat: {
+      ambil: ['Pira Aditia', 'Rani Aprilia', 'Ridho Abdillah Kalim'],
+      balikin: ['Salwa Azzahra', 'Satria Azka Pratama P.', 'Shainajwa Checilia']
+    }
+  },
   events: [
     { id: 'ev-1', title: 'Tryout Simulasi Sertifikasi PPLG', date: '2026-10-05', type: 'exam', desc: 'Simulasi kompetensi software development' },
     { id: 'ev-2', title: 'Kunjungan Industri / Webinar Tech', date: '2026-10-12', type: 'event', desc: 'Sesi bersama praktisi industri teknologi' },
@@ -243,6 +282,13 @@ const DEFAULT_SEED_DATA = {
       { id: 'tx-3', type: 'income', amount: 30000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 2', date: '2026-09-08', recordedBy: 'Rani Aprilia (Bendahara 1)' },
       { id: 'tx-4', type: 'expense', amount: 25000, category: 'Perlengkapan', description: 'Beli spidol whiteboard hitam & biru', date: '2026-09-09', recordedBy: 'Salwa Azzahra (Bendahara 2)' }
     ]
+  },
+  pageAccess: {
+    cash: { isEnabled: true, reason: '' },
+    tasks: { isEnabled: true, reason: '' },
+    exams: { isEnabled: true, reason: '' },
+    schedules: { isEnabled: true, reason: '' },
+    announcements: { isEnabled: true, reason: '' }
   }
 };
 
@@ -266,16 +312,53 @@ const sanitizeData = (raw) => {
       }
       return m;
     }),
-    tasks: Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks,
+    tasks: purgeExpiredCompletedTasks(Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks),
     announcements: Array.isArray(raw.announcements) ? raw.announcements : DEFAULT_SEED_DATA.announcements,
     exams: Array.isArray(raw.exams) ? raw.exams : DEFAULT_SEED_DATA.exams,
     events: Array.isArray(raw.events) ? raw.events : DEFAULT_SEED_DATA.events,
     schedules: raw.schedules && typeof raw.schedules === 'object' ? raw.schedules : DEFAULT_SEED_DATA.schedules,
+    piketMbg: (() => {
+      const defaultMbg = DEFAULT_SEED_DATA.piketMbg;
+      const rawMbg = (raw && raw.piketMbg && typeof raw.piketMbg === 'object') ? raw.piketMbg : {};
+      const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+      const result = {};
+      days.forEach(day => {
+        const dayRaw = rawMbg[day] || {};
+        const dayDef = defaultMbg[day] || { ambil: [], balikin: [] };
+        result[day] = {
+          ambil: Array.isArray(dayRaw.ambil) && dayRaw.ambil.length > 0 ? dayRaw.ambil : dayDef.ambil,
+          balikin: Array.isArray(dayRaw.balikin) && dayRaw.balikin.length > 0 ? dayRaw.balikin : dayDef.balikin
+        };
+      });
+      return result;
+    })(),
     cash: {
       ...DEFAULT_SEED_DATA.cash,
       ...(raw.cash || {}),
       duesPeriods: Array.isArray(raw.cash?.duesPeriods) ? raw.cash.duesPeriods : DEFAULT_SEED_DATA.cash.duesPeriods,
       transactions: Array.isArray(raw.cash?.transactions) ? raw.cash.transactions : DEFAULT_SEED_DATA.cash.transactions
+    },
+    pageAccess: {
+      cash: {
+        isEnabled: raw.pageAccess?.cash?.isEnabled ?? true,
+        reason: raw.pageAccess?.cash?.reason || ''
+      },
+      tasks: {
+        isEnabled: raw.pageAccess?.tasks?.isEnabled ?? true,
+        reason: raw.pageAccess?.tasks?.reason || ''
+      },
+      exams: {
+        isEnabled: raw.pageAccess?.exams?.isEnabled ?? true,
+        reason: raw.pageAccess?.exams?.reason || ''
+      },
+      schedules: {
+        isEnabled: raw.pageAccess?.schedules?.isEnabled ?? true,
+        reason: raw.pageAccess?.schedules?.reason || ''
+      },
+      announcements: {
+        isEnabled: raw.pageAccess?.announcements?.isEnabled ?? true,
+        reason: raw.pageAccess?.announcements?.reason || ''
+      }
     }
   };
 };
@@ -444,13 +527,13 @@ export function StoreProvider({ children }) {
   const addTask = (task) => {
     const newTask = {
       id: `tsk-${Date.now()}`,
-      completedStudentIds: [],
-      inProgressStudentIds: [],
+      isCompleted: false,
+      completedAt: null,
       ...task
     };
     commitData(prev => ({
       ...prev,
-      tasks: [newTask, ...(prev.tasks || [])]
+      tasks: purgeExpiredCompletedTasks([newTask, ...(prev.tasks || [])])
     }));
   };
 
@@ -459,6 +542,14 @@ export function StoreProvider({ children }) {
       ...prev,
       tasks: (prev.tasks || []).filter(t => t.id !== id)
     }));
+  };
+
+  // Toggle personal task checklist (stored locally per browser/device)
+  const togglePersonalTask = (taskId) => {
+    setPersonalDoneTasks(prev => {
+      const exists = prev.includes(taskId);
+      return exists ? prev.filter(id => id !== taskId) : [...prev, taskId];
+    });
   };
 
   const updateTask = (id, updatedFields) => {
@@ -470,40 +561,29 @@ export function StoreProvider({ children }) {
     }));
   };
 
-  // Update task completion (supports personal toggle for student or specific studentId)
+  // Toggle task completion by Admin (auto-purged after 7 days when completed)
+  const toggleTaskCompleted = (id) => {
+    commitData(prev => ({
+      ...prev,
+      tasks: purgeExpiredCompletedTasks((prev.tasks || []).map(t => {
+        if (t.id !== id) return t;
+        const nextCompleted = !t.isCompleted;
+        return {
+          ...t,
+          isCompleted: nextCompleted,
+          completedAt: nextCompleted ? new Date().toISOString() : null
+        };
+      }))
+    }));
+  };
+
+  // Backward-compatibility for student view
   const updateTaskStatus = (taskId, studentId, status) => {
-    // If it's a student (public-student or specific student), track in personal storage too
     if (status === 'done') {
       setPersonalDoneTasks(prev => Array.from(new Set([...prev, taskId])));
     } else {
       setPersonalDoneTasks(prev => prev.filter(id => id !== taskId));
     }
-
-    commitData(prev => ({
-      ...prev,
-      tasks: (prev.tasks || []).map(t => {
-        if (t.id !== taskId) return t;
-        const completed = new Set(t.completedStudentIds || []);
-        const inProgress = new Set(t.inProgressStudentIds || []);
-
-        if (status === 'done') {
-          completed.add(studentId);
-          inProgress.delete(studentId);
-        } else if (status === 'doing') {
-          inProgress.add(studentId);
-          completed.delete(studentId);
-        } else {
-          completed.delete(studentId);
-          inProgress.delete(studentId);
-        }
-
-        return {
-          ...t,
-          completedStudentIds: Array.from(completed),
-          inProgressStudentIds: Array.from(inProgress)
-        };
-      })
-    }));
   };
 
   const addExam = (exam) => {
@@ -699,12 +779,99 @@ export function StoreProvider({ children }) {
     }));
   };
 
+  const updateEvent = (id, updatedFields) => {
+    commitData(prev => ({
+      ...prev,
+      events: (prev.events || []).map(e => 
+        e.id === id ? { ...e, ...updatedFields } : e
+      )
+    }));
+  };
+
   const updateSchedule = (day, newScheduleData) => {
     commitData(prev => ({
       ...prev,
       schedules: {
         ...prev.schedules,
         [day]: newScheduleData
+      }
+    }));
+  };
+
+  const updateMbgSchedule = (day, newMbgData) => {
+    commitData(prev => ({
+      ...prev,
+      piketMbg: {
+        ...(prev.piketMbg || {}),
+        [day]: {
+          ambil: newMbgData.ambil || [],
+          balikin: newMbgData.balikin || []
+        }
+      }
+    }));
+  };
+
+  const addMbgMember = (day, type, name) => {
+    commitData(prev => {
+      const currentDay = prev.piketMbg?.[day] || { ambil: [], balikin: [] };
+      const currentList = currentDay[type] || [];
+      if (currentList.includes(name)) return prev;
+      return {
+        ...prev,
+        piketMbg: {
+          ...(prev.piketMbg || {}),
+          [day]: {
+            ...currentDay,
+            [type]: [...currentList, name]
+          }
+        }
+      };
+    });
+  };
+
+  const removeMbgMember = (day, type, name) => {
+    commitData(prev => {
+      const currentDay = prev.piketMbg?.[day] || { ambil: [], balikin: [] };
+      const currentList = currentDay[type] || [];
+      return {
+        ...prev,
+        piketMbg: {
+          ...(prev.piketMbg || {}),
+          [day]: {
+            ...currentDay,
+            [type]: currentList.filter(n => n !== name)
+          }
+        }
+      };
+    });
+  };
+
+  const resetMbgToDefault = () => {
+    commitData(prev => ({
+      ...prev,
+      piketMbg: DEFAULT_SEED_DATA.piketMbg
+    }));
+  };
+
+  const updatePageAccess = (pageKey, isEnabled, reason = '') => {
+    commitData(prev => ({
+      ...prev,
+      pageAccess: {
+        ...(prev.pageAccess || DEFAULT_SEED_DATA.pageAccess),
+        [pageKey]: {
+          isEnabled: Boolean(isEnabled),
+          reason: reason !== undefined ? String(reason) : (prev.pageAccess?.[pageKey]?.reason || '')
+        }
+      }
+    }));
+  };
+
+  const updateBulkPageAccess = (newPageAccess) => {
+    commitData(prev => ({
+      ...prev,
+      pageAccess: {
+        ...(prev.pageAccess || DEFAULT_SEED_DATA.pageAccess),
+        ...newPageAccess
       }
     }));
   };
@@ -837,10 +1004,12 @@ export function StoreProvider({ children }) {
       data,
       syncStatus,
       personalDoneTasks,
+      togglePersonalTask,
       addTask,
       updateTask,
       deleteTask,
       updateTaskStatus,
+      toggleTaskCompleted,
       addExam,
       updateExam,
       deleteExam,
@@ -854,7 +1023,14 @@ export function StoreProvider({ children }) {
       markAllDuesPaid,
       addEvent,
       deleteEvent,
+      updateEvent,
       updateSchedule,
+      updateMbgSchedule,
+      addMbgMember,
+      removeMbgMember,
+      resetMbgToDefault,
+      updatePageAccess,
+      updateBulkPageAccess,
       addMember,
       updateMember,
       deleteMember,

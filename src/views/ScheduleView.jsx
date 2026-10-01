@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { CalendarDays, CalendarClock, ChevronLeft, ChevronRight, Plus, Sparkles } from 'lucide-react';
+import { CalendarDays, CalendarClock, ChevronLeft, ChevronRight, Plus, Sparkles, Utensils } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import PiketMbgTab from '../components/PiketMbgTab';
 import { formatDateIndo } from '../lib/dateUtils';
 
 export default function ScheduleView() {
@@ -158,6 +159,13 @@ export default function ScheduleView() {
           >
             <CalendarDays size={14} />
             <span>Kalender Agenda</span>
+          </button>
+          <button
+            onClick={() => setActiveSubTab('piket-mbg')}
+            className={`clean-filter-chip ${activeSubTab === 'piket-mbg' ? 'active' : ''}`}
+          >
+            <Utensils size={14} />
+            <span>Piket MBG</span>
           </button>
         </div>
       </div>
@@ -467,6 +475,9 @@ export default function ScheduleView() {
         )}
       </div>
     )}
+
+      {/* 5. PIKET MBG CONTENT */}
+      {activeSubTab === 'piket-mbg' && <PiketMbgTab />}
 
       {/* MODAL: ADD AGENDA EVENT */}
       <Modal isOpen={isAddEventOpen} onClose={() => setIsAddEventOpen(false)} title="Tambah Agenda Baru">

@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Reusable Metric KPI Card for Dashboard Overview
+ * Minimalist Soft Surface KPI Card for Dashboard Overview
  */
 export const MetricCard = ({
   icon: IconComponent,
@@ -18,7 +18,7 @@ export const MetricCard = ({
 
   return (
     <div
-      className={`admin-metric-card card ${isClickable ? 'card-hover' : ''} ${className}`}
+      className={`admin-metric-card ${className}`}
       onClick={isClickable ? onClick : undefined}
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
@@ -29,26 +29,38 @@ export const MetricCard = ({
         }
       } : undefined}
       style={{
-        padding: '1.2rem 1.25rem',
-        borderRadius: 'var(--radius-md)',
+        padding: '1.35rem 1.5rem',
+        borderRadius: 'var(--radius-lg)',
         backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border)',
+        border: '1px solid var(--border-subtle)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         position: 'relative',
         overflow: 'hidden',
         cursor: isClickable ? 'pointer' : 'default',
-        minHeight: '120px',
+        minHeight: '124px',
+        boxShadow: 'var(--shadow-sm)',
+        transition: 'all var(--transition-fast)',
         ...style
       }}
+      onMouseEnter={isClickable ? (e) => {
+        e.currentTarget.style.borderColor = accentColor;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+      } : undefined}
+      onMouseLeave={isClickable ? (e) => {
+        e.currentTarget.style.borderColor = 'var(--border-subtle)';
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+      } : undefined}
     >
       <div style={{
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         justifyContent: 'space-between',
         gap: '0.75rem',
-        marginBottom: '0.6rem'
+        marginBottom: '0.75rem'
       }}>
         <div style={{
           display: 'flex',
@@ -57,8 +69,8 @@ export const MetricCard = ({
         }}>
           {IconComponent && (
             <div style={{
-              width: '36px',
-              height: '36px',
+              width: '34px',
+              height: '34px',
               borderRadius: 'var(--radius-sm)',
               backgroundColor: 'var(--bg-hover)',
               color: accentColor,
@@ -70,7 +82,7 @@ export const MetricCard = ({
               {React.isValidElement(IconComponent) ? (
                 IconComponent
               ) : (
-                <IconComponent size={20} strokeWidth={2} />
+                <IconComponent size={18} strokeWidth={2} />
               )}
             </div>
           )}
@@ -91,8 +103,8 @@ export const MetricCard = ({
 
       <div>
         <div style={{
-          fontSize: '1.65rem',
-          fontWeight: 800,
+          fontSize: '2rem',
+          fontWeight: 700,
           color: 'var(--text-primary)',
           letterSpacing: '-0.03em',
           lineHeight: 1.15

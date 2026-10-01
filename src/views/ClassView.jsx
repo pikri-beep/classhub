@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp } from 'lucide-react';
+import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
+import MaintenanceScreen from '../components/admin/MaintenanceScreen';
 
-export default function ClassView() {
-  const { currentUser, isAdmin } = useAuth();
+export default function ClassView({ onNavigate }) {
+  const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
   const { data, addAnnouncement, togglePinAnnouncement, deleteAnnouncement, updateClassInfo } = useStore();
   const { showToast } = useToast();
 
@@ -217,6 +218,19 @@ export default function ClassView() {
           >
             <Megaphone size={14} />
             <span>Pengumuman ({announcements.length})</span>
+            {data?.pageAccess?.announcements?.isEnabled === false && (
+              <span style={{
+                fontSize: '0.65rem',
+                padding: '0.1rem 0.4rem',
+                borderRadius: 'var(--radius-full)',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                color: 'var(--danger)',
+                fontWeight: 700,
+                marginLeft: '0.35rem'
+              }}>
+                Nonaktif
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('members')}
@@ -227,7 +241,7 @@ export default function ClassView() {
           </button>
         </div>
 
-        {activeTab === 'announcements' && isAdmin && (
+        {activeTab === 'announcements' && isEffectiveAdmin && (
           <button onClick={() => setIsAddAnnOpen(true)} className="btn btn-primary btn-sm">
             <Plus size={15} />
             <span>+ Buat Pengumuman</span>
@@ -237,8 +251,37 @@ export default function ClassView() {
 
       {/* 3. ANNOUNCEMENTS CONTENT */}
       {activeTab === 'announcements' && (
-        <div>
-          {/* Category Pills & Search */}
+        !data?.pageAccess?.announcements?.isEnabled && !isEffectiveAdmin ? (
+          <MaintenanceScreen
+            pageName="Papan Pengumuman"
+            reason={data?.pageAccess?.announcements?.reason}
+            onBackHome={() => onNavigate ? onNavigate('dashboard') : setActiveTab('members')}
+          />
+        ) : (
+          <div>
+            {/* Admin Bypass Warning Banner */}
+            {isEffectiveAdmin && data?.pageAccess?.announcements?.isEnabled === false && (
+              <div style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                border: '1px solid rgba(234, 179, 8, 0.45)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.75rem 1rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                fontSize: '0.82rem',
+                color: '#854D0E',
+                lineHeight: 1.45
+              }}>
+                <ShieldAlert size={18} style={{ flexShrink: 0, color: '#D97706' }} />
+                <div>
+                  <strong>Bypass Admin:</strong> Modul <strong>Papan Pengumuman</strong> sedang dinonaktifkan untuk siswa {data?.pageAccess?.announcements?.reason ? `(Alasan: "${data.pageAccess.announcements.reason}")` : ''}. Siswa melihat layar pemeliharaan, sementara Anda tetap memiliki akses penuh.
+                </div>
+              </div>
+            )}
+
+            {/* Category Pills & Search */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -401,6 +444,7 @@ export default function ClassView() {
             </div>
           )}
         </div>
+        )
       )}
 
       {/* 4. CLASSMATES ROSTER */}

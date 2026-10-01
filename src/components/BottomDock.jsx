@@ -4,13 +4,11 @@ import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function BottomDock({ activeView, onViewChange }) {
-  const { data } = useStore();
+  const { data, personalDoneTasks = [] } = useStore();
   const { currentUser } = useAuth();
 
-  // Count unfinished tasks for badge
-  const pendingTasksCount = (data?.tasks || []).filter(task => {
-    return !(task.completedStudentIds || []).includes(currentUser?.id);
-  }).length;
+  // Count unfinished tasks for badge (personal to current device/browser)
+  const pendingTasksCount = (data?.tasks || []).filter(task => !task.isCompleted && !personalDoneTasks.includes(task.id)).length;
 
   const dockItems = [
     { id: 'dashboard', label: 'Hari Ini', icon: Sparkles },

@@ -65,8 +65,8 @@ export const ActionMenu = ({
         onClick={handleToggle}
         className="action-menu-trigger"
         style={{
-          width: '32px',
-          height: '32px',
+          width: '30px',
+          height: '30px',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid transparent',
           backgroundColor: isOpen ? 'var(--bg-hover)' : 'transparent',
@@ -77,25 +77,31 @@ export const ActionMenu = ({
           cursor: 'pointer',
           transition: 'all var(--transition-fast)'
         }}
+        onMouseEnter={(e) => {
+          if (!isOpen) e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+        }}
+        onMouseLeave={(e) => {
+          if (!isOpen) e.currentTarget.style.backgroundColor = 'transparent';
+        }}
       >
-        <MoreVertical size={16} strokeWidth={2} />
+        <MoreVertical size={15} strokeWidth={2} />
       </button>
 
       {isOpen && (
         <div
           role="menu"
-          className="action-menu-dropdown card"
+          className="action-menu-dropdown"
           style={{
             position: 'absolute',
             top: 'calc(100% + 4px)',
             [align === 'right' ? 'right' : 'left']: 0,
             zIndex: 100,
-            minWidth: '160px',
-            padding: '0.35rem',
+            minWidth: '165px',
+            padding: '0.3rem',
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border)',
             borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-lg)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
             display: 'flex',
             flexDirection: 'column',
             gap: '0.15rem'
@@ -118,9 +124,9 @@ export const ActionMenu = ({
                   width: '100%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.6rem',
-                  padding: '0.5rem 0.75rem',
-                  fontSize: '0.82rem',
+                  gap: '0.55rem',
+                  padding: '0.45rem 0.65rem',
+                  fontSize: '0.8rem',
                   fontWeight: 500,
                   textAlign: 'left',
                   borderRadius: 'var(--radius-xs)',
@@ -134,7 +140,7 @@ export const ActionMenu = ({
                 onMouseEnter={(e) => {
                   if (!item.disabled) {
                     e.currentTarget.style.backgroundColor = isDanger
-                      ? 'rgba(196, 85, 77, 0.1)'
+                      ? 'rgba(196, 85, 77, 0.08)'
                       : 'var(--bg-hover)';
                   }
                 }}

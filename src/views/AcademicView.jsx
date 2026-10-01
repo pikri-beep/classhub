@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Plus, Trash2, ExternalLink, Calendar, BookOpen, GraduationCap, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
+import { MaintenanceScreen } from '../components/admin/MaintenanceScreen';
 import { formatDateIndo } from '../lib/dateUtils';
 
 export default function AcademicView() {
-  const { currentUser, isAdmin } = useAuth();
-  const { data, addTask, deleteTask, updateTaskStatus, addExam, deleteExam } = useStore();
+  const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
+  const { data, addTask, deleteTask, addExam, deleteExam, personalDoneTasks = [] } = useStore();
   const { showToast } = useToast();
 
   const [activeSubTab, setActiveSubTab] = useState('tasks');
@@ -128,16 +129,44 @@ export default function AcademicView() {
 
       {/* 3. TASKS CONTENT */}
       {activeSubTab === 'tasks' && (
-        <div>
-          {/* Filters Bar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '0.75rem',
-            marginBottom: '1rem'
-          }}>
+        !data?.pageAccess?.tasks?.isEnabled && !isEffectiveAdmin ? (
+          <MaintenanceScreen
+            pageName="Daftar Tugas Kelas"
+            reason={data?.pageAccess?.tasks?.reason}
+            onBackHome={() => setActiveSubTab('exams')}
+          />
+        ) : (
+          <div>
+            {/* Admin Bypass Warning */}
+            {isEffectiveAdmin && !data?.pageAccess?.tasks?.isEnabled && (
+              <div style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                border: '1px solid rgba(234, 179, 8, 0.45)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.65rem 0.95rem',
+                marginBottom: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.55rem',
+                fontSize: '0.8rem',
+                color: '#854D0E'
+              }}>
+                <ShieldAlert size={16} style={{ flexShrink: 0, color: '#D97706' }} />
+                <span>
+                  <strong>Bypass Admin:</strong> Modul Daftar Tugas sedang dinonaktifkan untuk siswa {data?.pageAccess?.tasks?.reason ? `(Alasan: "${data.pageAccess.tasks.reason}")` : ''}.
+                </span>
+              </div>
+            )}
+
+            {/* Filters Bar */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              marginBottom: '1rem'
+            }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                 Daftar Tugas
@@ -177,6 +206,9 @@ export default function AcademicView() {
                 const isExpanded = expandedTaskId === task.id;
                 const hasDetails = Boolean(task.description || task.link);
 
+                const isPersonalDone = (personalDoneTasks || []).includes(task.id);
+                const isDone = Boolean(task.isCompleted) || isPersonalDone;
+
                 return (
                   <div key={task.id} className="clean-task-card">
                     <div className="clean-task-main">
@@ -185,15 +217,25 @@ export default function AcademicView() {
                         style={{ flex: 1, minWidth: 0, cursor: hasDetails ? 'pointer' : 'default' }}
                         onClick={() => hasDetails && setExpandedTaskId(isExpanded ? null : task.id)}
                       >
-                        <div className="clean-task-title">
+                        <div className="clean-task-title" style={{ textDecoration: isDone ? 'line-through' : 'none', opacity: isDone ? 0.75 : 1 }}>
                           {task.title}
                         </div>
                         <div className="clean-task-tags">
                           <span className="clean-tag-subject">{task.subject}</span>
-                          <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
-                            <Calendar size={11} style={{ marginRight: '0.2rem' }} />
-                            {dateStr}
-                          </span>
+                          {task.isCompleted ? (
+                            <span className="clean-tag-subject" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#16A34A', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                              Selesai (Admin)
+                            </span>
+                          ) : isPersonalDone ? (
+                            <span className="clean-tag-subject" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', color: 'var(--primary)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                              Selesai di HP
+                            </span>
+                          ) : (
+                            <span className={`clean-tag-deadline ${isNear ? 'urgent' : ''}`}>
+                              <Calendar size={11} style={{ marginRight: '0.2rem' }} />
+                              {dateStr}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -254,11 +296,39 @@ export default function AcademicView() {
             </div>
           )}
         </div>
+        )
       )}
 
       {/* 4. EXAMS CONTENT */}
       {activeSubTab === 'exams' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+        !data?.pageAccess?.exams?.isEnabled && !isEffectiveAdmin ? (
+          <MaintenanceScreen
+            pageName="Jadwal Ujian"
+            reason={data?.pageAccess?.exams?.reason}
+            onBackHome={() => setActiveSubTab('tasks')}
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+            {/* Admin Bypass Warning */}
+            {isEffectiveAdmin && !data?.pageAccess?.exams?.isEnabled && (
+              <div style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                border: '1px solid rgba(234, 179, 8, 0.45)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.65rem 0.95rem',
+                marginBottom: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.55rem',
+                fontSize: '0.8rem',
+                color: '#854D0E'
+              }}>
+                <ShieldAlert size={16} style={{ flexShrink: 0, color: '#D97706' }} />
+                <span>
+                  <strong>Bypass Admin:</strong> Modul Jadwal Ujian sedang dinonaktifkan untuk siswa {data?.pageAccess?.exams?.reason ? `(Alasan: "${data.pageAccess.exams.reason}")` : ''}.
+                </span>
+              </div>
+            )}
           {exams.length === 0 ? (
             <div className="card" style={{ padding: '2.5rem', textAlign: 'center' }}>
               <p style={{ fontWeight: 700, margin: 0 }}>Belum ada jadwal ujian</p>
@@ -369,6 +439,7 @@ export default function AcademicView() {
             })
           )}
         </div>
+        )
       )}
 
       {/* MODAL: ADD TASK */}

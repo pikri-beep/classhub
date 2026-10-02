@@ -42,7 +42,7 @@ export default function OverviewTab({
   const cashStats = (typeof getTotalCashBalance === 'function' ? getTotalCashBalance() : null) || {
     totalIn: 0,
     totalOut: 0,
-    balance: 0
+    balance: data?.cash?.balance ?? 0
   };
   const activeTasksCount = tasks.filter(t => !t.isCompleted).length;
 

@@ -37,16 +37,31 @@ export default function CashTab() {
   } = useStore();
   const { showToast } = useToast();
 
-  const members = data.members || [];
+  const members = data?.members || [];
   const totalMembers = members.length;
-  const duesPeriods = data.duesPeriods || [];
-  const transactions = data.transactions || [];
+  const duesPeriods = data?.cash?.duesPeriods || [];
+  const transactions = data?.cash?.transactions || [];
 
-  const cashStats = (typeof getTotalCashBalance === 'function' ? getTotalCashBalance() : null) || {
-    income: 0,
-    expense: 0,
-    balance: 0
-  };
+  const income = useMemo(() => {
+    return transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transactions]);
+
+  const expense = useMemo(() => {
+    return transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transactions]);
+
+  const cashStats = useMemo(() => {
+    const fromFn = typeof getTotalCashBalance === 'function' ? getTotalCashBalance() : null;
+    return {
+      balance: fromFn?.balance !== undefined ? fromFn.balance : (data?.cash?.balance ?? 0),
+      income: fromFn?.income !== undefined ? fromFn.income : income,
+      expense: fromFn?.expense !== undefined ? fromFn.expense : expense
+    };
+  }, [getTotalCashBalance, data?.cash?.balance, income, expense]);
 
   // Month navigation
   const [selectedDuesMonth, setSelectedDuesMonth] = useState(() => getCurrentMonthKey());

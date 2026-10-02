@@ -1,172 +1,191 @@
-# 🚀 Rencana Masa Depan & Roadmap Praktis — ClassHub
+# 🚀 Rencana Pengembangan Utama — ClassHub Toolkit Kelas
 
-> *"Fokus pada kebutuhan nyata kegiatan belajar mengajar sehari-hari di kelas — praktis, interaktif, dan langsung bermanfaat."*
+> *"Fokus pada 3 kebutuhan nyata dan paling sering digunakan dalam kegiatan belajar mengajar sehari-hari di kelas — praktis, interaktif, tanpa AI, dan siap tampil di proyektor."*
 
-Dokumen ini merangkum **status proyek terkini** dan **ide-ide fitur praktis** yang benar-benar dibutuhkan siswa, guru, dan pengurus kelas dalam aktivitas sehari-hari di sekolah tanpa fitur rumit yang tidak diperlukan.
-
----
-
-## 📊 1. Status Proyek Saat Ini (v2.1.0) — ✅ SUDAH TERSEDIA
-
-ClassHub saat ini telah berjalan stabil sebagai Progressive Web App (PWA) yang dapat dipasang di layar utama ponsel siswa:
-
-| Fitur | Manfaat untuk Kelas | Status |
-| :--- | :--- | :---: |
-| **Live Class Tracker** | Mengetahui secara real-time mata pelajaran apa yang sedang berlangsung, guru pengampu, serta countdown menuju bel istirahat/pulang. | ✅ Aktif |
-| **Today-First Dashboard** | Siswa langsung melihat ringkasan penting hari ini: PR deadline terdekat, jadwal pelajaran, dan siapa yang piket hari ini. | ✅ Aktif |
-| **Jadwal Pelajaran & Kalender Agenda** | Jadwal mingguan lengkap dari Senin hingga Jumat beserta agenda kegiatan kelas (ulangan, peringatan hari besar, kegiatan sekolah). | ✅ Aktif |
-| **Piket Kebersihan & Tim MBG** | Pembagian jadwal piket harian kelas serta regu pengambil (11.30 WIB) dan pengembali (12.30 WIB) Makan Bergizi Gratis. | ✅ Aktif |
-| **Buku Kas & Matriks Iuran Siswa** | Checklist pembayaran iuran kas per minggu dan per bulan secara transparan, serta pencatatan mutasi pengeluaran kas kelas. | ✅ Aktif |
-| **Daftar Tugas & Checklist Selesai** | Siswa bisa menandai tugas yang sudah dikerjakan di ponsel masing-masing agar tidak terlewat. | ✅ Aktif |
-| **Generator Format WhatsApp** | Pengurus kelas dapat langsung menyalin pesan ringkasan persiapan belajar malam hari untuk dikirimkan ke grup WhatsApp kelas. | ✅ Aktif |
-| **Kontrol Akses / Pemeliharaan Halaman** | Admin dapat menyalakan mode pemeliharaan pada halaman tertentu (misal saat kas sedang diaudit oleh bendahara). | ✅ Aktif |
-| **Arsitektur Modular Terisolasi** | Kode dashboard admin telah dipecah rapi per tab domain sehingga performa cepat dan bebas lag. | ✅ Aktif |
+Dokumen ini mendokumentasikan spesifikasi rinci untuk **3 fitur utama** yang akan dikembangkan, mencakup penempatan halaman (**Users vs Admin**), mode **Full Screen proyektor**, serta aturan keamanan dan alur komunikasi kelas.
 
 ---
 
-## 🎯 2. Fokus Pengembangan: Toolkit Kegiatan Harian Kelas (Classroom Utilities)
+## 📊 1. Status Proyek Saat Ini (v2.1.0) — ✅ SUDAH BERJALAN STABIL
 
-Berdasarkan dinamika nyata di ruang kelas, fitur masa depan difokuskan pada **alat bantu kegiatan belajar, pengelolaan kelas, dan interaksi langsung antar siswa di kelas**.
+ClassHub telah beroperasi dengan baik dengan modul-modul berikut:
+- **Live Class Tracker**: Pelacakan jam mapel aktif, guru pengampu, dan hitung mundur bel istirahat/pulang.
+- **Today-First Dashboard**: Ringkasan tugas terdekat, jadwal hari ini, dan regu piket harian.
+- **Buku Kas & Matriks Iuran**: Pencatatan uang kas transparan per minggu dan per bulan.
+- **Daftar Tugas & Checklist**: Checklist penyelesaian PR mandiri per siswa.
+- **Arsitektur Dashboard Admin Modular**: Kode tab admin terisolasi rapi (`OverviewTab`, `TasksTab`, `ExamsTab`, `SchedulesTab`, `CashTab`, `AnnouncementsTab`, `MembersTab`, `SettingsTab`).
+
+---
+
+## 🎯 2. Tiga Fitur Prioritas Utama
 
 ```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   TOOLKIT KEGIATAN KELAS HARIAN                        │
-├────────────────────────────┬───────────────────────────────────────────┤
-│ 🎡 INTERAKSI & BELAJAR     │ 👥 PENGELOLAAN SISWA                      │
-│   • Roda Putar (Wheel)     │   • Generator Kelompok Otomatis           │
-│   • Timer Presentasi Kuis  │   • Denah Tempat Duduk & Acak Meja        │
-│   • Mode Tampilan Proyektor│   • Catatan Harian Presensi (S/I/A)       │
-├────────────────────────────┼───────────────────────────────────────────┤
-│ 📢 KOORDINASI & INFORMASI  │ 💰 TRANSPARANSI SEDERHANA                 │
-│   • Voting / Polling Kelas │   • Rekap Kas Siap Cetak untuk Mading     │
-│   • Papan Sticky Note Mading│  • Pengingat Barang Bawaan Praktik       │
-└────────────────────────────┴───────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        TIGA PILAR ALAT BANTU HARIAN KELAS                              │
+├────────────────────────────┬─────────────────────────────┬─────────────────────────────┤
+│ 1. 🎡 SPINNING WHEEL       │ 2. 👥 GROUP MAKER           │ 3. 📌 MADING DIGITAL        │
+│   • Roda Acak Nama Siswa   │   • Pembagi Kelompok Cepat  │   • Transformasi Pengumuman │
+│   • Mode Full Screen Layar │   • Full Screen Proyektor   │   • Sticky Notes Pastel     │
+│   • Eliminasi & Urutan     │   • WA Share (Admin Only)   │   • Checklist Barang Tas    │
+└────────────────────────────┴─────────────────────────────┴─────────────────────────────┘
 ```
 
 ---
 
-## 🛠️ 3. Rincian Fitur Praktis yang Akan Datang
+## 🎡 Fitur 1: Roda Keberuntungan / Random Student Picker (Spinning Wheel)
 
-### 1. 🎡 Roda Keberuntungan / Random Student Picker (Spinning Wheel)
-*Solusi saat guru meminta siswa maju ke depan atau menentukan urutan presentasi.*
-- **Fitur Utama**:
-  - Roda putar grafis yang memuat seluruh nama siswa di kelas.
-  - Tombol **"Putar Roda"** dengan animasi putaran seru dan konfeti saat nama terpilih.
-  - Opsi **"Eliminasi Siswa Terpilih"** agar siswa yang sudah maju tidak terpilih dua kali.
-  - Mode **"Pengambilan Cepat"** (1 nama instan) atau **"Urutan Presentasi"** (mengacak urutan tampil seluruh siswa/kelompok dari nomor 1 sampai selesai).
-  - Tampilan ramah layar proyektor kelas.
+Fitur pengacak nama siswa interaktif untuk menentukan giliran maju ke depan, menjawab pertanyaan guru, atau menentukan giliran presentasi secara adil dan seru tanpa tunjuk-menunjuk.
 
-### 2. 👥 Generator Pembagi Kelompok Otomatis (Smart Group Maker)
-*Menghindari perdebatan dan pilih-pilih teman saat ada tugas kelompok dari guru.*
-- **Fitur Utama**:
-  - Pilihan mode: **Bagi Berdasarkan Jumlah Kelompok** (misal: buat 6 kelompok) atau **Bagi Berdasarkan Jumlah Anggota** (misal: 4 orang per kelompok).
-  - Opsi penyeimbang (seimbang putra/putri atau acak murni).
-  - Pengecualian siswa yang sedang tidak hadir hari itu.
-  - Tombol **"Salin ke WhatsApp"** yang langsung memformat daftar kelompok (Kelompok 1: A, B, C, D) sehingga ketua kelas bisa langsung membagikannya ke grup WA dalam 1 klik.
+### A. Penempatan Fitur (Di Mana Ditaruh?)
+- **Di Sisi Siswa / Publik (Users)**:
+  - Ditaruh di menu navigasi utama dengan label **"Alat Kelas"** atau **"Roda Acak"** (dapat diakses oleh siapa saja: guru mapel yang sedang mengajar di kelas, ketua kelas, maupun murid tanpa perlu login admin).
+  - Alasan: Saat jam pelajaran berlangsung, laptop kelas yang tersambung ke proyektor sering dioperasikan guru mapel tamu. Guru harus bisa langsung membuka dan memutar roda tanpa harus meminta password admin kelas.
+- **Di Sisi Admin**:
+  - Disediakan pintasan cepat di Admin Dashboard untuk memfilter daftar nama (misal: hanya mengacak siswa putra, siswa putri, atau mengecualikan siswa yang sedang sakit/izin hari ini).
 
-### 3. ⏱️ Timer & Stopwatch Presentasi Kelas (Layar Penuh)
-*Membantu guru dan siswa menjaga kedisiplinan waktu saat sesi presentasi tugas atau kuis.*
-- **Fitur Utama**:
-  - Countdown timer dengan angka besar yang terlihat jelas dari bangku belakang saat ditampilkan di proyektor / laptop kelas.
-  - Tombol pintas preset: 5 Menit, 10 Menit, 15 Menit, 30 Menit.
-  - Bunyi lonceng atau peringatan visual saat waktu tersisa 1 menit dan saat waktu habis.
-  - Mode Stopwatch untuk menghitung durasi pengerjaan praktik koding/tugas.
+### B. Mode Full Screen (Layar Penuh Proyektor)
+- Dilengkapi tombol ikon **Full Screen (Layar Penuh)** di sudut atas.
+- Menggunakan standar browser `document.documentElement.requestFullscreen()`.
+- **Perilaku Tampilan Layar Penuh**:
+  1. Navbar, sidebar, dan footer otomatis tersembunyi sepenuhnya.
+  2. Roda putar grafis (Canvas/SVG) membesar proporsional mengisi tengah layar proyektor.
+  3. Panel nama siswa di sisi samping tersusun rapi dengan ukuran teks besar yang terbaca jelas dari meja baris belakang kelas (jarak 8-10 meter).
+  4. **Kontrol Keyboard Cepat**:
+     - Tekan tombol `Spacebar` di keyboard laptop kelas untuk langsung memutar roda.
+     - Tekan `Esc` untuk keluar dari layar penuh.
+  5. **Pop-up Pemenang Spektakuler**:
+     - Begitu roda berhenti, nama siswa yang terpilih muncul di tengah layar dalam kartu raksasa dengan animasi konfeti perayaan.
+     - Ada tombol cepat: **"Putar Lagi"** atau **"Eliminasi Siswa Ini"**.
 
-### 4. 🪑 Denah Tempat Duduk Interaktif & Pengacak Meja (Seating Chart)
-*Membuat visualisasi tata letak meja dan mengatasi rasa bosan dengan teman sebangku.*
-- **Fitur Utama**:
-  - Visualisasi denah kelas: meja guru, pintu, papan tulis, dan baris meja siswa (format 2-2 atau letter U).
-  - Setiap meja menampilkan nama siswa dan nomor absen.
-  - Tombol **"Acak Tempat Duduk Bulanan"** untuk merotasi posisi duduk secara adil tanpa ada yang merasa dianaktirikan.
-  - Kemampuan drag-and-drop sederhana bagi wali kelas/ketua kelas untuk menukar posisi duduk tertentu (misal siswa dengan kendala penglihatan dipindah ke depan).
-
-### 5. 🗳️ Polling & Voting Keputusan Kelas Sederhana (Quick Poll)
-*Mengambil keputusan kelas secara cepat dan demokratis tanpa berisik.*
-- **Contoh Kasus**:
-  - *"Baju apa yang dipakai untuk hari Jumat besok? (Batik / Kaos Olahraga / Baju Jurusan)"*
-  - *"Mau jenguk teman yang sakit hari apa? (Kamis pulang sekolah / Sabtu sore)"*
-  - *"Warna jaket/hoodie kelas yang disepakati? (Hitam / Navy / Abu-abu)"*
-- **Fitur Utama**:
-  - Siswa membuka portal dan langsung memilih satu opsi.
-  - Hasil diagram batang persentase langsung terupdate secara real-time di layar.
-  - Fitur tutup voting jika waktu pemungutan suara telah selesai.
-
-### 6. 📋 Catatan Presensi Harian Kelas (Jurnal Cepat Sekretaris)
-*Membantu sekretaris kelas merekap kehadiran sebelum dicatat di buku jurnal absensi fisik sekolah.*
-- **Fitur Utama**:
-  - Tombol cepat harian di admin: tandai siapa yang **Sakit (S)**, **Izin (I)**, atau **Alpa (A)** hari ini.
-  - Ringkasan teks harian yang siap dibagikan ke wali kelas / grup pengurus:
-    `"Laporan Absensi XI PPLG 1 (Kamis, 2 Okt): Hadir 34 siswa, Sakit: Fulan, Izin: Fulanah."`
-  - Riwayat sederhana untuk memantau siapa saja yang sering tidak hadir dalam satu bulan.
-
-### 7. 📌 Transformasi Halaman Pengumuman ➔ Mading Digital (Sticky Notes Board)
-*Mengalihfungsikan halaman "Pengumuman" konvensional menjadi Majalah Dinding (Mading) digital yang interaktif dan visual.*
-- **Alasan Perubahan**:
-  - Format pengumuman lama yang panjang dan formal jarang dibaca siswa.
-  - Siswa lebih tertarik dengan visual mading berwarna-warni dengan catatan singkat langsung pada intinya.
-- **Fitur Utama**:
-  - **Kertas Memo Warna-Warni**: Kuning (Catatan Umum), Hijau (Checklist Bawaan Praktik/Lab), Biru (Edaran Sekolah), Merah Muda/Oranye (Penting/Mendesak).
-  - **Checklist Bawaan Pribadi**: Siswa bisa mencentang sendiri barang bawaan di HP masing-masing saat menyiapkan tas di rumah.
-  - **Jarum Pin (Pinned Notes)**: Memo terpenting tetap menempel di posisi atas mading.
-  - **Auto-Expire**: Memo otomatis terarsip setelah hari/jam kegiatan berakhir agar mading selalu bersih.
-
-### 8. 🖨️ Lembar Kas Siap Cetak (Print-Friendly Sheet)
-*Membantu bendahara mencetak rekap kas untuk ditempel di papan mading belakang kelas.*
-- **Fitur Utama**:
-  - Tombol **"Cetak Rekap Kas Mading"** yang memformat matriks pembayaran kas ke dalam format A4 rapi tanpa elemen navigasi website.
-  - Dilengkapi kolom tanda tangan Bendahara dan Ketua Kelas.
-  - Siswa yang belum bayar terlihat jelas dengan tanda silang merah, dan yang sudah bayar bertanda centang hijau.
-
-### 9. 🖥️ Mode Tampilan Proyektor Kelas (Projector Screen Mode)
-*Tampilan khusus ketika laptop kelas disambungkan ke proyektor / TV interaktif di depan kelas.*
-- **Fitur Utama**:
-  - Tombol pintas layar penuh (Fullscreen) dengan font besar dan kontras tinggi.
-  - Menampilkan jam dinding digital besar, mata pelajaran saat ini, guru pengampu, dan tugas yang harus dikumpulkan hari ini.
-  - Bisa dialihkan ke mode Timer atau Spinning Wheel saat jam pelajaran kosong atau sesi ice breaking.
+### C. Logika & Aturan Putaran
+1. **Otomatis Mengambil Data Siswa**: Nama otomatis bersumber dari data anggota kelas (`data.members`), tidak perlu mengetik nama siswa satu per satu.
+2. **Opsi "Eliminasi Siswa Terpilih"**: Siswa yang namanya sudah keluar otomatis dicoret sementara dari roda agar tidak terpilih dua kali dalam sesi yang sama.
+3. **Mode Urutan Presentasi**: Sekali klik untuk mengacak urutan tampil seluruh siswa (nomor 1 sampai selesai) dan menampilkan daftar urutannya di layar.
 
 ---
 
-## 🗓️ 4. Rencana Tahapan Rilis (Roadmap)
+## 👥 Fitur 2: Generator Pembagi Kelompok Otomatis (Smart Group Maker)
 
-```
-  TAHAP 1 (Prioritas Utama)          TAHAP 2 (Fitur Belajar)            TAHAP 3 (Pengelolaan Kelas)
- ┌───────────────────────────┐      ┌───────────────────────────┐      ┌───────────────────────────┐
- │ • Spinning Wheel (Roda)   │ ───▶ │ • Timer & Stopwatch Layar │ ───▶ │ • Denah Tempat Duduk      │
- │ • Group Maker (Kelompok)  │      │ • Quick Poll (Voting)     │      │ • Lembar Kas Siap Cetak   │
- │ • Alih Fungsi Mading Note │      │ • Jurnal Presensi Harian  │      │ • Mode Proyektor Layar    │
- └───────────────────────────┘      └───────────────────────────┘      └───────────────────────────┘
-```
+Fitur pembuat kelompok belajar otomatis dalam hitungan detik untuk menghindari perdebatan dan pilih-pilih teman saat guru memberi tugas kelompok mendadak.
 
-### Tahap 1 — Alat Bantu Paling Sering Dipakai (2 Minggu ke depan)
-1. **Roda Putar (Spinning Wheel)**: Pemilihan acak siswa untuk menjawab pertanyaan dan giliran presentasi.
-2. **Generator Kelompok Otomatis (Group Maker)**: Pembagi tim tugas kelompok dengan tombol salin format ke WhatsApp (Admin only).
-3. **Transformasi Pengumuman ➔ Mading Sticky Notes**: Mengubah halaman pengumuman menjadi papan mading interaktif dengan kartu memo warna-warni dan checklist bawaan praktik.
+### A. Penempatan Fitur & Pembagian Hak Akses
+- **Di Sisi Siswa / Publik (Users)**:
+  - Diletakkan bersebelahan dengan Spinning Wheel di menu **"Alat Kelas"**.
+  - Siapa pun (guru atau perwakilan kelompok) bisa mengatur jumlah kelompok dan menekan tombol **"Acak Kelompok"**.
+  - Bisa dialihkan ke mode **Full Screen** proyektor agar seluruh kelas bisa melihat pembagian kelompoknya di layar depan.
+  - ❌ **TIDAK ADA tombol "Kirim ke WhatsApp" di sisi Users** (untuk mencegah spam klik oleh siswa).
+- **Di Sisi Admin (Pengurus Kelas)**:
+  - Terintegrasi di Admin Dashboard.
+  - Memiliki fitur yang sama dengan Users, **DITAMBAH tombol eksklusif**:
+    - 📲 **"Salin Format ke WhatsApp"**: Otomatis menghasilkan teks rapi berisi daftar kelompok dengan penomoran emoji siap kirim ke grup kelas dalam 1 klik.
 
-### Tahap 2 — Pengatur Waktu & Partisipasi (Bulan Berikutnya)
-1. **Timer Presentasi Kelas**: Pengatur waktu layar penuh dengan bel penanda waktu habis.
-2. **Voting Keputusan Kelas (Quick Poll)**: Wadah musyawarah keputusan kelas secara digital dan transparan.
-3. **Jurnal Presensi Harian**: Form cepat sekretaris mencatat siswa sakit/izin untuk laporan wali kelas (Admin only).
+### B. Mode Full Screen (Layar Penuh Proyektor)
+- Saat tombol **Full Screen** ditekan:
+  1. Tampilan berubah menjadi **Grid Kartu Kelompok Presentasi**.
+  2. Kelompok 1, Kelompok 2, Kelompok 3, dst. ditampilkan dalam bentuk kartu-kartu besar dengan warna aksen berbeda.
+  3. Nama setiap anggota tertulis tebal dan kontras tinggi.
+  4. Dilengkapi tombol melayang di pojok layar: **"Acak Ulang"** (jika kelas ingin mengocok ulang secara transparan di depan guru) dan **"Tutup Layar Penuh"**.
 
-### Tahap 3 — Penataan Kelas & Fisik (Fase Lanjutan)
-1. **Denah Meja Interaktif**: Denah tempat duduk kelas dengan fitur acak teman sebangku berkala.
-2. **Rekap Kas Siap Cetak**: Format cetak laporan kas untuk ditempel di dinding kelas.
-3. **Mode Proyektor Layar Penuh**: Standby screen saat jam pelajaran berlangsung di proyektor kelas.
+### C. Opsi Pengacakan yang Tersedia
+1. **Mode Pembagian**:
+   - Berdasarkan **Jumlah Kelompok** (contoh: *"Bagi kelas menjadi 6 kelompok"*).
+   - Berdasarkan **Jumlah Anggota per Kelompok** (contoh: *"Bagi menjadi 4 orang per kelompok"*).
+2. **Filter Pengecualian Kehadiran**:
+   - Terdapat checklist cepat untuk menghapus centang siswa yang sedang tidak masuk sekolah hari itu (Sakit/Izin/Alpa), sehingga tidak ada kelompok yang kekurangan orang akibat anggotanya absen.
+3. **Keseimbangan Gender (Opsional)**:
+   - Opsi pembagian seimbang antara siswa laki-laki dan perempuan di setiap kelompok.
 
 ---
 
-## 🎯 5. Prinsip Desain Fitur Baru
+## 📌 Fitur 3: Transformasi Halaman Pengumuman ➔ Mading Digital (Sticky Notes Board)
 
-1. **Buka → Pakai (No Configuration Needed)**:
-   Guru atau ketua kelas tidak perlu mengatur akun atau database rumit. Buka tab Spinning Wheel, nama siswa otomatis sudah terisi dari data kelas yang ada, langsung tekan tombol Putar.
-2. **Fitur "Salin / Bagikan ke WhatsApp" EKSKLUSIF di Halaman Admin**:
-   Tombol generator pesan WhatsApp (rekap tugas, kelompok, memo mading, dan absensi) **HANYA tersedia di Dashboard Admin / Pengurus Kelas**. Tampilan siswa umum sengaja bersih tanpa tombol share WA untuk mencegah spam dan memastikan informasi resmi disebarkan secara tertib oleh pengurus.
-3. **Ringan dan Tahan Banting**:
-   Dapat berjalan lancar di HP siswa berspesifikasi menengah-ke-bawah tanpa menguras kuota internet.
+Mengalihfungsikan halaman "Pengumuman" konvensional yang kaku dan jarang dibaca menjadi **Majalah Dinding (Mading) Digital Kelas** yang interaktif, visual, dan memuat catatan barang bawaan praktik.
+
+### A. Penempatan Fitur & Hak Akses
+- **Di Sisi Siswa / Publik (Users)**:
+  - Menggantikan halaman `Pengumuman` lama menjadi tab **"Mading Kelas"** (dengan ikon pin 📌).
+  - Berisi papan memo warna-warni yang disusun rapi otomatis.
+  - **Interaksi Siswa**: Siswa dapat **mencentang checklist barang bawaan** di HP masing-masing saat menyiapkan tas di malam hari. Centang ini tersimpan di memori ponsel mereka (*LocalStorage*) sehingga aman dan personal.
+  - ❌ **TIDAK ADA tombol share WhatsApp di sisi Users**.
+- **Di Sisi Admin**:
+  - Tab di Admin Dashboard diubah dari `Pengumuman` menjadi `Mading & Sticky Notes`.
+  - Formulir pembuatan memo dirancang sangat cepat:
+    1. Pilih warna kertas memo: 🟡 Kuning (Umum), 🟢 Hijau (Barang Bawaan Praktik/Lab), 🔵 Biru (Info Sekolah), 🔴 Pink/Oranye (Penting/Mendesak).
+    2. Pilih tipe memo: **Checklist Barang** (bisa tambah poin checklist) atau **Memo Teks Biasa**.
+    3. Toggle **📌 Sematkan di Paling Atas (Pin)**.
+    4. Atur **Masa Aktif (Auto-Expire)**: Memo otomatis hilang setelah tanggal tertentu agar mading tidak menumpuk.
+    5. 📲 **Eksklusif Admin**: Tombol **"Kirim ke WhatsApp"** yang menyalin seluruh teks memo dan daftar checklist ke format pesan WA.
+
+### B. Konsep Desain Visual Papan & Kartu Memo (CSS Murni Modern)
+1. **Papan Latar Belakang (Board Background)**:
+   - Menggunakan konsep **Papan Felt Akustik Modern (Dark Dot-Grid)**:
+     - Warna dasar abu-abu arang gelap (*slate-900*) dengan pola titik-titik halus (*subtle dot-matrix*).
+     - Bingkai lis lembut di sekeliling area mading layaknya papan gantung fisik di kelas.
+     - Dibuat 100% menggunakan kode CSS murni (ringan, tidak memerlukan gambar latar berat, langsung terbuka instan).
+2. **Kartu Sticky Notes di Atas Papan**:
+   - Kertas memo berwarna pastel yang tampak sangat menyala (*pop out*) di atas latar papan gelap.
+   - Dilengkapi aksen fisik: jarum pin bundar di bagian atas tengah kertas dan bayangan lembut (*soft drop-shadow*) yang memberi kesan kertas terangkat.
+   - Kemiringan acak sangat halus (`-0.8°` s.d. `+0.8°`) untuk kesan mading santai namun tetap rapi dan tidak mengganggu keterbacaan teks.
+3. **Tata Letak (Layout)**:
+   - Menggunakan **Smart Responsive Masonry Grid**:
+     - Di layar laptop: Tampil 3–4 kolom memo berdampingan.
+     - Di layar HP: Otomatis tersusun vertikal 1 kolom yang pas di lebar layar tanpa perlu zoom-in.
+
+---
+
+## 🔒 3. Matriks Perbandingan Akses: Users vs Admin
+
+| Fitur | Sisi Users (Siswa / Guru di Kelas) | Sisi Admin (Pengurus Kelas / Wali Kelas) |
+| :--- | :--- | :--- |
+| **🎡 Spinning Wheel** | ✅ Bisa putar roda, pilih mode, dan **Full Screen Proyektor** tanpa perlu login. | ✅ Bisa putar roda + akses filter nama khusus. |
+| **👥 Group Maker** | ✅ Bisa generate kelompok dan buka **Full Screen Proyektor** di depan kelas. | ✅ Bisa generate kelompok, Full Screen, **DAN tombol eksklusif Salin Format WhatsApp**. |
+| **📌 Mading Digital** | ✅ Membaca memo, filter kategori, dan **mencentang checklist barang tas pribadi**. | ✅ Buat memo baru, pilih warna, atur checklist, atur auto-expire, **DAN tombol kirim ke WhatsApp**. |
+| **📲 Fitur Share WA** | ❌ **DITIADAKAN** (bebas dari tombol kirim WA untuk mencegah spam). | ✅ **EKSKLUSIF** (semua generator pesan WhatsApp hanya ada di Admin). |
+
+---
+
+## 🖥️ 4. Spesifikasi Mode Full Screen (Layar Proyektor)
+
+Mode Full Screen pada **Spinning Wheel** dan **Group Maker** dirancang khusus untuk memenuhi standar penggunaan di proyektor kelas:
+
+1. **Aktivasi Standar Web API**:
+   ```javascript
+   // Menggunakan native Fullscreen API browser
+   const toggleFullscreen = () => {
+     if (!document.fullscreenElement) {
+       containerRef.current.requestFullscreen().catch(err => console.error(err));
+     } else {
+       document.exitFullscreen();
+     }
+   };
+   ```
+2. **Tipografi & Kontras Tinggi**:
+   - Ukuran font minimum nama siswa pada layar penuh adalah `24px` hingga `36px` dengan ketebalan *bold/semi-bold*.
+   - Menggunakan palet warna dengan rasio kontras tinggi agar tetap terbaca jelas meskipun proyektor kelas memiliki lumens yang redup atau kondisi ruangan terang benderang.
+3. **Dukungan Pintasan Keyboard**:
+   - `Spacebar`: Mulai / Berhenti putar roda pada Spinning Wheel.
+   - `Escape`: Keluar dari tampilan Full Screen.
+
+---
+
+## 🗓️ 5. Tahapan Eksekusi Pembangunan
+
+```
+ ┌──────────────────────────────────┐
+ │ LANGKAH 1: RODA PUTAR SISWA      │ ➔ Halaman/Modal Toolkit, Grafis Roda Canvas/SVG,
+ │ (Spinning Wheel + Fullscreen)    │   Animasi Spin, Konfeti, Mode Full Screen Proyektor.
+ ├──────────────────────────────────┤
+ │ LANGKAH 2: GENERATOR KELOMPOK    │ ➔ Logika pembagian kelompok, filter kehadiran,
+ │ (Group Maker + Fullscreen + WA)  │   tampilan kartu proyektor, tombol WA di Admin.
+ ├──────────────────────────────────┤
+ │ LANGKAH 3: TRANSFORMASI MADING   │ ➔ Refactor Announcements ➔ Mading Digital,
+ │ (Sticky Notes + Checklist Bawaan)│   desain papan felt dot-grid, checklist lokal HP.
+ └──────────────────────────────────┘
+```
 
 ---
 
 <p align="center">
-  <em>ClassHub: Dibuat untuk menyelesaikan urusan nyata di dalam ruang kelas.</em><br/>
-  <strong>Terakhir diperbarui:</strong> Oktober 2026<br/><br/>
-  <code>// Simpel, Bermanfaat, dan Langsung Pakai 🚀</code>
+  <em>ClassHub: Sederhana, Bermanfaat Nyata, Siap Tampil di Proyektor Kelas.</em><br/>
+  <strong>Dokumen Spesifikasi Teknis:</strong> Oktober 2026
 </p>

@@ -7,13 +7,21 @@ import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
 import MaintenanceScreen from '../components/admin/MaintenanceScreen';
 import SpinningWheel from '../components/classroom/SpinningWheel';
+import GroupMaker from '../components/classroom/GroupMaker';
 
 export default function ClassView({ onNavigate }) {
   const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
   const { data, addAnnouncement, togglePinAnnouncement, deleteAnnouncement, updateClassInfo } = useStore();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('announcements');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'announcements';
+  });
+  const [activeTool, setActiveTool] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tool') || 'wheel';
+  });
   const [currentCategory, setCurrentCategory] = useState('all');
   const [annSearch, setAnnSearch] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
@@ -535,7 +543,50 @@ export default function ClassView({ onNavigate }) {
       {/* 5. CLASSROOM UTILITIES / TOOLS */}
       {activeTab === 'tools' && (
         <div style={{ marginTop: '0.25rem' }}>
-          <SpinningWheel members={members} />
+          {/* Sub-tool Selector Bar */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.3rem',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.25rem'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTool('wheel')}
+              className={`btn btn-sm ${activeTool === 'wheel' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: activeTool === 'wheel' ? 700 : 500,
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.4rem 0.85rem'
+              }}
+            >
+              🎡 Roda Acak Siswa
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTool('groups')}
+              className={`btn btn-sm ${activeTool === 'groups' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: activeTool === 'groups' ? 700 : 500,
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.4rem 0.85rem'
+              }}
+            >
+              👥 Pembagi Kelompok
+            </button>
+          </div>
+
+          {activeTool === 'wheel' ? (
+            <SpinningWheel members={members} />
+          ) : (
+            <GroupMaker members={members} isAdmin={isEffectiveAdmin} />
+          )}
         </div>
       )}
 

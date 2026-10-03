@@ -314,7 +314,7 @@ export default function MembersTab() {
                     }}>
                       <span>{m.name}</span>
                       {m.nickname && (
-                        <span 
+                        <span
                           style={{
                             fontSize: '0.72rem',
                             fontWeight: 600,
@@ -423,7 +423,7 @@ export default function MembersTab() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Contoh: Muhammad Aditya Pratama"
+                placeholder="Contoh: Cristiano Ronaldo"
                 value={studentName}
                 onChange={(e) => setStudentName(e.target.value)}
                 required
@@ -435,7 +435,7 @@ export default function MembersTab() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Contoh: Adit"
+                placeholder="Contoh: CR7"
                 value={studentNickname}
                 onChange={(e) => setStudentNickname(e.target.value)}
               />
@@ -515,7 +515,7 @@ export default function MembersTab() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Contoh: Adit"
+                placeholder="Contoh: CR7"
                 value={editMemberNickname}
                 onChange={(e) => setEditMemberNickname(e.target.value)}
               />

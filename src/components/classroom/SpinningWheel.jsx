@@ -31,13 +31,21 @@ const SLICE_COLORS = [
   '#0EA5E9'  // Sky
 ];
 
+// Helper to resolve student display name (prioritizes admin-configured nickname)
+const getDisplayName = (m) => {
+  if (m.nickname && m.nickname.trim()) return m.nickname.trim();
+  if (m.name && m.name.trim()) return m.name.trim().split(/\s+/)[0];
+  return `Siswa ${m.absentNo || ''}`;
+};
+
 export default function SpinningWheel({ members = [] }) {
-  // Items state: defaults to class members
+  // Items state: defaults to class members using nickname
   const [items, setItems] = useState(() => {
     if (members && members.length > 0) {
       return members.map(m => ({
         id: String(m.id || m.absentNo || Math.random()),
-        name: m.name || `Siswa ${m.absentNo}`,
+        name: getDisplayName(m),
+        fullName: m.name,
         absentNo: m.absentNo,
         isEliminated: false
       }));
@@ -49,10 +57,12 @@ export default function SpinningWheel({ members = [] }) {
   useEffect(() => {
     if (members && members.length > 0) {
       setItems(prev => {
-        if (prev.length === 0) {
+        // If current items are default or empty, update with latest member nicknames
+        if (prev.length === 0 || prev.every(p => !p.isEliminated)) {
           return members.map(m => ({
             id: String(m.id || m.absentNo || Math.random()),
-            name: m.name || `Siswa ${m.absentNo}`,
+            name: getDisplayName(m),
+            fullName: m.name,
             absentNo: m.absentNo,
             isEliminated: false
           }));
@@ -456,12 +466,13 @@ export default function SpinningWheel({ members = [] }) {
     setItems(prev => prev.filter(item => item.id !== id));
   };
 
-  // Reset list back to original class roster
+  // Reset list back to original class roster with admin nicknames
   const handleResetToRoster = () => {
     if (members && members.length > 0) {
       setItems(members.map(m => ({
         id: String(m.id || m.absentNo || Math.random()),
-        name: m.name || `Siswa ${m.absentNo}`,
+        name: getDisplayName(m),
+        fullName: m.name,
         absentNo: m.absentNo,
         isEliminated: false
       })));

@@ -35,12 +35,14 @@ export default function MembersTab() {
   // Form state - Add Member
   const [studentAbsentNo, setStudentAbsentNo] = useState('');
   const [studentName, setStudentName] = useState('');
+  const [studentNickname, setStudentNickname] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
   const [studentRoleTitle, setStudentRoleTitle] = useState('Anggota');
 
   // Form state - Edit Member
   const [editMemberAbsentNo, setEditMemberAbsentNo] = useState('');
   const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberNickname, setEditMemberNickname] = useState('');
   const [editMemberPhone, setEditMemberPhone] = useState('');
   const [editMemberRoleTitle, setEditMemberRoleTitle] = useState('Anggota');
 
@@ -70,11 +72,13 @@ export default function MembersTab() {
     addMember({
       absentNo: Number(studentAbsentNo) || (members.length + 1),
       name: studentName.trim(),
+      nickname: studentNickname.trim(),
       phone: studentPhone.trim(),
       roleTitle: studentRoleTitle.trim() || 'Anggota'
     });
     setIsAddMemberOpen(false);
     setStudentName('');
+    setStudentNickname('');
     setStudentPhone('');
     showToast(`Siswa "${studentName.trim()}" berhasil ditambahkan! 🎉`, 'success');
   };
@@ -85,6 +89,7 @@ export default function MembersTab() {
     updateMember(selectedMemberForEdit.id, {
       absentNo: Number(editMemberAbsentNo),
       name: editMemberName.trim(),
+      nickname: editMemberNickname.trim(),
       phone: editMemberPhone.trim(),
       roleTitle: editMemberRoleTitle.trim() || 'Anggota'
     });
@@ -103,6 +108,7 @@ export default function MembersTab() {
           onClick={() => {
             setStudentAbsentNo(members.length + 1);
             setStudentName('');
+            setStudentNickname('');
             setStudentPhone('');
             setStudentRoleTitle('Anggota');
             setIsAddMemberOpen(true);
@@ -301,9 +307,27 @@ export default function MembersTab() {
                       color: 'var(--text-primary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
-                      textOverflow: 'ellipsis'
+                      textOverflow: 'ellipsis',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem'
                     }}>
-                      {m.name}
+                      <span>{m.name}</span>
+                      {m.nickname && (
+                        <span 
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            padding: '0.1rem 0.45rem',
+                            borderRadius: 'var(--radius-xs)',
+                            backgroundColor: 'var(--primary-soft)',
+                            color: 'var(--primary)',
+                            border: '1px solid var(--primary-border)'
+                          }}
+                        >
+                          {m.nickname}
+                        </span>
+                      )}
                     </div>
 
                     {hasSpecialRole && (
@@ -357,6 +381,7 @@ export default function MembersTab() {
                           setSelectedMemberForEdit(m);
                           setEditMemberAbsentNo(m.absentNo || '');
                           setEditMemberName(m.name || '');
+                          setEditMemberNickname(m.nickname || '');
                           setEditMemberPhone(m.phone || '');
                           setEditMemberRoleTitle(m.roleTitle || 'Anggota');
                           setIsEditMemberOpen(true);
@@ -380,7 +405,7 @@ export default function MembersTab() {
       {/* MODAL: INPUT SISWA BARU */}
       <Modal isOpen={isAddMemberOpen} onClose={() => setIsAddMemberOpen(false)} title="Input Siswa Baru">
         <form onSubmit={handleCreateMember} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">No. Absen</label>
               <input
@@ -398,11 +423,21 @@ export default function MembersTab() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Contoh: Muhammad Rizki"
+                placeholder="Contoh: Muhammad Aditya Pratama"
                 value={studentName}
                 onChange={(e) => setStudentName(e.target.value)}
                 required
                 autoFocus
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Nama Panggilan</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Contoh: Adit"
+                value={studentNickname}
+                onChange={(e) => setStudentNickname(e.target.value)}
               />
             </div>
           </div>
@@ -453,7 +488,7 @@ export default function MembersTab() {
       {/* MODAL: EDIT DATA SISWA */}
       <Modal isOpen={isEditMemberOpen} onClose={() => setIsEditMemberOpen(false)} title="Edit Data Siswa">
         <form onSubmit={handleUpdateMember} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 1fr', gap: '0.75rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">No. Absen</label>
               <input
@@ -473,6 +508,16 @@ export default function MembersTab() {
                 value={editMemberName}
                 onChange={(e) => setEditMemberName(e.target.value)}
                 required
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Nama Panggilan</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Contoh: Adit"
+                value={editMemberNickname}
+                onChange={(e) => setEditMemberNickname(e.target.value)}
               />
             </div>
           </div>

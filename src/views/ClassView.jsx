@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp, ShieldAlert } from 'lucide-react';
+import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp, ShieldAlert, Dices } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
 import MaintenanceScreen from '../components/admin/MaintenanceScreen';
+import SpinningWheel from '../components/classroom/SpinningWheel';
 
 export default function ClassView({ onNavigate }) {
   const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
@@ -238,6 +239,13 @@ export default function ClassView({ onNavigate }) {
           >
             <Users size={14} />
             <span>Teman Sekelas ({members.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('tools')}
+            className={`clean-filter-chip ${activeTab === 'tools' ? 'active' : ''}`}
+          >
+            <Dices size={14} />
+            <span>Alat Kelas</span>
           </button>
         </div>
 
@@ -521,6 +529,13 @@ export default function ClassView({ onNavigate }) {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* 5. CLASSROOM UTILITIES / TOOLS */}
+      {activeTab === 'tools' && (
+        <div style={{ marginTop: '0.25rem' }}>
+          <SpinningWheel members={members} />
         </div>
       )}
 

@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'ClassHub — XI PPLG',
@@ -48,6 +48,29 @@ export default defineConfig(({ mode }) => {
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Jadwal Hari Ini',
+            short_name: 'Hari Ini',
+            description: 'Buka jadwal pelajaran dan tugas hari ini',
+            url: '/?view=dashboard',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Roda Acak Siswa',
+            short_name: 'Roda Acak',
+            description: 'Putar roda keberuntungan kelas',
+            url: '/?view=class&tab=tools&tool=wheel',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Buku Kas Kelas',
+            short_name: 'Kas',
+            description: 'Lihat status kas dan iuran kelas',
+            url: '/?view=cash',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       },

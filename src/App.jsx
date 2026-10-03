@@ -8,6 +8,7 @@ import StudentHeader from './components/StudentHeader';
 import Header from './components/Header';
 import Modal from './components/Modal';
 import { InstallBanner } from './components/InstallBanner';
+import PwaUpdatePrompt from './components/pwa/PwaUpdatePrompt';
 import WhatsAppShareModal from './components/WhatsAppShareModal';
 
 import DashboardView from './views/DashboardView';
@@ -243,6 +244,7 @@ export default function App() {
       />
 
       <InstallBanner />
+      <PwaUpdatePrompt />
 
       {/* Main Companion Canvas */}
       <main 
@@ -348,7 +350,12 @@ export default function App() {
         color: 'var(--text-muted)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <span>ClassHub</span>
+          <span>ClassHub <strong style={{ color: 'var(--text-primary)' }}>v2.2.0</strong></span>
+          <span>•</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--success)', fontWeight: 600 }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
+            PWA Ready
+          </span>
           <span>•</span>
           {/* Subtle discreet admin access trigger */}
           <span

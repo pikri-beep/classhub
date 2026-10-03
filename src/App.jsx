@@ -350,12 +350,7 @@ export default function App() {
         color: 'var(--text-muted)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
-          <span>ClassHub <strong style={{ color: 'var(--text-primary)' }}>v2.2.0</strong></span>
-          <span>•</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--success)', fontWeight: 600 }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--success)' }} />
-            PWA Ready
-          </span>
+          <span>ClassHub</span>
           <span>•</span>
           {/* Subtle discreet admin access trigger */}
           <span

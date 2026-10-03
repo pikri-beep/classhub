@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { 
-  Play, 
   RotateCcw, 
   Volume2, 
   VolumeX, 
@@ -9,14 +8,11 @@ import {
   Minimize, 
   Edit3, 
   UserX, 
-  Trophy, 
-  Sparkles, 
   X, 
   Plus, 
   Trash2,
   CheckSquare,
-  Square,
-  Users
+  Square
 } from 'lucide-react';
 
 // Curated vibrant & contrasting palette for wheel slices
@@ -124,7 +120,7 @@ export default function SpinningWheel({ members = [] }) {
       osc.start();
       osc.stop(ctx.currentTime + 0.04);
     } catch {
-      // Ignore audio synthesis errors on unsupported browsers
+      // Ignore audio synthesis errors
     }
   }, [isMuted, getAudioContext]);
 
@@ -199,7 +195,7 @@ export default function SpinningWheel({ members = [] }) {
 
     // Retina display resolution adjustment
     const dpr = window.devicePixelRatio || 1;
-    const size = canvas.clientWidth || 360;
+    const size = canvas.clientWidth || 440;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
 
@@ -213,20 +209,6 @@ export default function SpinningWheel({ members = [] }) {
     ctx.clearRect(0, 0, size, size);
 
     if (count === 0) {
-      // Empty wheel placeholder
-      ctx.beginPath();
-      ctx.arc(center, center, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(100, 116, 139, 0.15)';
-      ctx.fill();
-      ctx.strokeStyle = 'var(--border)';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
-      ctx.fillStyle = 'var(--text-muted)';
-      ctx.font = 'bold 14px Plus Jakarta Sans, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Tidak ada siswa aktif', center, center);
       ctx.restore();
       return;
     }
@@ -267,27 +249,27 @@ export default function SpinningWheel({ members = [] }) {
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 1;
 
-      // Font size adapts to total items count
-      let fontSize = 14;
-      if (count > 25) fontSize = 10;
-      else if (count > 18) fontSize = 11;
-      else if (count > 12) fontSize = 12;
-      if (size > 480) fontSize = Math.min(fontSize * 1.35, 18);
+      // Font size adapts to total items count and canvas size
+      let fontSize = 15;
+      if (count > 25) fontSize = 11;
+      else if (count > 18) fontSize = 12;
+      else if (count > 12) fontSize = 13.5;
+      if (size > 500) fontSize = Math.min(fontSize * 1.35, 20);
 
       ctx.font = `700 ${fontSize}px Plus Jakarta Sans, sans-serif`;
 
       // Truncate name if too long
       const item = activeItems[i];
       let displayName = item.name;
-      if (displayName.length > 18) {
-        displayName = displayName.substring(0, 16) + '...';
+      if (displayName.length > 20) {
+        displayName = displayName.substring(0, 18) + '...';
       }
 
-      ctx.fillText(displayName, radius - 16, 0);
+      ctx.fillText(displayName, radius - 18, 0);
       ctx.restore();
     }
 
-    // Outer Rim with decorative dots
+    // Outer Rim with decorative border
     ctx.beginPath();
     ctx.arc(center, center, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 6;
@@ -296,7 +278,7 @@ export default function SpinningWheel({ members = [] }) {
 
     // Center Hub (Golden jewel cap)
     ctx.beginPath();
-    ctx.arc(center, center, Math.max(radius * 0.18, 26), 0, 2 * Math.PI);
+    ctx.arc(center, center, Math.max(radius * 0.16, 26), 0, 2 * Math.PI);
     const grad = ctx.createRadialGradient(center, center, 4, center, center, 32);
     grad.addColorStop(0, '#FFFFFF');
     grad.addColorStop(0.5, '#F59E0B');
@@ -307,7 +289,7 @@ export default function SpinningWheel({ members = [] }) {
     ctx.strokeStyle = '#FFFFFF';
     ctx.stroke();
 
-    // Center icon/star
+    // Center jewel core
     ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.arc(center, center, 6, 0, 2 * Math.PI);
@@ -358,8 +340,7 @@ export default function SpinningWheel({ members = [] }) {
       const current = startAngle + totalRotation * easeOut;
       rotationRef.current = current;
 
-      // Detect ticking sound when needle crosses a slice border at top (3*PI/2)
-      // Top pointer is at angle -Math.PI / 2 (or 3 * Math.PI / 2)
+      // Detect ticking sound when needle crosses a slice border at top
       const normalizedAngle = (2 * Math.PI - (current % (2 * Math.PI))) % (2 * Math.PI);
       const pointerAngle = (normalizedAngle + 3 * Math.PI / 2) % (2 * Math.PI);
       const currentSliceIndex = Math.floor(pointerAngle / anglePerSlice);
@@ -397,7 +378,6 @@ export default function SpinningWheel({ members = [] }) {
   // Keyboard navigation: Spacebar to spin, Esc to close
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.code === 'Space') {
@@ -427,7 +407,7 @@ export default function SpinningWheel({ members = [] }) {
     };
   }, []);
 
-  // Eliminate chosen student
+  // Eliminate chosen student (Remove button)
   const handleEliminateWinner = () => {
     if (!winner) return;
     setItems(prev => prev.map(item => {
@@ -499,260 +479,315 @@ export default function SpinningWheel({ members = [] }) {
         alignItems: 'center',
         position: 'relative',
         width: '100%',
-        padding: isFullscreen ? '2rem' : '1.25rem 0.5rem',
-        backgroundColor: isFullscreen ? 'var(--bg)' : 'transparent',
+        padding: isFullscreen ? '1.5rem' : '0.5rem',
+        backgroundColor: isFullscreen ? '#0B0F19' : 'transparent',
         minHeight: isFullscreen ? '100vh' : 'auto',
-        justifyContent: isFullscreen ? 'center' : 'flex-start'
+        justifyContent: 'center'
       }}
     >
-      {/* Top Action Bar */}
+      {/* Action Controls: Edit, Mute, Fullscreen */}
       <div 
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          width: '100%',
-          maxWidth: '540px',
-          marginBottom: '1rem',
-          gap: '0.5rem',
-          flexWrap: 'wrap'
-        }}
+        style={
+          isFullscreen
+            ? {
+                position: 'fixed',
+                top: '1.25rem',
+                right: '1.5rem',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                backgroundColor: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(10px)',
+                padding: '0.35rem 0.5rem',
+                borderRadius: 'var(--radius-full)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.35)'
+              }
+            : {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                width: '100%',
+                maxWidth: '520px',
+                marginBottom: '0.5rem',
+                gap: '0.4rem'
+              }
+        }
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span 
-            className="notion-tag"
+        {items.some(i => i.isEliminated) && (
+          <button
+            onClick={handleResetEliminations}
+            className="btn btn-ghost btn-sm"
+            title="Reset & Kembalikan siswa yang tereliminasi"
             style={{ 
-              backgroundColor: 'var(--primary-soft)', 
-              color: 'var(--primary)', 
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem'
+              fontSize: '0.75rem', 
+              padding: '0.35rem 0.65rem', 
+              color: isFullscreen ? '#E2E8F0' : 'var(--text-secondary)',
+              gap: '0.35rem' 
             }}
           >
-            <Users size={12} />
-            <span>{activeItems.length} Siswa Aktif</span>
-          </span>
-
-          {items.some(i => i.isEliminated) && (
-            <button
-              onClick={handleResetEliminations}
-              className="btn btn-ghost btn-sm"
-              title="Kembalikan siswa yang tereliminasi"
-              style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', color: 'var(--text-muted)' }}
-            >
-              <RotateCcw size={12} />
-              <span>Reset Eliminasi</span>
-            </button>
-          )}
-        </div>
-
-        {/* Right Controls: Edit, Mute, Fullscreen */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="btn btn-outline btn-sm"
-            title="Edit daftar nama sesi ini"
-            style={{ fontSize: '0.75rem', gap: '0.3rem' }}
-          >
-            <Edit3 size={13} />
-            <span>Edit Daftar</span>
+            <RotateCcw size={13} />
+            <span>Reset</span>
           </button>
+        )}
 
-          <button
-            onClick={toggleMute}
-            className="btn btn-ghost btn-sm btn-icon"
-            title={isMuted ? 'Nyalakan Suara' : 'Matikan Suara'}
-            aria-label="Toggle Audio"
-            style={{ color: isMuted ? 'var(--danger)' : 'var(--text-secondary)' }}
-          >
-            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-          </button>
-
-          <button
-            onClick={toggleFullscreen}
-            className="btn btn-ghost btn-sm btn-icon"
-            title={isFullscreen ? 'Keluar Layar Penuh (Esc)' : 'Layar Penuh Proyektor'}
-            aria-label="Toggle Fullscreen"
-          >
-            {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Wheel Canvas & Indicator Wrapper */}
-      <div 
-        style={{
-          position: 'relative',
-          width: isFullscreen ? 'min(76vw, 72vh)' : 'min(92vw, 420px)',
-          height: isFullscreen ? 'min(76vw, 72vh)' : 'min(92vw, 420px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0.5rem auto 1.25rem auto'
-        }}
-      >
-        {/* Top Needle Pointer (Indicator pointing down) */}
-        <div 
-          style={{
-            position: 'absolute',
-            top: '-12px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            width: '0',
-            height: '0',
-            borderLeft: '14px solid transparent',
-            borderRight: '14px solid transparent',
-            borderTop: '28px solid #E11D48',
-            filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.35))',
-            pointerEvents: 'none',
-            transition: 'transform 0.05s ease-out'
-          }}
-        />
-
-        {/* HTML5 Canvas */}
-        <canvas 
-          ref={canvasRef} 
-          style={{
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.15)',
-            cursor: isSpinning ? 'not-allowed' : 'pointer'
-          }}
-          onClick={!isSpinning && activeItems.length > 0 ? handleSpin : undefined}
-        />
-      </div>
-
-      {/* Controls & Quick Instructions */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
         <button
-          onClick={handleSpin}
-          disabled={isSpinning || activeItems.length === 0}
-          className="btn btn-primary"
-          style={{
-            fontSize: isFullscreen ? '1.25rem' : '1rem',
-            padding: isFullscreen ? '0.85rem 2.5rem' : '0.65rem 1.85rem',
-            borderRadius: 'var(--radius-full)',
-            gap: '0.5rem',
-            fontWeight: 800,
-            boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)'
+          onClick={() => setIsEditModalOpen(true)}
+          className="btn btn-outline btn-sm"
+          title="Edit daftar nama sesi ini"
+          style={{ 
+            fontSize: '0.75rem', 
+            gap: '0.35rem',
+            color: isFullscreen ? '#F8FAFC' : undefined,
+            borderColor: isFullscreen ? 'rgba(255, 255, 255, 0.2)' : undefined,
+            backgroundColor: isFullscreen ? 'rgba(255, 255, 255, 0.05)' : undefined
           }}
         >
-          <Play size={isFullscreen ? 20 : 16} fill="currentColor" />
-          <span>{isSpinning ? 'Sedang Memutar...' : 'Putar Roda'}</span>
+          <Edit3 size={13} />
+          <span>Edit Daftar</span>
         </button>
 
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          💡 Tips: Tekan tombol <strong>[Spasi]</strong> di keyboard untuk memutar cepat
-        </span>
+        <button
+          onClick={toggleMute}
+          className="btn btn-ghost btn-sm btn-icon"
+          title={isMuted ? 'Nyalakan Suara' : 'Matikan Suara'}
+          aria-label="Toggle Audio"
+          style={{ color: isMuted ? 'var(--danger)' : isFullscreen ? '#E2E8F0' : 'var(--text-secondary)' }}
+        >
+          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+        </button>
+
+        <button
+          onClick={toggleFullscreen}
+          className="btn btn-ghost btn-sm btn-icon"
+          title={isFullscreen ? 'Keluar Layar Penuh (Esc)' : 'Layar Penuh Proyektor'}
+          aria-label="Toggle Fullscreen"
+          style={{ color: isFullscreen ? '#F8FAFC' : 'var(--text-secondary)' }}
+        >
+          {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+        </button>
       </div>
 
-      {/* WINNER POPUP MODAL */}
+      {/* EMPTY STATE (JIKA SEMUA SISWA TERELIMINASI / KOSONG) */}
+      {activeItems.length === 0 ? (
+        <div 
+          style={{
+            width: isFullscreen ? 'min(82vw, 76vh)' : 'min(92vw, 440px)',
+            height: isFullscreen ? 'min(82vw, 76vh)' : 'min(92vw, 440px)',
+            borderRadius: 'var(--radius-xl)',
+            backgroundColor: 'var(--bg-surface)',
+            border: '2px dashed var(--border)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem 1.5rem',
+            textAlign: 'center',
+            boxShadow: 'var(--shadow-md)',
+            margin: '1rem auto'
+          }}
+        >
+          <div 
+            style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              color: 'var(--danger)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1rem'
+            }}
+          >
+            <UserX size={30} />
+          </div>
+          <h4 style={{ margin: '0 0 0.4rem 0', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+            Semua Siswa Tereliminasi
+          </h4>
+          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.84rem', color: 'var(--text-muted)', maxWidth: '300px', lineHeight: 1.5 }}>
+            Seluruh siswa pada sesi ini sudah selesai maju. Klik tombol di bawah untuk memasukkan kembali seluruh nama ke roda.
+          </p>
+          <button
+            onClick={handleResetEliminations}
+            className="btn btn-primary"
+            style={{ gap: '0.45rem', fontWeight: 700, borderRadius: 'var(--radius-full)', padding: '0.6rem 1.4rem' }}
+          >
+            <RotateCcw size={15} />
+            <span>Reset & Muat Ulang Siswa</span>
+          </button>
+        </div>
+      ) : (
+        /* Wheel Canvas & Indicator Wrapper (Perbesar ukuran tampilan) */
+        <div 
+          style={{
+            position: 'relative',
+            width: isFullscreen ? 'min(88vw, 86vh)' : 'min(94vw, 480px)',
+            height: isFullscreen ? 'min(88vw, 86vh)' : 'min(94vw, 480px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0.5rem auto'
+          }}
+        >
+          {/* Top Needle Pointer (Indicator pointing down) */}
+          <div 
+            style={{
+              position: 'absolute',
+              top: '-14px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 10,
+              width: '0',
+              height: '0',
+              borderLeft: isFullscreen ? '18px solid transparent' : '14px solid transparent',
+              borderRight: isFullscreen ? '18px solid transparent' : '14px solid transparent',
+              borderTop: isFullscreen ? '34px solid #E11D48' : '28px solid #E11D48',
+              filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.45))',
+              pointerEvents: 'none'
+            }}
+          />
+
+          {/* HTML5 Canvas (Klik langsung roda untuk memutar) */}
+          <canvas 
+            ref={canvasRef} 
+            style={{
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              boxShadow: '0 16px 40px -10px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.2)',
+              cursor: isSpinning ? 'not-allowed' : 'pointer'
+            }}
+            onClick={!isSpinning && activeItems.length > 0 ? handleSpin : undefined}
+            title={isSpinning ? 'Sedang memutar...' : 'Klik roda untuk memutar'}
+          />
+        </div>
+      )}
+
+      {/* HASIL UNDIAN MODAL (Sesuai Desain Foto: Header Merah 'We have a winner!', Nama Tengah, Tombol Close & Remove) */}
       {winner && (
         <div 
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 99999,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backgroundColor: 'rgba(0, 0, 0, 0.78)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1.25rem',
-            animation: 'fadeIn 0.25s ease-out'
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setWinner(null);
           }}
         >
           <div 
             style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '2px solid var(--primary-border)',
-              borderRadius: 'var(--radius-xl)',
-              padding: '2rem 1.5rem',
-              maxWidth: '460px',
+              backgroundColor: '#18181B',
+              borderRadius: '10px',
+              overflow: 'hidden',
+              maxWidth: '480px',
               width: '100%',
-              textAlign: 'center',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45)',
-              position: 'relative',
-              animation: 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7)',
+              animation: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            <button
-              onClick={() => setWinner(null)}
-              className="btn btn-ghost btn-icon btn-sm"
-              style={{ position: 'absolute', top: '1rem', right: '1rem', color: 'var(--text-muted)' }}
-              aria-label="Tutup"
-            >
-              <X size={18} />
-            </button>
-
+            {/* Red Top Header Bar: "We have a winner!" */}
             <div 
               style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                backgroundColor: 'var(--primary-soft)',
-                color: 'var(--primary)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '1rem'
+                backgroundColor: '#DC2626',
+                padding: '0.85rem 1.25rem',
+                color: '#FFFFFF',
+                fontSize: '1.15rem',
+                fontWeight: 800,
+                letterSpacing: '-0.01em',
+                userSelect: 'none'
               }}
             >
-              <Trophy size={32} />
+              We have a winner!
             </div>
 
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-              <Sparkles size={14} />
-              <span>SISWA TERPILIH</span>
-              <Sparkles size={14} />
-            </div>
-
-            <h2 
-              style={{ 
-                fontSize: isFullscreen ? '2.4rem' : '1.85rem', 
-                fontWeight: 800, 
-                color: 'var(--text-primary)',
-                margin: '0.25rem 0 0.5rem 0',
-                lineHeight: 1.2
-              }}
-            >
-              {winner.name}
-            </h2>
-
-            {winner.absentNo && (
-              <span className="notion-tag" style={{ fontSize: '0.82rem', marginBottom: '1.5rem' }}>
-                Nomor Absen: #{winner.absentNo}
-              </span>
-            )}
-
+            {/* Winner Name in the Middle */}
             <div 
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '0.65rem',
-                marginTop: '1.5rem'
+              style={{
+                padding: '3.5rem 1.5rem',
+                textAlign: 'center',
+                backgroundColor: '#18181B',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <h1 
+                style={{ 
+                  margin: 0,
+                  fontSize: isFullscreen ? '3.8rem' : '3rem',
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  letterSpacing: '0.01em',
+                  lineHeight: 1.1,
+                  wordBreak: 'break-word',
+                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                }}
+              >
+                {winner.name}
+              </h1>
+            </div>
+
+            {/* Footer Buttons: Close & Remove */}
+            <div 
+              style={{
+                padding: '0.75rem 1.25rem 1.25rem 1.25rem',
+                backgroundColor: '#18181B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: '0.85rem'
               }}
             >
               <button
-                onClick={handleSpin}
-                className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', fontWeight: 700 }}
+                onClick={() => setWinner(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#FFFFFF',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  padding: '0.5rem 0.85rem',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                  transition: 'opacity 0.15s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >
-                <RotateCcw size={16} />
-                <span>Putar Lagi</span>
+                Close
               </button>
 
               <button
                 onClick={handleEliminateWinner}
-                className="btn btn-outline"
-                style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.35)' }}
+                style={{
+                  backgroundColor: '#4F46E5',
+                  color: '#FFFFFF',
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  padding: '0.55rem 1.35rem',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(79, 70, 229, 0.4)',
+                  transition: 'background-color 0.15s, transform 0.1s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4338CA'}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#4F46E5'}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <UserX size={16} />
-                <span>Eliminasi Siswa Ini (Tidak Ikut Putaran Berikutnya)</span>
+                Remove
               </button>
             </div>
           </div>
@@ -772,6 +807,9 @@ export default function SpinningWheel({ members = [] }) {
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1.25rem'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditModalOpen(false);
           }}
         >
           <div 

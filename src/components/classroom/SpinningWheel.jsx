@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { 
-  RotateCcw, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
-  Minimize, 
-  Edit3, 
-  UserX, 
-  X, 
-  Plus, 
+import {
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Maximize,
+  Minimize,
+  Edit3,
+  UserX,
+  X,
+  Plus,
   Trash2,
   CheckSquare,
   Square
@@ -183,7 +183,7 @@ export default function SpinningWheel({ members = [] }) {
         console.warn('Fullscreen tidak didukung atau diblokir:', err);
       });
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     }
   };
 
@@ -481,7 +481,7 @@ export default function SpinningWheel({ members = [] }) {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`spinning-wheel-container ${isFullscreen ? 'wheel-fullscreen' : ''}`}
       style={{
@@ -497,33 +497,33 @@ export default function SpinningWheel({ members = [] }) {
       }}
     >
       {/* Action Controls: Edit, Mute, Fullscreen */}
-      <div 
+      <div
         style={
           isFullscreen
             ? {
-                position: 'fixed',
-                top: '1.25rem',
-                right: '1.5rem',
-                zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                backgroundColor: 'rgba(15, 23, 42, 0.75)',
-                backdropFilter: 'blur(10px)',
-                padding: '0.35rem 0.5rem',
-                borderRadius: 'var(--radius-full)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 8px 20px rgba(0, 0, 0, 0.35)'
-              }
+              position: 'fixed',
+              top: '1.25rem',
+              right: '1.5rem',
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              backgroundColor: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(10px)',
+              padding: '0.35rem 0.5rem',
+              borderRadius: 'var(--radius-full)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 8px 20px rgba(0, 0, 0, 0.35)'
+            }
             : {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                width: '100%',
-                maxWidth: '520px',
-                marginBottom: '0.5rem',
-                gap: '0.4rem'
-              }
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              width: '100%',
+              maxWidth: '520px',
+              marginBottom: '0.5rem',
+              gap: '0.4rem'
+            }
         }
       >
         {items.some(i => i.isEliminated) && (
@@ -531,11 +531,11 @@ export default function SpinningWheel({ members = [] }) {
             onClick={handleResetEliminations}
             className="btn btn-ghost btn-sm"
             title="Reset & Kembalikan siswa yang tereliminasi"
-            style={{ 
-              fontSize: '0.75rem', 
-              padding: '0.35rem 0.65rem', 
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.35rem 0.65rem',
               color: isFullscreen ? '#E2E8F0' : 'var(--text-secondary)',
-              gap: '0.35rem' 
+              gap: '0.35rem'
             }}
           >
             <RotateCcw size={13} />
@@ -547,8 +547,8 @@ export default function SpinningWheel({ members = [] }) {
           onClick={() => setIsEditModalOpen(true)}
           className="btn btn-outline btn-sm"
           title="Edit daftar nama sesi ini"
-          style={{ 
-            fontSize: '0.75rem', 
+          style={{
+            fontSize: '0.75rem',
             gap: '0.35rem',
             color: isFullscreen ? '#F8FAFC' : undefined,
             borderColor: isFullscreen ? 'rgba(255, 255, 255, 0.2)' : undefined,
@@ -582,7 +582,7 @@ export default function SpinningWheel({ members = [] }) {
 
       {/* EMPTY STATE (JIKA SEMUA SISWA TERELIMINASI / KOSONG) */}
       {activeItems.length === 0 ? (
-        <div 
+        <div
           style={{
             width: isFullscreen ? 'min(82vw, 76vh)' : 'min(92vw, 440px)',
             height: isFullscreen ? 'min(82vw, 76vh)' : 'min(92vw, 440px)',
@@ -599,7 +599,7 @@ export default function SpinningWheel({ members = [] }) {
             margin: '1rem auto'
           }}
         >
-          <div 
+          <div
             style={{
               width: '64px',
               height: '64px',
@@ -631,7 +631,7 @@ export default function SpinningWheel({ members = [] }) {
         </div>
       ) : (
         /* Wheel Canvas & Indicator Wrapper (Perbesar ukuran tampilan) */
-        <div 
+        <div
           style={{
             position: 'relative',
             width: isFullscreen ? 'min(88vw, 86vh)' : 'min(94vw, 480px)',
@@ -643,7 +643,7 @@ export default function SpinningWheel({ members = [] }) {
           }}
         >
           {/* Top Needle Pointer (Indicator pointing down) */}
-          <div 
+          <div
             style={{
               position: 'absolute',
               top: '-14px',
@@ -661,8 +661,8 @@ export default function SpinningWheel({ members = [] }) {
           />
 
           {/* HTML5 Canvas (Klik langsung roda untuk memutar) */}
-          <canvas 
-            ref={canvasRef} 
+          <canvas
+            ref={canvasRef}
             style={{
               width: '100%',
               height: '100%',
@@ -678,7 +678,7 @@ export default function SpinningWheel({ members = [] }) {
 
       {/* HASIL UNDIAN MODAL (Sesuai Desain Foto: Header Merah 'We have a winner!', Nama Tengah, Tombol Close & Remove) */}
       {winner && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             inset: 0,
@@ -695,7 +695,7 @@ export default function SpinningWheel({ members = [] }) {
             if (e.target === e.currentTarget) setWinner(null);
           }}
         >
-          <div 
+          <div
             style={{
               backgroundColor: '#18181B',
               borderRadius: '10px',
@@ -707,7 +707,7 @@ export default function SpinningWheel({ members = [] }) {
             }}
           >
             {/* Red Top Header Bar: "We have a winner!" */}
-            <div 
+            <div
               style={{
                 backgroundColor: '#DC2626',
                 padding: '0.85rem 1.25rem',
@@ -722,7 +722,7 @@ export default function SpinningWheel({ members = [] }) {
             </div>
 
             {/* Winner Name in the Middle */}
-            <div 
+            <div
               style={{
                 padding: '3.5rem 1.5rem',
                 textAlign: 'center',
@@ -733,8 +733,8 @@ export default function SpinningWheel({ members = [] }) {
                 justifyContent: 'center'
               }}
             >
-              <h1 
-                style={{ 
+              <h1
+                style={{
                   margin: 0,
                   fontSize: isFullscreen ? '3.8rem' : '3rem',
                   fontWeight: 600,
@@ -750,7 +750,7 @@ export default function SpinningWheel({ members = [] }) {
             </div>
 
             {/* Footer Buttons: Close & Remove */}
-            <div 
+            <div
               style={{
                 padding: '0.75rem 1.25rem 1.25rem 1.25rem',
                 backgroundColor: '#18181B',
@@ -807,7 +807,7 @@ export default function SpinningWheel({ members = [] }) {
 
       {/* EDIT TEMPORARY LIST MODAL */}
       {isEditModalOpen && (
-        <div 
+        <div
           style={{
             position: 'fixed',
             inset: 0,
@@ -823,7 +823,7 @@ export default function SpinningWheel({ members = [] }) {
             if (e.target === e.currentTarget) setIsEditModalOpen(false);
           }}
         >
-          <div 
+          <div
             style={{
               backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border)',
@@ -838,7 +838,7 @@ export default function SpinningWheel({ members = [] }) {
             }}
           >
             {/* Modal Header */}
-            <div 
+            <div
               style={{
                 padding: '1.15rem 1.25rem',
                 borderBottom: '1px solid var(--border)',
@@ -853,7 +853,7 @@ export default function SpinningWheel({ members = [] }) {
                   Perubahan di sini hanya bersifat sementara untuk sesi putaran ini.
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="btn btn-ghost btn-sm btn-icon"
               >
@@ -863,7 +863,7 @@ export default function SpinningWheel({ members = [] }) {
 
             {/* Modal Form: Add Custom Item */}
             <form onSubmit={handleAddCustomItem} style={{ padding: '0.85rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
-              <input 
+              <input
                 type="text"
                 className="form-input"
                 placeholder="Tambah nama siswa atau topik khusus..."
@@ -880,7 +880,7 @@ export default function SpinningWheel({ members = [] }) {
             {/* Modal List Items */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '0.85rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
               {items.map(item => (
-                <div 
+                <div
                   key={item.id}
                   style={{
                     display: 'flex',
@@ -893,7 +893,7 @@ export default function SpinningWheel({ members = [] }) {
                     opacity: item.isEliminated ? 0.6 : 1
                   }}
                 >
-                  <div 
+                  <div
                     onClick={() => handleToggleItem(item.id)}
                     style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', flex: 1 }}
                   >
@@ -902,13 +902,13 @@ export default function SpinningWheel({ members = [] }) {
                     ) : (
                       <CheckSquare size={16} color="var(--primary)" />
                     )}
-                    <span style={{ 
-                      fontSize: '0.84rem', 
+                    <span style={{
+                      fontSize: '0.84rem',
                       fontWeight: 600,
                       textDecoration: item.isEliminated ? 'line-through' : 'none',
                       color: item.isEliminated ? 'var(--text-muted)' : 'var(--text-primary)'
                     }}>
-                      {item.name} {item.absentNo ? `(#${item.absentNo})` : ''}
+                      {item.name}
                     </span>
                   </div>
 
@@ -925,7 +925,7 @@ export default function SpinningWheel({ members = [] }) {
             </div>
 
             {/* Modal Footer */}
-            <div 
+            <div
               style={{
                 padding: '0.85rem 1.25rem',
                 borderTop: '1px solid var(--border)',

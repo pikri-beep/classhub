@@ -15,21 +15,22 @@ import {
   Square
 } from 'lucide-react';
 
-// Curated vibrant & contrasting palette for wheel slices
-const SLICE_COLORS = [
-  '#F59E0B', // Amber
-  '#10B981', // Emerald
-  '#3B82F6', // Blue
-  '#EC4899', // Pink
-  '#8B5CF6', // Purple
-  '#06B6D4', // Cyan
-  '#F97316', // Orange
-  '#14B8A6', // Teal
-  '#6366F1', // Indigo
-  '#84CC16', // Lime
-  '#E11D48', // Rose
-  '#0EA5E9'  // Sky
+// Vibrant 4-color repeating palette matching reference design
+const WHEEL_PALETTE = [
+  { bg: '#3B82F6', text: '#FFFFFF' }, // Blue -> Crisp White
+  { bg: '#DC2626', text: '#FFFFFF' }, // Red -> Crisp White
+  { bg: '#EAB308', text: '#18181B' }, // Yellow -> Crisp Dark
+  { bg: '#16A34A', text: '#18181B' }  // Green -> Crisp Dark
 ];
+
+const getSliceTheme = (index, total) => {
+  // If total is 4k + 1 (e.g. 5, 9, 13, 17, 21...), last item would touch first item (Blue).
+  // In that case, use purple for the last item so adjacent slices never clash.
+  if (total > 1 && index === total - 1 && (index % WHEEL_PALETTE.length === 0)) {
+    return { bg: '#8B5CF6', text: '#FFFFFF' };
+  }
+  return WHEEL_PALETTE[index % WHEEL_PALETTE.length];
+};
 
 // Helper to resolve student display name (prioritizes admin-configured nickname)
 const getDisplayName = (m) => {
@@ -230,19 +231,20 @@ export default function SpinningWheel({ members = [] }) {
     for (let i = 0; i < count; i++) {
       const sliceStart = currentAngle + i * anglePerSlice;
       const sliceEnd = sliceStart + anglePerSlice;
+      const theme = getSliceTheme(i, count);
 
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.arc(center, center, radius, sliceStart, sliceEnd);
       ctx.closePath();
 
-      // Alternate slice background colors
-      ctx.fillStyle = SLICE_COLORS[i % SLICE_COLORS.length];
+      // Slice background color
+      ctx.fillStyle = theme.bg;
       ctx.fill();
 
       // Slice border line
       ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Draw Name Text along the slice radius
@@ -252,58 +254,46 @@ export default function SpinningWheel({ members = [] }) {
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
 
-      // Contrast text styling
-      ctx.fillStyle = '#FFFFFF';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 1;
-      ctx.shadowOffsetY = 1;
+      // Contrast text styling matching reference
+      ctx.fillStyle = theme.text;
 
       // Font size adapts to total items count and canvas size
       let fontSize = 15;
-      if (count > 25) fontSize = 11;
-      else if (count > 18) fontSize = 12;
-      else if (count > 12) fontSize = 13.5;
-      if (size > 500) fontSize = Math.min(fontSize * 1.35, 20);
+      if (count > 32) fontSize = 10.5;
+      else if (count > 24) fontSize = 11.5;
+      else if (count > 16) fontSize = 13;
+      else if (count > 10) fontSize = 14.5;
+      if (size > 500) fontSize = Math.min(fontSize * 1.35, 21);
 
-      ctx.font = `700 ${fontSize}px Plus Jakarta Sans, sans-serif`;
+      ctx.font = `700 ${fontSize}px 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif`;
 
       // Truncate name if too long
       const item = activeItems[i];
       let displayName = item.name;
       if (displayName.length > 20) {
-        displayName = displayName.substring(0, 18) + '...';
+        displayName = displayName.substring(0, 18) + '..';
       }
 
-      ctx.fillText(displayName, radius - 18, 0);
+      ctx.fillText(displayName, radius - 14, 0);
       ctx.restore();
     }
 
-    // Outer Rim with decorative border
+    // Outer Rim: Thin crisp border matching reference
     ctx.beginPath();
     ctx.arc(center, center, radius, 0, 2 * Math.PI);
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = '#1E293B';
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = '#18181B';
     ctx.stroke();
 
-    // Center Hub (Golden jewel cap)
+    // Center Hub: Pure solid white circle matching reference
+    const hubRadius = Math.max(radius * 0.22, 28);
     ctx.beginPath();
-    ctx.arc(center, center, Math.max(radius * 0.16, 26), 0, 2 * Math.PI);
-    const grad = ctx.createRadialGradient(center, center, 4, center, center, 32);
-    grad.addColorStop(0, '#FFFFFF');
-    grad.addColorStop(0.5, '#F59E0B');
-    grad.addColorStop(1, '#B45309');
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.stroke();
-
-    // Center jewel core
+    ctx.arc(center, center, hubRadius, 0, 2 * Math.PI);
     ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(center, center, 6, 0, 2 * Math.PI);
     ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+    ctx.stroke();
 
     ctx.restore();
   }, [activeItems]);
@@ -350,10 +340,9 @@ export default function SpinningWheel({ members = [] }) {
       const current = startAngle + totalRotation * easeOut;
       rotationRef.current = current;
 
-      // Detect ticking sound when needle crosses a slice border at top
-      const normalizedAngle = (2 * Math.PI - (current % (2 * Math.PI))) % (2 * Math.PI);
-      const pointerAngle = (normalizedAngle + 3 * Math.PI / 2) % (2 * Math.PI);
-      const currentSliceIndex = Math.floor(pointerAngle / anglePerSlice);
+      // Detect ticking sound when needle crosses a slice border at 3 o'clock (0 rad)
+      const normalizedAngle = ((2 * Math.PI) - (current % (2 * Math.PI))) % (2 * Math.PI);
+      const currentSliceIndex = Math.floor(normalizedAngle / anglePerSlice) % count;
 
       if (currentSliceIndex !== lastTickIndexRef.current) {
         lastTickIndexRef.current = currentSliceIndex;
@@ -367,7 +356,7 @@ export default function SpinningWheel({ members = [] }) {
       } else {
         // Spin finished: Determine winner
         setIsSpinning(false);
-        const winningIndex = (currentSliceIndex % count + count) % count;
+        const winningIndex = currentSliceIndex;
         const selectedWinner = activeItems[winningIndex];
 
         setWinner(selectedWinner);
@@ -642,23 +631,29 @@ export default function SpinningWheel({ members = [] }) {
             margin: '0.5rem auto'
           }}
         >
-          {/* Top Needle Pointer (Indicator pointing down) */}
+          {/* Right Needle Pointer (Red 3D Faceted Arrow pointing left into wheel) */}
           <div
             style={{
               position: 'absolute',
-              top: '-14px',
-              left: '50%',
-              transform: 'translateX(-50%)',
+              right: isFullscreen ? '-12px' : '-10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
               zIndex: 10,
-              width: '0',
-              height: '0',
-              borderLeft: isFullscreen ? '18px solid transparent' : '14px solid transparent',
-              borderRight: isFullscreen ? '18px solid transparent' : '14px solid transparent',
-              borderTop: isFullscreen ? '34px solid #E11D48' : '28px solid #E11D48',
-              filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.45))',
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.45))'
             }}
-          />
+          >
+            <svg
+              width={isFullscreen ? "38" : "32"}
+              height={isFullscreen ? "42" : "36"}
+              viewBox="0 0 32 36"
+            >
+              {/* Top lighter facet */}
+              <polygon points="0,18 32,4 32,18" fill="#EF4444" />
+              {/* Bottom darker facet for 3D depth */}
+              <polygon points="0,18 32,18 32,32" fill="#B91C1C" />
+            </svg>
+          </div>
 
           {/* HTML5 Canvas (Klik langsung roda untuk memutar) */}
           <canvas

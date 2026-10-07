@@ -6,13 +6,16 @@ const ToastContext = createContext();
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const showToast = (message, type = 'info') => {
+  const showToast = (message, type = 'info', options = null) => {
     const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message, type }]);
+    const action = options?.action || (typeof options === 'function' ? { label: 'Urungkan', onClick: options } : null);
+    const duration = options?.duration || (action ? 5500 : 3500);
+
+    setToasts(prev => [...prev, { id, message, type, action }]);
 
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3500);
+    }, duration);
   };
 
   const removeToast = (id) => {
@@ -43,22 +46,46 @@ export function ToastProvider({ children }) {
               gap: '0.65rem',
               padding: '0.75rem 1rem',
               backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border)',
+              border: `1px solid ${t.type === 'error' ? 'var(--danger)' : 'var(--border)'}`,
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-lg)',
               color: 'var(--text-primary)',
-              fontSize: '0.85rem',
+              fontSize: '0.875rem',
               fontWeight: 600,
-              animation: 'toastFade 0.2s ease',
-              borderLeft: `4px solid ${
-                t.type === 'success' ? 'var(--success)' : (t.type === 'error' ? 'var(--danger)' : 'var(--primary)')
-              }`
+              animation: 'toastFade 0.2s ease'
             }}
           >
             {t.type === 'success' && <CheckCircle2 size={16} color="var(--success)" />}
             {t.type === 'error' && <AlertCircle size={16} color="var(--danger)" />}
             {t.type === 'info' && <Info size={16} color="var(--primary)" />}
             <span style={{ flex: 1 }}>{t.message}</span>
+            {t.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    t.action.onClick?.();
+                  } finally {
+                    removeToast(t.id);
+                  }
+                }}
+                style={{
+                  background: 'var(--primary-soft)',
+                  color: 'var(--primary)',
+                  border: '1px solid var(--primary-border)',
+                  borderRadius: 'var(--radius-xs)',
+                  padding: '0.2rem 0.6rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginLeft: '0.35rem',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {t.action.label || 'Urungkan'}
+              </button>
+            )}
             <button
               onClick={() => removeToast(t.id)}
               style={{

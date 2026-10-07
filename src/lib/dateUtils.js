@@ -43,37 +43,18 @@ export const formatDateIndo = (dateStr, options = {}) => {
 };
 
 /**
- * Formats a full date and time string to Indonesian standard format.
+ * Formats a date string to Indonesian standard format without clock time.
  * Example:
- * - formatDateTimeIndo('2026-09-28T23:59:00') -> 'Senin, 28 Sep 2026 • 23:59 WIB'
  * - formatDateTimeIndo('2026-09-28') -> 'Senin, 28 Sep 2026'
  */
 export const formatDateTimeIndo = (dateStr) => {
   if (!dateStr) return '-';
-
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) {
-    return typeof dateStr === 'string' ? dateStr : '-';
-  }
-
-  const baseDate = formatDateIndo(dateStr, { withDay: true, monthFormat: 'short' });
-
-  // Check if string contains explicit time information
-  const hasTime = typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes(':'));
-  if (!hasTime) {
-    return baseDate;
-  }
-
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-
-  return `${baseDate} • ${hours}:${minutes} WIB`;
+  return formatDateIndo(dateStr, { withDay: true, monthFormat: 'short' });
 };
 
 /**
- * Compact date and time format for dense lists, cards, and tables.
+ * Compact date format for dense lists, cards, and tables without clock time.
  * Example:
- * - formatCompactDateTime('2026-09-28T23:59:00') -> '28 Sep • 23:59'
  * - formatCompactDateTime('2026-09-28') -> '28 Sep 2026'
  */
 export const formatCompactDateTime = (dateStr) => {
@@ -87,13 +68,6 @@ export const formatCompactDateTime = (dateStr) => {
   const monthsShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   const dateNum = d.getDate();
   const monthName = monthsShort[d.getMonth()];
-
-  const hasTime = typeof dateStr === 'string' && (dateStr.includes('T') || dateStr.includes(':'));
-  if (hasTime) {
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${dateNum} ${monthName} • ${hours}:${minutes}`;
-  }
 
   return `${dateNum} ${monthName} ${d.getFullYear()}`;
 };
@@ -202,4 +176,43 @@ export const getDeadlineStatus = (dateStr) => {
     label: `${diffDays} hari lagi`,
     urgency: 'info'
   };
+};
+
+/**
+ * Formats an ISO timestamp or date into relative time in Indonesian.
+ * Examples: 'Baru saja', '5 menit lalu', '2 jam lalu', 'Kemarin, 14:30', '5 Okt 2026, 09:15'.
+ */
+export const formatRelativeTime = (timestamp) => {
+  if (!timestamp) return '-';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return typeof timestamp === 'string' ? timestamp : '-';
+
+  const now = Date.now();
+  const diffSec = Math.floor((now - d.getTime()) / 1000);
+
+  if (diffSec < 45) return 'Baru saja';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} menit lalu`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours} jam lalu`;
+
+  const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return `Kemarin, ${timeStr}`;
+  if (diffDays < 7) return `${diffDays} hari lalu, ${timeStr}`;
+
+  return `${formatCompactDateTime(timestamp)}, ${timeStr}`;
+};
+
+/**
+ * Detailed Indonesian timestamp with hours and minutes.
+ * Example: 'Senin, 5 Okt 2026 · 14:30 WIB'
+ */
+export const formatFullTimeIndo = (timestamp) => {
+  if (!timestamp) return '-';
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return '-';
+  const dateFormatted = formatDateIndo(timestamp, { withDay: true, monthFormat: 'short' });
+  const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${dateFormatted} · ${timeStr} WIB`;
 };

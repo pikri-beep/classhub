@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Share2, 
-  Copy, 
-  Check, 
-  ExternalLink, 
-  MessageCircle, 
-  Calendar, 
-  Sparkles, 
-  Edit3, 
-  Eye, 
+import {
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
+  MessageCircle,
+  Calendar,
+  Sparkles,
+  Edit3,
+  Eye,
   RotateCcw,
   Clock,
   BookOpen,
@@ -19,12 +19,12 @@ import Modal from './Modal';
 import { useToast } from '../context/ToastContext';
 import { useStore } from '../context/StoreContext';
 
-export default function WhatsAppShareModal({ 
-  isOpen, 
-  onClose, 
-  tasks: propTasks = [], 
-  classInfo: propClassInfo = {}, 
-  currentUser = {} 
+export default function WhatsAppShareModal({
+  isOpen,
+  onClose,
+  tasks: propTasks = [],
+  classInfo: propClassInfo = {},
+  currentUser = {}
 }) {
   const { showToast } = useToast();
   const { data } = useStore();
@@ -246,7 +246,7 @@ export default function WhatsAppShareModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="📲 WhatsApp Brief Kelas" maxWidth="600px">
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-        
+
         {/* Date Selector & Data Signals */}
         <div style={{
           padding: '0.75rem 0.95rem',
@@ -261,7 +261,7 @@ export default function WhatsAppShareModal({
             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>
               Target Tanggal: <span style={{ color: 'var(--primary)' }}>{dateFormatted}</span>
             </div>
-            
+
             {/* Quick Presets */}
             <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
               <button

@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { 
-  Check, 
-  Sparkles, 
-  Calendar, 
-  BookOpen, 
-  Wallet, 
-  Users, 
-  ChevronRight, 
-  ExternalLink, 
-  CheckCircle2, 
+import {
+  Check,
+  Sparkles,
+  Calendar,
+  BookOpen,
+  Wallet,
+  Users,
+  ChevronRight,
+  ExternalLink,
+  CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
+import { formatDateIndo } from '../lib/dateUtils';
 import LiveClassTracker from '../components/LiveClassTracker';
 import Modal from '../components/Modal';
 
@@ -27,22 +28,27 @@ export default function DashboardView({ onNavigate }) {
 
   const now = new Date();
   const daysMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-  const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const currentDayName = daysMap[now.getDay()];
-  const formattedDate = `${currentDayName}, ${now.getDate()} ${monthsMap[now.getMonth()]} ${now.getFullYear()}`;
+  const formattedDate = formatDateIndo(now, { withDay: true, monthFormat: 'long' });
 
   // Schedule & Piket data
   const todaySchedule = data.schedules[currentDayName] || { subjects: [], piket: [] };
   const subjectsToday = todaySchedule.subjects || [];
   const piketToday = todaySchedule.piket || [];
-  const isPiketToday = piketToday.some(name => 
-    name.toLowerCase().includes(currentUser.name.toLowerCase()) || 
+  const isPiketToday = piketToday.some(name =>
+    name.toLowerCase().includes(currentUser.name.toLowerCase()) ||
     currentUser.name.toLowerCase().includes(name.toLowerCase())
   );
 
   // Tasks data - uses personalDoneTasks for device checklist and isCompleted for admin status
   const tasks = data.tasks || [];
   const pendingTasks = tasks.filter(t => !t.isCompleted && !personalDoneTasks.includes(t.id));
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const aDone = Boolean(a.isCompleted) || personalDoneTasks.includes(a.id);
+    const bDone = Boolean(b.isCompleted) || personalDoneTasks.includes(b.id);
+    if (aDone === bDone) return 0;
+    return aDone ? 1 : -1;
+  });
 
   // Toggle task completion (personal to this device)
   const handleToggleTask = (task, e) => {
@@ -70,12 +76,17 @@ export default function DashboardView({ onNavigate }) {
   };
 
   // Upcoming Exams & Events
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   const upcomingExams = [...(data.exams || [])]
-    .sort((a, b) => new Date(a.examDate) - new Date(b.examDate))
-    .filter(ex => new Date(ex.examDate) >= new Date(now.setHours(0, 0, 0, 0)));
+    .filter(ex => ex.examDate && new Date(ex.examDate) >= todayStart)
+    .sort((a, b) => new Date(a.examDate) - new Date(b.examDate));
   const nearestExam = upcomingExams[0];
 
-  const upcomingEvents = (data.events || []).filter(ev => new Date(ev.date) >= new Date(now.setHours(0, 0, 0, 0)));
+  const upcomingEvents = [...(data.events || [])]
+    .filter(ev => ev.date && new Date(ev.date) >= todayStart)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
   // Cash status for current student
   const duesPeriods = data.cash.duesPeriods || [];
@@ -97,7 +108,7 @@ export default function DashboardView({ onNavigate }) {
     target.setHours(0, 0, 0, 0);
     const diffTime = target - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays <= 0) return { text: 'Hari ini', tagClass: 'notion-tag-red' };
     if (diffDays === 1) return { text: 'Besok', tagClass: 'notion-tag-red' };
     if (diffDays === 2) return { text: '2 hari lagi', tagClass: 'notion-tag-red' };
@@ -110,8 +121,8 @@ export default function DashboardView({ onNavigate }) {
   };
 
   return (
-    <div style={{ maxWidth: '840px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      
+    <div className="student-dashboard-container">
+
       {/* 1. PERSONAL GREETING & CONTEXT HEADER */}
       <div className="card" style={{
         padding: '1.25rem 1.4rem',
@@ -121,33 +132,35 @@ export default function DashboardView({ onNavigate }) {
         flexDirection: 'column',
         gap: '0.75rem'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               <Calendar size={13} />
               <span>{formattedDate}</span>
             </div>
-            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0.25rem 0 0 0', letterSpacing: '-0.02em' }}>
-              Selamat Datang! 👋
+            <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0.25rem 0 0 0', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <span>Selamat Datang, {currentUser?.name?.split(' ')[0] || 'Siswa'}</span>
+              <Sparkles size={18} color="var(--primary)" />
             </h1>
           </div>
 
           {/* Contextual Status Badges */}
           <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Piket Badge */}
-            <span className="clean-chip chip-neutral" style={{ fontWeight: 600 }}>
-              🧹 {piketToday.length} Petugas Piket
+            <span className="clean-chip chip-neutral" style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Users size={12} color="var(--text-muted)" />
+              <span>{piketToday.length} Petugas Piket</span>
             </span>
 
             {/* Cash Badge */}
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('cash')}
               className="clean-chip chip-neutral"
-              style={{ cursor: 'pointer', border: 'none', fontWeight: 600 }}
+              style={{ cursor: 'pointer', border: 'none', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
               title="Buka Halaman Kas Kelas"
             >
-              <Wallet size={12} style={{ marginRight: '0.25rem' }} />
-              Kas: Rp {Number(data?.cash?.balance || 0).toLocaleString('id-ID')}
+              <Wallet size={12} color="var(--primary)" />
+              <span>Kas: Rp {Number(data?.cash?.balance || 0).toLocaleString('id-ID')}</span>
             </button>
           </div>
         </div>
@@ -157,13 +170,13 @@ export default function DashboardView({ onNavigate }) {
       <LiveClassTracker schedules={data.schedules} onNavigate={onNavigate} />
 
       {/* 3. TODAY'S LESSONS & PIKET TEAM (INTEGRATED DAILY HUB) */}
-      <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
+      <div className="card" style={{ padding: '1.25rem 1.4rem', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <BookOpen size={16} color="var(--primary)" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>Jadwal Hari {currentDayName}</h3>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>Jadwal {currentDayName}</h3>
           </div>
-          <button 
+          <button
             onClick={() => onNavigate('schedule')}
             className="btn btn-ghost btn-xs"
             style={{ color: 'var(--primary)', fontWeight: 600, gap: '0.2rem' }}
@@ -174,37 +187,41 @@ export default function DashboardView({ onNavigate }) {
         </div>
 
         {subjectsToday.length === 0 ? (
-          <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Tidak ada jam pelajaran hari ini (Libur / Kegiatan Sekolah).
+          <div style={{ padding: '1.75rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.45rem' }}>
+            <div style={{ width: '38px', height: '38px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--callout-bg)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen size={18} />
+            </div>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Tidak ada jam KBM</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hari ini libur atau agenda bebas kegiatan sekolah.</span>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
             {subjectsToday.map((sub, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '0.65rem 0.85rem',
+                  padding: '0.6rem 0.75rem',
                   backgroundColor: 'var(--bg)',
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-subtle)',
                   gap: '0.75rem'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', width: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', minWidth: 0 }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', width: '22px' }}>
                     #{idx + 1}
                   </span>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {sub.subject}
                     </div>
                   </div>
                 </div>
 
-                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 600 }}>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', flexShrink: 0, fontWeight: 600 }}>
                   {sub.timeStart} - {sub.timeEnd}
                 </span>
               </div>
@@ -214,23 +231,23 @@ export default function DashboardView({ onNavigate }) {
 
         {/* Piket List */}
         {piketToday.length > 0 && (
-          <div style={{ 
-            marginTop: '1rem', 
-            paddingTop: '0.75rem', 
+          <div style={{
+            marginTop: '1rem',
+            paddingTop: '0.75rem',
             borderTop: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             flexWrap: 'wrap',
             gap: '0.45rem',
-            fontSize: '0.8rem'
+            fontSize: '0.75rem'
           }}>
             <span style={{ fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <Users size={13} />
               <span>Petugas Piket:</span>
             </span>
             {piketToday.map((name, i) => (
-              <span 
-                key={i} 
+              <span
+                key={i}
                 className="clean-chip chip-neutral"
                 style={{ fontSize: '0.75rem', fontWeight: 600 }}
               >
@@ -242,40 +259,59 @@ export default function DashboardView({ onNavigate }) {
       </div>
 
       {/* 4. PERLU DIKERJAKAN (TO-DO FOCUS & DEADLINES) */}
-      <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+      <div className="card" style={{ padding: '1.25rem 1.4rem', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
             <CheckCircle2 size={16} color="var(--primary)" />
-            <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>
+            <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0 }}>
               Perlu Dikerjakan ({pendingTasks.length})
             </h3>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.35rem' }}>
-            <button 
-              onClick={() => onNavigate('academic')}
-              className="btn btn-ghost btn-xs"
-              style={{ color: 'var(--primary)', fontWeight: 600, gap: '0.2rem' }}
-            >
-              <span>Semua Tugas</span>
-              <ChevronRight size={13} />
-            </button>
-          </div>
+          <button
+            onClick={() => onNavigate('academic')}
+            className="btn btn-ghost btn-xs"
+            style={{ color: 'var(--primary)', fontWeight: 600, gap: '0.2rem' }}
+          >
+            <span>Semua Tugas</span>
+            <ChevronRight size={13} />
+          </button>
         </div>
 
         {tasks.length === 0 ? (
-          <div style={{ padding: '1.25rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            Belum ada tugas aktif untuk kelas ini.
+          <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '42px', height: '42px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--tag-green-bg)', color: 'var(--tag-green-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Check size={20} strokeWidth={2.5} />
+            </div>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Semua tugas beres!</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tidak ada tanggungan tugas aktif untuk kelas saat ini.</span>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-            {tasks.map(task => {
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {pendingTasks.length === 0 && tasks.length > 0 && (
+              <div style={{
+                padding: '0.65rem 0.85rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--tag-green-bg)',
+                color: 'var(--tag-green-text)',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                marginBottom: '0.2rem'
+              }}>
+                <Sparkles size={14} />
+                <span>Hebat! Semua tugas di daftar ini sudah selesai kamu tandai 🎉</span>
+              </div>
+            )}
+
+            {sortedTasks.map(task => {
               const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
               const isGloballyDone = Boolean(task.isCompleted);
-              const dObj = new Date(task.deadline);
-              const deadlineFormatted = !isNaN(dObj) ? `${dObj.getDate()} ${monthsMap[dObj.getMonth()]}` : task.deadline;
+              const deadlineFormatted = formatDateIndo(task.deadline, { withDay: false, monthFormat: 'short' });
               const daysLeft = getDaysUntil(task.deadline);
-              const isUrgent = daysLeft === 'Hari ini!' || daysLeft === 'Besok';
+              const isUrgent = daysLeft === 'Hari ini' || daysLeft === 'Besok';
 
               return (
                 <div
@@ -284,38 +320,38 @@ export default function DashboardView({ onNavigate }) {
                   onClick={() => setSelectedTaskDetail(task)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <button 
+                  <button
                     type="button"
-                    className="clean-todo-checkbox"
+                    className="clean-todo-checkbox-btn"
                     onClick={(e) => handleToggleTask(task, e)}
                     aria-label={`Tandai tugas ${task.title}`}
-                    title={isGloballyDone ? 'Selesai oleh Admin' : isDone ? 'Batal tandai selesai' : 'Tandai selesai di perangkat ini'}
-                    style={{
-                      cursor: isGloballyDone ? 'default' : 'pointer',
-                      backgroundColor: isDone ? 'rgba(34, 197, 94, 0.15)' : 'var(--bg-subtle, rgba(0,0,0,0.04))',
-                      color: isDone ? '#16A34A' : 'var(--text-muted)',
-                      border: isDone ? '1px solid #22C55E' : '1px solid var(--border)'
-                    }}
+                    title={isGloballyDone ? 'Ditutup oleh Pengurus Kelas' : isDone ? 'Batal tandai selesai' : 'Tandai selesai'}
                   >
-                    {isDone && <Check size={12} strokeWidth={3} />}
+                    <div className={`clean-todo-checkbox-box ${isDone ? 'checked' : ''}`}>
+                      {isDone && <Check size={13} strokeWidth={3} />}
+                    </div>
                   </button>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="clean-todo-text" style={{ textDecoration: isDone ? 'line-through' : 'none' }}>
+                    <div className="clean-todo-text" style={{ textDecoration: isDone ? 'line-through' : 'none', fontSize: '0.9375rem' }}>
                       {task.title}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                       <span>{task.subject}</span>
                       {isGloballyDone && (
-                        <span style={{ color: '#16A34A', fontWeight: 600 }}>• Selesai (Admin)</span>
+                        <span className="notion-tag notion-tag-green" style={{ fontSize: '0.7rem' }}>
+                          Tugas Selesai
+                        </span>
                       )}
                     </div>
                   </div>
 
                   <div className="clean-todo-meta">
-                    <span className={`clean-tag-deadline ${isUrgent && !isDone ? 'urgent' : ''}`}>
-                      {daysLeft || deadlineFormatted}
-                    </span>
+                    {!isGloballyDone && (
+                      <span className={`clean-tag-deadline ${isUrgent && !isDone ? 'urgent' : ''}`}>
+                        {daysLeft || deadlineFormatted}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -324,21 +360,21 @@ export default function DashboardView({ onNavigate }) {
         )}
       </div>
 
-      {/* 5. AKAN DATANG (UJIAN TERDEKAT & AGENDA KELAS) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-        
+      {/* 4. AKAN DATANG (UJIAN TERDEKAT & AGENDA KELAS) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+
         {/* Nearest Exam Card */}
         <div className="card" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <AlertTriangle size={13} />
                 <span>Ujian Terdekat</span>
               </div>
               {nearestExam && (() => {
                 const urgency = getExamUrgency(nearestExam.examDate);
                 return (
-                  <span className={`notion-tag ${urgency.tagClass}`} style={{ fontSize: '0.72rem', fontWeight: 700 }}>
+                  <span className={`notion-tag ${urgency.tagClass}`} style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                     {urgency.text}
                   </span>
                 );
@@ -347,11 +383,14 @@ export default function DashboardView({ onNavigate }) {
 
             {nearestExam ? (
               <div>
-                <h4 style={{ fontSize: '0.92rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>
+                <h4 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: '0 0 0.25rem 0' }}>
                   {nearestExam.title}
                 </h4>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  {nearestExam.subject}
+                <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', padding: '0.1rem 0.45rem', fontWeight: 600 }}>
+                    {formatDateIndo(nearestExam.examDate, { withDay: true, monthFormat: 'short' })}
+                  </span>
+                  <span>{nearestExam.subject}</span>
                 </div>
                 {nearestExam.scope && (
                   <div style={{
@@ -367,16 +406,16 @@ export default function DashboardView({ onNavigate }) {
                 )}
               </div>
             ) : (
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
                 Tidak ada ujian mendatang dalam waktu dekat.
               </div>
             )}
           </div>
 
-          <button 
+          <button
             onClick={() => onNavigate('academic')}
             className="btn btn-ghost btn-xs"
-            style={{ marginTop: '0.75rem', alignSelf: 'flex-start', color: 'var(--text-secondary)', gap: '0.2rem' }}
+            style={{ marginTop: '0.85rem', alignSelf: 'flex-start', color: 'var(--text-secondary)', gap: '0.2rem' }}
           >
             <span>Daftar Ujian ({upcomingExams.length})</span>
             <ChevronRight size={12} />
@@ -386,33 +425,38 @@ export default function DashboardView({ onNavigate }) {
         {/* Agenda & Event Card */}
         <div className="card" style={{ padding: '1.15rem 1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 <Calendar size={13} />
                 <span>Agenda Mendatang</span>
               </div>
             </div>
 
             {upcomingEvents.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
                 {upcomingEvents.slice(0, 2).map(ev => (
-                  <div key={ev.id} style={{ fontSize: '0.8rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ev.title}</div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{ev.date} {ev.desc && `• ${ev.desc}`}</div>
+                  <div key={ev.id} style={{ fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{ev.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                      <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', padding: '0.1rem 0.45rem', fontWeight: 600 }}>
+                        {formatDateIndo(ev.date, { withDay: true, monthFormat: 'short' })}
+                      </span>
+                      {ev.desc && <span style={{ color: 'var(--text-muted)' }}>{ev.desc}</span>}
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
                 Belum ada agenda kegiatan kelas yang dijadwalkan.
               </div>
             )}
           </div>
 
-          <button 
+          <button
             onClick={() => onNavigate('schedule')}
             className="btn btn-ghost btn-xs"
-            style={{ marginTop: '0.75rem', alignSelf: 'flex-start', color: 'var(--text-secondary)', gap: '0.2rem' }}
+            style={{ marginTop: '0.85rem', alignSelf: 'flex-start', color: 'var(--text-secondary)', gap: '0.2rem' }}
           >
             <span>Buka Kalender Agenda</span>
             <ChevronRight size={12} />
@@ -421,21 +465,21 @@ export default function DashboardView({ onNavigate }) {
 
       </div>
 
-      {/* 6. PENGUMUMAN TERKINI */}
+      {/* 5. PENGUMUMAN TERKINI */}
       {pinnedAnnouncement && (data?.pageAccess?.announcements?.isEnabled !== false || isEffectiveAdmin) && (
-        <div className="card" style={{ padding: '1.25rem 1.4rem', borderLeft: '3px solid var(--primary)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+        <div className="card" style={{ padding: '1.25rem 1.4rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
-              <span className="notion-tag notion-tag-gray" style={{ textTransform: 'uppercase', fontSize: '0.68rem', fontWeight: 700 }}>
+              <span className="notion-tag notion-tag-orange" style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700 }}>
                 {pinnedAnnouncement.category || 'Info'}
               </span>
               {isEffectiveAdmin && data?.pageAccess?.announcements?.isEnabled === false && (
-                <span className="notion-tag notion-tag-red" style={{ fontSize: '0.68rem', fontWeight: 700 }}>
+                <span className="notion-tag notion-tag-red" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                   Nonaktif untuk Siswa
                 </span>
               )}
             </div>
-            <button 
+            <button
               onClick={() => onNavigate('class')}
               className="btn btn-ghost btn-xs"
               style={{ color: 'var(--primary)', fontWeight: 600, gap: '0.2rem' }}
@@ -445,10 +489,10 @@ export default function DashboardView({ onNavigate }) {
             </button>
           </div>
 
-          <h4 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
+          <h4 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-primary)' }}>
             {pinnedAnnouncement.title}
           </h4>
-          <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
             {pinnedAnnouncement.content}
           </p>
         </div>
@@ -462,12 +506,27 @@ export default function DashboardView({ onNavigate }) {
               <span className="clean-tag-subject" style={{ marginBottom: '0.35rem', display: 'inline-block' }}>
                 {selectedTaskDetail.subject}
               </span>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: '0.25rem 0' }}>
+              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0.25rem 0' }}>
                 {selectedTaskDetail.title}
               </h3>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Tenggat Waktu: <strong>{selectedTaskDetail.deadline}</strong>
-              </div>
+              {selectedTaskDetail.isCompleted ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  fontSize: '0.78rem',
+                  color: 'var(--success)',
+                  marginTop: '0.35rem',
+                  fontWeight: 600
+                }}>
+                  <CheckCircle2 size={14} />
+                  <span>Tugas ini telah ditandai selesai untuk seluruh kelas oleh pengurus.</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                  Tenggat Waktu: <strong style={{ color: 'var(--text-primary)' }}>{formatDateIndo(selectedTaskDetail.deadline, { withDay: true, monthFormat: 'long' })}</strong>
+                </div>
+              )}
             </div>
 
             {selectedTaskDetail.description && (
@@ -475,9 +534,9 @@ export default function DashboardView({ onNavigate }) {
                 backgroundColor: 'var(--bg)',
                 padding: '0.85rem',
                 borderRadius: 'var(--radius-sm)',
-                fontSize: '0.85rem',
+                fontSize: '0.875rem',
                 color: 'var(--text-secondary)',
-                lineHeight: 1.55
+                lineHeight: 1.6
               }}>
                 {selectedTaskDetail.description}
               </div>
@@ -517,8 +576,8 @@ export default function DashboardView({ onNavigate }) {
                   <Check size={14} />
                   <span>
                     {personalDoneTasks.includes(selectedTaskDetail.id)
-                      ? 'Tandai Belum Selesai (di HP ini)'
-                      : 'Tandai Sudah Selesai (di HP ini)'}
+                      ? 'Tandai Belum Selesai'
+                      : 'Tandai Sudah Selesai'}
                   </span>
                 </button>
               )}

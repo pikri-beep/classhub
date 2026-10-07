@@ -12,10 +12,16 @@ import {
   Plus,
   Trash2,
   CheckSquare,
-  Square
+  Square,
+  Sparkles,
+  Copy,
+  Check,
+  Users,
+  Search
 } from 'lucide-react';
+import ConfirmDialog from '../admin/ConfirmDialog';
 
-// Vibrant 4-color repeating palette matching reference design
+// Vibrant 4-color repeating palette
 const WHEEL_PALETTE = [
   { bg: '#3B82F6', text: '#FFFFFF' }, // Blue -> Crisp White
   { bg: '#DC2626', text: '#FFFFFF' }, // Red -> Crisp White
@@ -24,8 +30,6 @@ const WHEEL_PALETTE = [
 ];
 
 const getSliceTheme = (index, total) => {
-  // If total is 4k + 1 (e.g. 5, 9, 13, 17, 21...), last item would touch first item (Blue).
-  // In that case, use purple for the last item so adjacent slices never clash.
   if (total > 1 && index === total - 1 && (index % WHEEL_PALETTE.length === 0)) {
     return { bg: '#8B5CF6', text: '#FFFFFF' };
   }
@@ -58,7 +62,6 @@ export default function SpinningWheel({ members = [] }) {
   useEffect(() => {
     if (members && members.length > 0) {
       setItems(prev => {
-        // If current items are default or empty, update with latest member nicknames
         if (prev.length === 0 || prev.every(p => !p.isEliminated)) {
           return members.map(m => ({
             id: String(m.id || m.absentNo || Math.random()),
@@ -74,13 +77,20 @@ export default function SpinningWheel({ members = [] }) {
   }, [members]);
 
   const [isSpinning, setIsSpinning] = useState(false);
+  const isSpinningRef = useRef(false);
+
   const [winner, setWinner] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [copiedHistory, setCopiedHistory] = useState(false);
+  const [isClearHistoryConfirmOpen, setIsClearHistoryConfirmOpen] = useState(false);
+
   const [isMuted, setIsMuted] = useState(() => {
     return localStorage.getItem('classhub_wheel_muted') === 'true';
   });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [editSearch, setEditSearch] = useState('');
 
   // Audio Context Ref (synthesizer)
   const audioCtxRef = useRef(null);
@@ -94,6 +104,13 @@ export default function SpinningWheel({ members = [] }) {
 
   // Active items for the wheel (non-eliminated)
   const activeItems = items.filter(item => !item.isEliminated);
+  const activeCount = activeItems.length;
+  const eliminatedCount = items.filter(item => item.isEliminated).length;
+
+  // Keep isSpinningRef in sync
+  useEffect(() => {
+    isSpinningRef.current = isSpinning;
+  }, [isSpinning]);
 
   // Initialize Web Audio safely on user gesture
   const getAudioContext = useCallback(() => {
@@ -254,7 +271,7 @@ export default function SpinningWheel({ members = [] }) {
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
 
-      // Contrast text styling matching reference
+      // Contrast text styling
       ctx.fillStyle = theme.text;
 
       // Font size adapts to total items count and canvas size
@@ -278,22 +295,31 @@ export default function SpinningWheel({ members = [] }) {
       ctx.restore();
     }
 
-    // Outer Rim: Thin crisp border matching reference
+    // Outer Rim
     ctx.beginPath();
     ctx.arc(center, center, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 3.5;
     ctx.strokeStyle = '#18181B';
     ctx.stroke();
 
-    // Center Hub: Pure solid white circle matching reference
+    // Center Hub: Pure solid white circle with "PUTAR" affordance
     const hubRadius = Math.max(radius * 0.22, 28);
     ctx.beginPath();
     ctx.arc(center, center, hubRadius, 0, 2 * Math.PI);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
     ctx.stroke();
+
+    // Center Hub Label ("PUTAR" / "SPIN...")
+    ctx.save();
+    ctx.font = `800 ${Math.max(hubRadius * 0.36, 11)}px 'Plus Jakarta Sans', system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = isSpinningRef.current ? '#D97706' : '#18181B';
+    ctx.fillText(isSpinningRef.current ? 'SPIN...' : 'PUTAR', center, center);
+    ctx.restore();
 
     ctx.restore();
   }, [activeItems]);
@@ -314,6 +340,7 @@ export default function SpinningWheel({ members = [] }) {
     getAudioContext();
 
     setIsSpinning(true);
+    isSpinningRef.current = true;
     setWinner(null);
 
     const count = activeItems.length;
@@ -327,7 +354,6 @@ export default function SpinningWheel({ members = [] }) {
     const totalRotation = rounds * 2 * Math.PI + extraAngle;
 
     const startAngle = rotationRef.current;
-    const targetAngle = startAngle + totalRotation;
     const duration = 4800; // ~4.8 seconds
     const startTime = performance.now();
 
@@ -356,10 +382,24 @@ export default function SpinningWheel({ members = [] }) {
       } else {
         // Spin finished: Determine winner
         setIsSpinning(false);
+        isSpinningRef.current = false;
         const winningIndex = currentSliceIndex;
         const selectedWinner = activeItems[winningIndex];
 
         setWinner(selectedWinner);
+
+        // Add to history
+        if (selectedWinner) {
+          setHistory(prev => [
+            ...prev,
+            {
+              ...selectedWinner,
+              drawIndex: prev.length + 1,
+              timestamp: Date.now()
+            }
+          ]);
+        }
+
         playWinSound();
 
         // Celebration confetti burst!
@@ -368,6 +408,8 @@ export default function SpinningWheel({ members = [] }) {
           spread: 80,
           origin: { y: 0.6 }
         });
+
+        drawWheel();
       }
     };
 
@@ -406,7 +448,7 @@ export default function SpinningWheel({ members = [] }) {
     };
   }, []);
 
-  // Eliminate chosen student (Remove button)
+  // Eliminate chosen student (Remove from current wheel)
   const handleEliminateWinner = () => {
     if (!winner) return;
     setItems(prev => prev.map(item => {
@@ -418,10 +460,36 @@ export default function SpinningWheel({ members = [] }) {
     setWinner(null);
   };
 
+  // Spin again directly from winner modal
+  const handleSpinAgain = () => {
+    setWinner(null);
+    setTimeout(() => {
+      handleSpin();
+    }, 150);
+  };
+
   // Reset all eliminated students back into the wheel
   const handleResetEliminations = () => {
     setItems(prev => prev.map(item => ({ ...item, isEliminated: false })));
     setWinner(null);
+  };
+
+  // Copy winner history to clipboard
+  const handleCopyHistory = () => {
+    if (history.length === 0) return;
+    const text = history
+      .map((h, i) => `${i + 1}. ${h.fullName || h.name}`)
+      .join('\n');
+    const header = `📋 Urutan Hasil Undian Roda Acak (${history.length} Siswa):\n\n`;
+    navigator.clipboard.writeText(header + text).then(() => {
+      setCopiedHistory(true);
+      setTimeout(() => setCopiedHistory(false), 2000);
+    });
+  };
+
+  // Clear history
+  const handleClearHistory = () => {
+    setIsClearHistoryConfirmOpen(true);
   };
 
   // Add custom item in edit modal
@@ -433,6 +501,7 @@ export default function SpinningWheel({ members = [] }) {
       {
         id: 'custom-' + Date.now(),
         name: newItemName.trim(),
+        fullName: newItemName.trim(),
         absentNo: null,
         isEliminated: false
       }
@@ -448,6 +517,15 @@ export default function SpinningWheel({ members = [] }) {
       }
       return item;
     }));
+  };
+
+  // Select all / Deselect all in edit modal
+  const handleSelectAll = () => {
+    setItems(prev => prev.map(item => ({ ...item, isEliminated: false })));
+  };
+
+  const handleDeselectAll = () => {
+    setItems(prev => prev.map(item => ({ ...item, isEliminated: true })));
   };
 
   // Delete item from list
@@ -469,6 +547,13 @@ export default function SpinningWheel({ members = [] }) {
     setIsEditModalOpen(false);
   };
 
+  // Filter items in Edit Modal
+  const filteredEditItems = items.filter(item => {
+    if (!editSearch.trim()) return true;
+    const q = editSearch.toLowerCase().trim();
+    return (item.name || '').toLowerCase().includes(q) || (item.fullName || '').toLowerCase().includes(q);
+  });
+
   return (
     <div
       ref={containerRef}
@@ -485,7 +570,7 @@ export default function SpinningWheel({ members = [] }) {
         justifyContent: 'center'
       }}
     >
-      {/* Action Controls: Edit, Mute, Fullscreen */}
+      {/* Action Controls & Session Status Bar */}
       <div
         style={
           isFullscreen
@@ -507,66 +592,113 @@ export default function SpinningWheel({ members = [] }) {
             : {
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'flex-end',
+              justifyContent: 'space-between',
               width: '100%',
               maxWidth: '520px',
-              marginBottom: '0.5rem',
-              gap: '0.4rem'
+              marginBottom: '0.75rem',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
             }
         }
       >
-        {items.some(i => i.isEliminated) && (
-          <button
-            onClick={handleResetEliminations}
-            className="btn btn-ghost btn-sm"
-            title="Reset & Kembalikan siswa yang tereliminasi"
-            style={{
-              fontSize: '0.75rem',
-              padding: '0.35rem 0.65rem',
-              color: isFullscreen ? '#E2E8F0' : 'var(--text-secondary)',
-              gap: '0.35rem'
-            }}
-          >
-            <RotateCcw size={13} />
-            <span>Reset</span>
-          </button>
+        {/* Left: Status Badges (Aktif & Tereliminasi) */}
+        {!isFullscreen && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                padding: '0.2rem 0.55rem',
+                borderRadius: 'var(--radius-full)',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)'
+              }}
+            >
+              <Users size={12} color="var(--primary)" />
+              <span>{activeCount} Siswa Aktif</span>
+            </span>
+
+            {eliminatedCount > 0 && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.74rem',
+                  fontWeight: 600,
+                  padding: '0.2rem 0.55rem',
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  color: 'var(--danger)'
+                }}
+              >
+                <span>{eliminatedCount} Tereliminasi</span>
+              </span>
+            )}
+          </div>
         )}
 
-        <button
-          onClick={() => setIsEditModalOpen(true)}
-          className="btn btn-outline btn-sm"
-          title="Edit daftar nama sesi ini"
-          style={{
-            fontSize: '0.75rem',
-            gap: '0.35rem',
-            color: isFullscreen ? '#F8FAFC' : undefined,
-            borderColor: isFullscreen ? 'rgba(255, 255, 255, 0.2)' : undefined,
-            backgroundColor: isFullscreen ? 'rgba(255, 255, 255, 0.05)' : undefined
-          }}
-        >
-          <Edit3 size={13} />
-          <span>Edit Daftar</span>
-        </button>
+        {/* Right: Controls (Reset, Edit, Mute, Fullscreen) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginLeft: 'auto' }}>
+          {items.some(i => i.isEliminated) && (
+            <button
+              onClick={handleResetEliminations}
+              className="btn btn-ghost btn-sm"
+              title="Reset & kembalikan seluruh siswa yang tereliminasi"
+              style={{
+                fontSize: '0.75rem',
+                padding: '0.3rem 0.55rem',
+                color: isFullscreen ? '#E2E8F0' : 'var(--text-secondary)',
+                gap: '0.3rem'
+              }}
+            >
+              <RotateCcw size={13} />
+              <span>Reset</span>
+            </button>
+          )}
 
-        <button
-          onClick={toggleMute}
-          className="btn btn-ghost btn-sm btn-icon"
-          title={isMuted ? 'Nyalakan Suara' : 'Matikan Suara'}
-          aria-label="Toggle Audio"
-          style={{ color: isMuted ? 'var(--danger)' : isFullscreen ? '#E2E8F0' : 'var(--text-secondary)' }}
-        >
-          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="btn btn-outline btn-sm"
+            title="Edit daftar nama sesi ini"
+            style={{
+              fontSize: '0.75rem',
+              gap: '0.3rem',
+              padding: '0.3rem 0.65rem',
+              color: isFullscreen ? '#F8FAFC' : undefined,
+              borderColor: isFullscreen ? 'rgba(255, 255, 255, 0.2)' : undefined,
+              backgroundColor: isFullscreen ? 'rgba(255, 255, 255, 0.05)' : undefined
+            }}
+          >
+            <Edit3 size={13} />
+            <span>Edit Daftar</span>
+          </button>
 
-        <button
-          onClick={toggleFullscreen}
-          className="btn btn-ghost btn-sm btn-icon"
-          title={isFullscreen ? 'Keluar Layar Penuh (Esc)' : 'Layar Penuh Proyektor'}
-          aria-label="Toggle Fullscreen"
-          style={{ color: isFullscreen ? '#F8FAFC' : 'var(--text-secondary)' }}
-        >
-          {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
-        </button>
+          <button
+            onClick={toggleMute}
+            className="btn btn-ghost btn-sm btn-icon"
+            title={isMuted ? 'Nyalakan Suara' : 'Matikan Suara'}
+            aria-label="Toggle Audio"
+            style={{ color: isMuted ? 'var(--danger)' : isFullscreen ? '#E2E8F0' : 'var(--text-secondary)' }}
+          >
+            {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+
+          <button
+            onClick={toggleFullscreen}
+            className="btn btn-ghost btn-sm btn-icon"
+            title={isFullscreen ? 'Keluar Layar Penuh (Esc)' : 'Layar Penuh Proyektor'}
+            aria-label="Toggle Fullscreen"
+            style={{ color: isFullscreen ? '#F8FAFC' : 'var(--text-secondary)' }}
+          >
+            {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+          </button>
+        </div>
       </div>
 
       {/* EMPTY STATE (JIKA SEMUA SISWA TERELIMINASI / KOSONG) */}
@@ -619,23 +751,23 @@ export default function SpinningWheel({ members = [] }) {
           </button>
         </div>
       ) : (
-        /* Wheel Canvas & Indicator Wrapper (Perbesar ukuran tampilan) */
+        /* Wheel Canvas & Indicator Wrapper */
         <div
           style={{
             position: 'relative',
-            width: isFullscreen ? 'min(88vw, 86vh)' : 'min(94vw, 480px)',
-            height: isFullscreen ? 'min(88vw, 86vh)' : 'min(94vw, 480px)',
+            width: isFullscreen ? 'min(88vw, 86vh)' : 'min(92vw, 460px)',
+            height: isFullscreen ? 'min(88vw, 86vh)' : 'min(92vw, 460px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0.5rem auto'
           }}
         >
-          {/* Right Needle Pointer (Red 3D Faceted Arrow pointing left into wheel) */}
+          {/* Right Needle Pointer */}
           <div
             style={{
               position: 'absolute',
-              right: isFullscreen ? '-12px' : '-10px',
+              right: isFullscreen ? '-8px' : '-4px',
               top: '50%',
               transform: 'translateY(-50%)',
               zIndex: 10,
@@ -644,18 +776,16 @@ export default function SpinningWheel({ members = [] }) {
             }}
           >
             <svg
-              width={isFullscreen ? "38" : "32"}
-              height={isFullscreen ? "42" : "36"}
+              width={isFullscreen ? "36" : "28"}
+              height={isFullscreen ? "40" : "32"}
               viewBox="0 0 32 36"
             >
-              {/* Top lighter facet */}
               <polygon points="0,18 32,4 32,18" fill="#EF4444" />
-              {/* Bottom darker facet for 3D depth */}
               <polygon points="0,18 32,18 32,32" fill="#B91C1C" />
             </svg>
           </div>
 
-          {/* HTML5 Canvas (Klik langsung roda untuk memutar) */}
+          {/* HTML5 Canvas (Klik kanvas langsung untuk memutar) */}
           <canvas
             ref={canvasRef}
             style={{
@@ -671,14 +801,118 @@ export default function SpinningWheel({ members = [] }) {
         </div>
       )}
 
-      {/* HASIL UNDIAN MODAL (Sesuai Desain Foto: Header Merah 'We have a winner!', Nama Tengah, Tombol Close & Remove) */}
+      {/* Primary Spin Button Below Wheel */}
+      <div style={{ marginTop: '0.85rem', width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={handleSpin}
+          disabled={isSpinning || activeItems.length === 0}
+          className="btn btn-primary btn-lg"
+          style={{
+            width: '100%',
+            height: '46px',
+            fontSize: '0.98rem',
+            fontWeight: 800,
+            borderRadius: 'var(--radius-full)',
+            boxShadow: 'var(--shadow-md)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.45rem',
+            cursor: isSpinning || activeItems.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          <Sparkles size={17} />
+          <span>{isSpinning ? 'Sedang Memutar...' : 'Putar Roda Acak'}</span>
+        </button>
+      </div>
+
+      {/* Winner History List (Riwayat Siswa Terpilih) */}
+      {history.length > 0 && !isFullscreen && (
+        <div
+          className="card"
+          style={{
+            width: '100%',
+            maxWidth: '520px',
+            marginTop: '1.25rem',
+            padding: '0.9rem 1.15rem',
+            backgroundColor: 'var(--bg-surface)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem', flexWrap: 'wrap', gap: '0.45rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <Users size={15} color="var(--primary)" />
+              <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Riwayat Terpilih ({history.length} Siswa)
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={handleCopyHistory}
+                className="btn btn-secondary btn-xs"
+                style={{ gap: '0.25rem', fontSize: '0.74rem' }}
+                title="Salin daftar urutan siswa terpilih"
+              >
+                {copiedHistory ? <Check size={12} color="var(--success)" /> : <Copy size={12} />}
+                <span>{copiedHistory ? 'Tersalin!' : 'Salin Urutan'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleClearHistory}
+                className="btn btn-ghost btn-xs"
+                style={{ fontSize: '0.74rem', color: 'var(--danger)' }}
+                title="Hapus riwayat undian sesi ini"
+              >
+                <Trash2 size={12} />
+                <span>Hapus</span>
+              </button>
+            </div>
+          </div>
+
+          {/* History Sequence Chips */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {history.map((item, idx) => (
+              <div
+                key={`${item.id}-${idx}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  padding: '0.3rem 0.6rem',
+                  backgroundColor: 'var(--bg)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: 'var(--text-primary)'
+                }}
+              >
+                <span style={{
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  color: 'var(--primary)',
+                  backgroundColor: 'var(--primary-soft)',
+                  padding: '0.1rem 0.35rem',
+                  borderRadius: 'var(--radius-xs)'
+                }}>
+                  #{idx + 1}
+                </span>
+                <span>{item.fullName || item.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* HASIL UNDIAN MODAL (Siswa Terpilih) */}
       {winner && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 99999,
-            backgroundColor: 'rgba(0, 0, 0, 0.78)',
+            backgroundColor: 'rgba(0, 0, 0, 0.72)',
             backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
@@ -692,109 +926,114 @@ export default function SpinningWheel({ members = [] }) {
         >
           <div
             style={{
-              backgroundColor: '#18181B',
-              borderRadius: '10px',
+              backgroundColor: 'var(--bg-surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-lg)',
               overflow: 'hidden',
               maxWidth: '480px',
               width: '100%',
-              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7)',
+              boxShadow: 'var(--shadow-xl)',
               animation: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            {/* Red Top Header Bar: "We have a winner!" */}
+            {/* Celebratory Header */}
             <div
               style={{
-                backgroundColor: '#DC2626',
-                padding: '0.85rem 1.25rem',
+                backgroundColor: 'var(--primary)',
+                padding: '0.9rem 1.25rem',
                 color: '#FFFFFF',
-                fontSize: '1.15rem',
+                fontSize: '1.1rem',
                 fontWeight: 800,
-                letterSpacing: '-0.01em',
-                userSelect: 'none'
-              }}
-            >
-              We have a winner!
-            </div>
-
-            {/* Winner Name in the Middle */}
-            <div
-              style={{
-                padding: '3.5rem 1.5rem',
-                textAlign: 'center',
-                backgroundColor: '#18181B',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: isFullscreen ? '3.8rem' : '3rem',
-                  fontWeight: 600,
-                  color: '#FFFFFF',
-                  letterSpacing: '0.01em',
-                  lineHeight: 1.1,
-                  wordBreak: 'break-word',
-                  fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-                }}
-              >
-                {winner.name}
-              </h1>
-            </div>
-
-            {/* Footer Buttons: Close & Remove */}
-            <div
-              style={{
-                padding: '0.75rem 1.25rem 1.25rem 1.25rem',
-                backgroundColor: '#18181B',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
-                gap: '0.85rem'
+                justifyContent: 'space-between',
+                letterSpacing: '-0.01em'
               }}
             >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={20} />
+                <span>Siswa Terpilih!</span>
+              </div>
               <button
+                type="button"
                 onClick={() => setWinner(null)}
                 style={{
                   background: 'transparent',
                   border: 'none',
                   color: '#FFFFFF',
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  padding: '0.5rem 0.85rem',
                   cursor: 'pointer',
-                  borderRadius: '4px',
-                  transition: 'opacity 0.15s'
+                  padding: '0.2rem',
+                  display: 'flex',
+                  opacity: 0.9
                 }}
-                onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
-                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                title="Tutup"
               >
-                Close
+                <X size={18} />
               </button>
+            </div>
+
+            {/* Winner Name in the Middle: FULL NAME ONLY, NO ABSENT NUMBER */}
+            <div
+              style={{
+                padding: '2.5rem 1.5rem',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: isFullscreen ? '2.8rem' : '2.1rem',
+                  fontWeight: 800,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.2,
+                  wordBreak: 'break-word',
+                  fontFamily: 'Plus Jakarta Sans, sans-serif'
+                }}
+              >
+                {winner.fullName || winner.name}
+              </h1>
+            </div>
+
+            {/* Footer Buttons: Tutup, Eliminasi Siswa, Putar Lagi */}
+            <div
+              style={{
+                padding: '0.9rem 1.25rem',
+                backgroundColor: 'var(--bg)',
+                borderTop: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                flexWrap: 'wrap',
+                gap: '0.5rem'
+              }}
+            >
 
               <button
-                onClick={handleEliminateWinner}
-                style={{
-                  backgroundColor: '#4F46E5',
-                  color: '#FFFFFF',
-                  fontSize: '0.95rem',
-                  fontWeight: 700,
-                  padding: '0.55rem 1.35rem',
-                  borderRadius: '6px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(79, 70, 229, 0.4)',
-                  transition: 'background-color 0.15s, transform 0.1s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4338CA'}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = '#4F46E5'}
-                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                type="button"
+                onClick={handleSpinAgain}
+                className="btn btn-primary btn-sm"
+                style={{ fontWeight: 700, fontSize: '0.82rem', gap: '0.35rem' }}
+                title="Lanjut memutar roda untuk siswa berikutnya"
               >
-                Remove
+                <RotateCcw size={13} />
+                <span>Putar Lagi</span>
               </button>
+              <button
+                type="button"
+                onClick={handleEliminateWinner}
+                className="btn btn-danger btn-sm"
+                style={{ fontWeight: 600, fontSize: '0.82rem' }}
+                title="Keluarkan siswa dari putaran berikutnya agar tidak terpilih ganda"
+              >
+                Eliminasi Siswa
+              </button>
+
             </div>
           </div>
         </div>
@@ -845,7 +1084,7 @@ export default function SpinningWheel({ members = [] }) {
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700 }}>Edit Daftar Sesi Ini</h3>
                 <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  Perubahan di sini hanya bersifat sementara untuk sesi putaran ini.
+                  {activeCount} dari {items.length} siswa aktif pada roda putaran.
                 </p>
               </div>
               <button
@@ -856,15 +1095,49 @@ export default function SpinningWheel({ members = [] }) {
               </button>
             </div>
 
+            {/* Quick Actions & Search Filter */}
+            <div style={{ padding: '0.65rem 1.25rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
+                <Search size={14} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Cari nama siswa..."
+                  value={editSearch}
+                  onChange={e => setEditSearch(e.target.value)}
+                  style={{ paddingLeft: '1.9rem', fontSize: '0.82rem', height: '32px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  className="btn btn-secondary btn-xs"
+                  style={{ fontSize: '0.74rem' }}
+                >
+                  Pilih Semua
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeselectAll}
+                  className="btn btn-ghost btn-xs"
+                  style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}
+                >
+                  Batal Semua
+                </button>
+              </div>
+            </div>
+
             {/* Modal Form: Add Custom Item */}
-            <form onSubmit={handleAddCustomItem} style={{ padding: '0.85rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
+            <form onSubmit={handleAddCustomItem} style={{ padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
               <input
                 type="text"
                 className="form-input"
                 placeholder="Tambah nama siswa atau topik khusus..."
                 value={newItemName}
                 onChange={e => setNewItemName(e.target.value)}
-                style={{ flex: 1, fontSize: '0.85rem' }}
+                style={{ flex: 1, fontSize: '0.84rem', height: '34px' }}
               />
               <button type="submit" className="btn btn-primary btn-sm" style={{ gap: '0.3rem', flexShrink: 0 }}>
                 <Plus size={14} />
@@ -873,50 +1146,56 @@ export default function SpinningWheel({ members = [] }) {
             </form>
 
             {/* Modal List Items */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0.85rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
-              {items.map(item => (
-                <div
-                  key={item.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: item.isEliminated ? 'rgba(100, 116, 139, 0.08)' : 'var(--bg)',
-                    border: '1px solid var(--border)',
-                    opacity: item.isEliminated ? 0.6 : 1
-                  }}
-                >
-                  <div
-                    onClick={() => handleToggleItem(item.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', flex: 1 }}
-                  >
-                    {item.isEliminated ? (
-                      <Square size={16} color="var(--text-muted)" />
-                    ) : (
-                      <CheckSquare size={16} color="var(--primary)" />
-                    )}
-                    <span style={{
-                      fontSize: '0.84rem',
-                      fontWeight: 600,
-                      textDecoration: item.isEliminated ? 'line-through' : 'none',
-                      color: item.isEliminated ? 'var(--text-muted)' : 'var(--text-primary)'
-                    }}>
-                      {item.name}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => handleDeleteItem(item.id)}
-                    className="btn btn-ghost btn-sm btn-icon"
-                    title="Hapus dari daftar sesi ini"
-                    style={{ color: 'var(--danger)' }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+              {filteredEditItems.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                  Tidak ada siswa yang cocok dengan "{editSearch}".
                 </div>
-              ))}
+              ) : (
+                filteredEditItems.map(item => (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: item.isEliminated ? 'rgba(100, 116, 139, 0.08)' : 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      opacity: item.isEliminated ? 0.6 : 1
+                    }}
+                  >
+                    <div
+                      onClick={() => handleToggleItem(item.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', flex: 1 }}
+                    >
+                      {item.isEliminated ? (
+                        <Square size={16} color="var(--text-muted)" />
+                      ) : (
+                        <CheckSquare size={16} color="var(--primary)" />
+                      )}
+                      <span style={{
+                        fontSize: '0.84rem',
+                        fontWeight: 600,
+                        textDecoration: item.isEliminated ? 'line-through' : 'none',
+                        color: item.isEliminated ? 'var(--text-muted)' : 'var(--text-primary)'
+                      }}>
+                        {item.fullName || item.name}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => handleDeleteItem(item.id)}
+                      className="btn btn-ghost btn-sm btn-icon"
+                      title="Hapus dari daftar sesi ini"
+                      style={{ color: 'var(--danger)' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Modal Footer */}
@@ -934,7 +1213,7 @@ export default function SpinningWheel({ members = [] }) {
                 className="btn btn-ghost btn-sm"
                 style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}
               >
-                Reset ke Seluruh Siswa Kelas
+                Reset ke Rombel Kelas
               </button>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -946,6 +1225,20 @@ export default function SpinningWheel({ members = [] }) {
           </div>
         </div>
       )}
+      {/* CONFIRM DIALOG: HAPUS RIWAYAT TERPILIH */}
+      <ConfirmDialog
+        isOpen={isClearHistoryConfirmOpen}
+        onClose={() => setIsClearHistoryConfirmOpen(false)}
+        onConfirm={() => {
+          setHistory([]);
+          setIsClearHistoryConfirmOpen(false);
+        }}
+        title="Hapus Riwayat Undian"
+        message={`Apakah Anda yakin ingin menghapus seluruh ${history.length} riwayat siswa terpilih sesi ini? Urutan yang telah tercatat akan dikosongkan.`}
+        confirmLabel="Hapus Riwayat"
+        cancelLabel="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -75,7 +75,7 @@ export default function PiketMbgTab({ initialDay }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
 
       {/* Week Navigator Bar */}
-      <div 
+      <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -139,12 +139,12 @@ export default function PiketMbgTab({ initialDay }) {
       </div>
 
       {/* Day Selector Tabs (With subtle indicator underline for today, without notification dots) */}
-      <div 
-        style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.4rem', 
-          flexWrap: 'wrap' 
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          flexWrap: 'wrap'
         }}
       >
         {MBG_DAYS.map(day => {
@@ -176,7 +176,7 @@ export default function PiketMbgTab({ initialDay }) {
 
       {/* User Duty Notice Banner (If user is on duty) */}
       {hasUserDutyToday && (
-        <div 
+        <div
           style={{
             padding: '0.75rem 1rem',
             backgroundColor: 'rgba(234, 88, 12, 0.08)',
@@ -196,11 +196,11 @@ export default function PiketMbgTab({ initialDay }) {
 
       {/* Teams Grid (2 Columns: Tim Pengambil & Tim Pengembali) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem' }}>
-        
+
         {/* CARD 1: Tim Pengambil (11.30 WIB) */}
-        <div 
+        <div
           className="card"
-          style={{ 
+          style={{
             padding: '1.25rem',
             backgroundColor: 'var(--bg-surface)',
             borderRadius: 'var(--radius-sm)',
@@ -236,7 +236,7 @@ export default function PiketMbgTab({ initialDay }) {
               </div>
             </div>
 
-            <span 
+            <span
               className="notion-tag notion-tag-orange"
               style={{ fontSize: '0.72rem', fontWeight: 600 }}
             >
@@ -268,7 +268,7 @@ export default function PiketMbgTab({ initialDay }) {
                       transition: 'background-color 0.15s ease'
                     }}
                   >
-                    <span 
+                    <span
                       style={{
                         fontSize: '0.88rem',
                         fontWeight: isMe ? 700 : 600,
@@ -283,7 +283,7 @@ export default function PiketMbgTab({ initialDay }) {
                     </span>
 
                     {isMe && (
-                      <span 
+                      <span
                         className="notion-tag notion-tag-orange"
                         style={{ fontSize: '0.68rem', fontWeight: 700 }}
                       >
@@ -298,9 +298,9 @@ export default function PiketMbgTab({ initialDay }) {
         </div>
 
         {/* CARD 2: Tim Pengembali (13.00 WIB) */}
-        <div 
+        <div
           className="card"
-          style={{ 
+          style={{
             padding: '1.25rem',
             backgroundColor: 'var(--bg-surface)',
             borderRadius: 'var(--radius-sm)',
@@ -336,7 +336,7 @@ export default function PiketMbgTab({ initialDay }) {
               </div>
             </div>
 
-            <span 
+            <span
               className="notion-tag notion-tag-blue"
               style={{ fontSize: '0.72rem', fontWeight: 600 }}
             >
@@ -368,7 +368,7 @@ export default function PiketMbgTab({ initialDay }) {
                       transition: 'background-color 0.15s ease'
                     }}
                   >
-                    <span 
+                    <span
                       style={{
                         fontSize: '0.88rem',
                         fontWeight: isMe ? 700 : 600,
@@ -383,7 +383,7 @@ export default function PiketMbgTab({ initialDay }) {
                     </span>
 
                     {isMe && (
-                      <span 
+                      <span
                         className="notion-tag notion-tag-blue"
                         style={{ fontSize: '0.68rem', fontWeight: 700 }}
                       >

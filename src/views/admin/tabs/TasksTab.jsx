@@ -18,7 +18,8 @@ import {
   EmptyState,
   StatusBadge,
   ActionMenu,
-  ConfirmDialog
+  ConfirmDialog,
+  SubjectPicker
 } from '../../../components/admin';
 import { formatCompactDateTime, getDeadlineStatus } from '../../../lib/dateUtils';
 import {
@@ -78,20 +79,34 @@ export default function TasksTab({
   const completedTasksCount = useMemo(() => tasks.filter(t => t.isCompleted).length, [tasks]);
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(task => {
-      const q = taskSearchQuery.toLowerCase().trim();
-      const matchesSearch = !q ||
-        task.title.toLowerCase().includes(q) ||
-        task.subject.toLowerCase().includes(q) ||
-        (task.description || '').toLowerCase().includes(q);
+    return tasks
+      .filter(task => {
+        const q = taskSearchQuery.toLowerCase().trim();
+        const matchesSearch = !q ||
+          task.title.toLowerCase().includes(q) ||
+          task.subject.toLowerCase().includes(q) ||
+          (task.description || '').toLowerCase().includes(q);
 
-      if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
 
-      if (taskFilterStatus === 'all') return true;
-      if (taskFilterStatus === 'active') return !task.isCompleted;
-      if (taskFilterStatus === 'completed') return Boolean(task.isCompleted);
-      return true;
-    });
+        if (taskFilterStatus === 'all') return true;
+        if (taskFilterStatus === 'active') return !task.isCompleted;
+        if (taskFilterStatus === 'completed') return Boolean(task.isCompleted);
+        return true;
+      })
+      .sort((a, b) => {
+        // 1. Tugas belum selesai di atas, tugas selesai otomatis turun ke bawah
+        if (Boolean(a.isCompleted) !== Boolean(b.isCompleted)) {
+          return a.isCompleted ? 1 : -1;
+        }
+        // 2. Tenggat terdekat didahulukan
+        if (a.deadline && b.deadline) {
+          return new Date(a.deadline) - new Date(b.deadline);
+        }
+        if (a.deadline && !b.deadline) return -1;
+        if (!a.deadline && b.deadline) return 1;
+        return 0;
+      });
   }, [tasks, taskSearchQuery, taskFilterStatus]);
 
   const handleCreateTask = (e) => {
@@ -324,7 +339,7 @@ export default function TasksTab({
 
                       {task.description && (
                         <p style={{
-                          fontSize: '0.8rem',
+                          fontSize: '0.875rem',
                           color: 'var(--text-muted)',
                           margin: '0.35rem 0 0 0',
                           lineHeight: 1.45,
@@ -389,12 +404,10 @@ export default function TasksTab({
         <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="form-group">
             <label className="form-label">Mata Pelajaran</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Pemrograman Web (PPLG)"
+            <SubjectPicker
               value={taskSubject}
-              onChange={(e) => setTaskSubject(e.target.value)}
+              onChange={setTaskSubject}
+              placeholder="Pilih Mata Pelajaran"
               required
             />
           </div>
@@ -412,7 +425,7 @@ export default function TasksTab({
           <div className="form-group">
             <label className="form-label">Tenggat Waktu (Deadline)</label>
             <input
-              type="datetime-local"
+              type="date"
               className="form-input"
               value={taskDeadline}
               onChange={(e) => setTaskDeadline(e.target.value)}
@@ -450,12 +463,10 @@ export default function TasksTab({
         <form onSubmit={handleUpdateTask} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="form-group">
             <label className="form-label">Mata Pelajaran</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Pemrograman Web (PPLG)"
+            <SubjectPicker
               value={editTaskSubject}
-              onChange={(e) => setEditTaskSubject(e.target.value)}
+              onChange={setEditTaskSubject}
+              placeholder="Pilih Mata Pelajaran"
               required
             />
           </div>
@@ -473,7 +484,7 @@ export default function TasksTab({
           <div className="form-group">
             <label className="form-label">Tenggat Waktu (Deadline)</label>
             <input
-              type="datetime-local"
+              type="date"
               className="form-input"
               value={editTaskDeadline}
               onChange={(e) => setEditTaskDeadline(e.target.value)}
@@ -517,13 +528,22 @@ export default function TasksTab({
         onClose={() => setTaskToDelete(null)}
         onConfirm={() => {
           if (taskToDelete) {
+            const backupTask = { ...taskToDelete };
             deleteTask(taskToDelete.id);
-            showToast(`Tugas "${taskToDelete.title}" berhasil dihapus`, 'info');
+            showToast(`Tugas "${backupTask.title}" berhasil dihapus`, 'info', {
+              action: {
+                label: 'Urungkan',
+                onClick: () => {
+                  addTask(backupTask);
+                  showToast(`Tugas "${backupTask.title}" dipulihkan! ✨`, 'success');
+                }
+              }
+            });
             setTaskToDelete(null);
           }
         }}
         title="Hapus Tugas Kelas"
-        message={`Apakah Anda yakin ingin menghapus tugas "${taskToDelete?.title}" (${taskToDelete?.subject})? Tindakan ini tidak dapat dibatalkan.`}
+        message={`Apakah Anda yakin ingin menghapus tugas "${taskToDelete?.title}" (${taskToDelete?.subject})?`}
         confirmLabel="Hapus Tugas"
         variant="danger"
       />

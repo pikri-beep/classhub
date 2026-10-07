@@ -4,19 +4,27 @@ import {
   Upload,
   RotateCcw,
   Wrench,
-  ShieldAlert,
   MessageCircle,
   AlertCircle,
   Wallet,
   BookOpen,
   CalendarDays,
   Calendar,
-  Megaphone
+  Megaphone,
+  Palette,
+  ShieldCheck,
+  KeyRound,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  ShieldAlert,
+  History
 } from 'lucide-react';
 import { useStore } from '../../../context/StoreContext';
 import { useToast } from '../../../context/ToastContext';
 import { processImageFile } from '../../../lib/imageUtils';
-import { StatusBadge } from '../../../components/admin';
+import { StatusBadge, ConfirmDialog, AuditLogWidget } from '../../../components/admin';
 import { formatDateIndo } from '../../../lib/dateUtils';
 import {
   DEFAULT_WA_GREETING,
@@ -34,13 +42,36 @@ export default function SettingsTab({ onOpenWhatsApp }) {
   } = useStore();
   const { showToast } = useToast();
 
+  // Sub-Tab Navigation: 'identity' | 'security' | 'whatsapp'
+  const [activeSubTab, setActiveSubTab] = useState('identity');
+
+  // Security Gate State (Re-Authentication for sensitive area)
+  const [isSecurityUnlocked, setIsSecurityUnlocked] = useState(false);
+  const [unlockPinInput, setUnlockPinInput] = useState('');
+  const [showUnlockPin, setShowUnlockPin] = useState(false);
+  const [unlockError, setUnlockError] = useState('');
+  const [unlockAttempts, setUnlockAttempts] = useState(0);
+
+  // Multi-Step Change PIN State
+  const [pinTarget, setPinTarget] = useState('admin'); // 'admin' | 'master'
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmNewPinInput, setConfirmNewPinInput] = useState('');
+  const [showCurrentPin, setShowCurrentPin] = useState(false);
+  const [showNewPin, setShowNewPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
+  const [pinChangeError, setPinChangeError] = useState('');
+
+  // Reset Confirmation State
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
   // Class Info state
   const [settingsAppName, setSettingsAppName] = useState(data.classInfo?.appName || 'ClassHub');
   const [settingsName, setSettingsName] = useState(data.classInfo?.name || 'XI PPLG');
   const [settingsSchool, setSettingsSchool] = useState(data.classInfo?.school || '');
   const [settingsAcademicYear, setSettingsAcademicYear] = useState(data.classInfo?.academicYear || '2026/2027');
   const [settingsHomeroomTeacher, setSettingsHomeroomTeacher] = useState(data.classInfo?.homeroomTeacher || '');
-  const [settingsAdminPin, setSettingsAdminPin] = useState(data.classInfo?.adminPin || 'admin123');
   const [settingsLogoUrl, setSettingsLogoUrl] = useState(data.classInfo?.logoUrl || '');
   const [isProcessingSettingsImg, setIsProcessingSettingsImg] = useState(false);
 
@@ -84,7 +115,6 @@ export default function SettingsTab({ onOpenWhatsApp }) {
       setSettingsSchool(data.classInfo.school || '');
       setSettingsAcademicYear(data.classInfo.academicYear || '2026/2027');
       setSettingsHomeroomTeacher(data.classInfo.homeroomTeacher || '');
-      setSettingsAdminPin(data.classInfo.adminPin || 'admin123');
       setSettingsLogoUrl(data.classInfo.logoUrl || '');
 
       setWaGreeting(data.classInfo.waGreeting !== undefined ? data.classInfo.waGreeting : DEFAULT_WA_GREETING);
@@ -113,7 +143,7 @@ export default function SettingsTab({ onOpenWhatsApp }) {
     }
   };
 
-  const handleSaveSettings = (e) => {
+  const handleSaveIdentity = (e) => {
     e.preventDefault();
     updateClassInfo({
       appName: settingsAppName.trim() || 'ClassHub',
@@ -121,10 +151,85 @@ export default function SettingsTab({ onOpenWhatsApp }) {
       school: settingsSchool.trim(),
       academicYear: settingsAcademicYear.trim(),
       homeroomTeacher: settingsHomeroomTeacher.trim(),
-      adminPin: settingsAdminPin.trim() || 'admin123',
       logoUrl: settingsLogoUrl.trim()
     });
-    showToast('Identitas kelas berhasil diperbarui!', 'success');
+    showToast('Identitas & profil kelas berhasil diperbarui! 🎉', 'success');
+  };
+
+  // Security Gate Authentication Handler
+  const handleUnlockSecurity = (e) => {
+    e.preventDefault();
+    setUnlockError('');
+    const expectedMasterPin = (data.classInfo?.masterPin || 'master123').trim();
+    if (unlockPinInput.trim() === expectedMasterPin) {
+      setIsSecurityUnlocked(true);
+      setUnlockPinInput('');
+      setUnlockAttempts(0);
+      showToast('Akses Area Terlindungi berhasil dibuka! 🔓', 'success');
+    } else {
+      const nextAttempts = unlockAttempts + 1;
+      setUnlockAttempts(nextAttempts);
+      setUnlockError('Master PIN Keamanan salah. Akses ditolak.');
+      showToast('Master PIN Keamanan salah!', 'error');
+    }
+  };
+
+  const handleLockSecurity = () => {
+    setIsSecurityUnlocked(false);
+    setUnlockPinInput('');
+    setUnlockError('');
+    setCurrentPinInput('');
+    setNewPinInput('');
+    setConfirmNewPinInput('');
+    setPinChangeError('');
+    showToast('Akses area sensitif telah dikunci kembali. 🔒', 'info');
+  };
+
+  // Multi-Step Change PIN Handler (Admin PIN vs Master PIN)
+  const handleChangePin = (e) => {
+    e.preventDefault();
+    setPinChangeError('');
+
+    const isMaster = pinTarget === 'master';
+    const expectedPin = isMaster
+      ? (data.classInfo?.masterPin || 'master123').trim()
+      : (data.classInfo?.adminPin || 'admin123').trim();
+
+    if (currentPinInput.trim() !== expectedPin) {
+      const errMsg = isMaster ? 'Master PIN Saat Ini salah.' : 'PIN Pengurus Saat Ini tidak sesuai.';
+      setPinChangeError(errMsg);
+      showToast(errMsg, 'error');
+      return;
+    }
+
+    if (!newPinInput.trim() || newPinInput.trim().length < 4) {
+      setPinChangeError('PIN Baru minimal 4 karakter demi keamanan.');
+      showToast('PIN Baru minimal 4 karakter!', 'warning');
+      return;
+    }
+
+    if (newPinInput.trim() !== confirmNewPinInput.trim()) {
+      setPinChangeError('Konfirmasi PIN Baru tidak cocok dengan PIN Baru.');
+      showToast('Konfirmasi PIN tidak cocok!', 'error');
+      return;
+    }
+
+    if (isMaster) {
+      updateClassInfo({
+        masterPin: newPinInput.trim()
+      });
+      showToast('Master PIN Keamanan berhasil diperbarui! 🛡️', 'success');
+    } else {
+      updateClassInfo({
+        adminPin: newPinInput.trim()
+      });
+      showToast('PIN Pengurus Harian berhasil diperbarui! 🔑', 'success');
+    }
+
+    setCurrentPinInput('');
+    setNewPinInput('');
+    setConfirmNewPinInput('');
+    setPinChangeError('');
   };
 
   const handleTogglePageAccess = (pageKey) => {
@@ -159,6 +264,20 @@ export default function SettingsTab({ onOpenWhatsApp }) {
       updateBulkPageAccess(pageAccessDraft);
     }
     showToast('Status akses halaman siswa berhasil disimpan!', 'success');
+  };
+
+  const handleConfirmResetData = async () => {
+    try {
+      setIsResetting(true);
+      resetToDefault();
+      setIsResetConfirmOpen(false);
+      setIsSecurityUnlocked(false);
+      showToast('Seluruh data berhasil di-reset ke kondisi demo awal.', 'info');
+    } catch (err) {
+      showToast('Gagal mereset data.', 'error');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleSaveWaBriefSettings = (e) => {
@@ -247,520 +366,898 @@ export default function SettingsTab({ onOpenWhatsApp }) {
     return lines.join('\n');
   }, [waGreeting, waBannerTitle, waFooterNote, waClosing, waIncludeSchedule, waIncludeTasks, waIncludePiket, waIncludeExams]);
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      {/* Class Identity & Logo Form Card */}
-      <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Identitas & Branding Kelas</h3>
-        </div>
+  const renderSecurityLockCard = (description) => (
+    <div className="admin-security-lock-card">
+      <div style={{
+        width: '60px',
+        height: '60px',
+        borderRadius: 'var(--radius-full)',
+        backgroundColor: 'var(--primary-soft)',
+        color: 'var(--primary)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        border: '1px solid var(--primary-border)'
+      }}>
+        <Lock size={28} strokeWidth={2.2} />
+      </div>
 
-        <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
-          {/* Logo / Foto Kelas Picker */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--primary-soft)',
-              border: '1px solid var(--primary-border)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--primary)',
+      <div>
+        <h3 className="admin-settings-title">
+          Area Terlindungi (Master PIN Required)
+        </h3>
+        <p className="admin-settings-desc" style={{ maxWidth: '440px', margin: '0.35rem auto 0 auto' }}>
+          {description || 'Bagian ini dilindungi oleh Master PIN Keamanan khusus (terpisah dari PIN login harian). Masukkan Master PIN untuk membuka kunci.'}
+        </p>
+      </div>
+
+      <form onSubmit={handleUnlockSecurity} style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showUnlockPin ? 'text' : 'password'}
+            className="form-input"
+            placeholder="Masukkan Master PIN Keamanan..."
+            value={unlockPinInput}
+            onChange={(e) => { setUnlockPinInput(e.target.value); setUnlockError(''); }}
+            style={{
+              textAlign: 'center',
+              letterSpacing: showUnlockPin ? '0.05em' : '0.25em',
+              fontSize: '0.9375rem',
               fontWeight: 700,
-              fontSize: '1.4rem',
-              overflow: 'hidden',
-              flexShrink: 0
-            }}>
-              {settingsLogoUrl ? (
-                <img src={settingsLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              ) : (
-                <Camera size={26} />
-              )}
-            </div>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
-                Logo / Foto Kelas
-              </label>
-
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: '0.35rem', fontWeight: 600 }}>
-                  <Upload size={14} />
-                  <span>{isProcessingSettingsImg ? 'Memproses...' : 'Pilih Foto'}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleSettingsLogoFileChange}
-                    style={{ display: 'none' }}
-                    disabled={isProcessingSettingsImg}
-                  />
-                </label>
-
-                {settingsLogoUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setSettingsLogoUrl('')}
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--danger)', fontSize: '0.78rem' }}
-                  >
-                    Hapus Foto
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* URL alternatif */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              Atau URL Gambar Eksternal
-            </label>
-            <input
-              type="url"
-              className="form-input"
-              placeholder="https://contoh.com/logo.png"
-              value={settingsLogoUrl.startsWith('data:') ? '' : settingsLogoUrl}
-              onChange={(e) => setSettingsLogoUrl(e.target.value)}
-              style={{ fontSize: '0.85rem' }}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Nama Web / Aplikasi</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="ClassHub"
-                value={settingsAppName}
-                onChange={(e) => setSettingsAppName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Nama Kelas</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Contoh: XII PPLG 1"
-                value={settingsName}
-                onChange={(e) => setSettingsName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Nama Sekolah</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: SMK Negeri 1 Cibinong"
-              value={settingsSchool}
-              onChange={(e) => setSettingsSchool(e.target.value)}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Tahun Ajaran</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="2026/2027"
-                value={settingsAcademicYear}
-                onChange={(e) => setSettingsAcademicYear(e.target.value)}
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Wali Kelas</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Nama Guru Pengampu"
-                value={settingsHomeroomTeacher}
-                onChange={(e) => setSettingsHomeroomTeacher(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Master PIN Pengurus */}
-          <div className="form-group" style={{ marginBottom: 0, paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Master PIN Pengurus</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Masukkan PIN"
-              value={settingsAdminPin}
-              onChange={(e) => setSettingsAdminPin(e.target.value)}
-              style={{ maxWidth: '280px', fontFamily: 'monospace', letterSpacing: '0.05em' }}
-              required
-            />
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.25rem' }}>
-            <button type="submit" className="btn btn-primary" style={{ fontWeight: 600, padding: '0.55rem 1.25rem' }}>
-              Simpan Perubahan
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* CARD 2: KONTROL STATUS & MAINTENANCE HALAMAN SISWA */}
-      <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Wrench size={18} color="var(--primary)" />
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Kontrol Akses & Pemeliharaan Modul</h3>
-          </div>
-          <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.72rem', fontWeight: 600 }}>
-            Akses Siswa
-          </span>
-        </div>
-
-        <form onSubmit={handleSavePageAccess} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {[
-              {
-                key: 'cash',
-                name: 'Kas & Keuangan Kelas',
-                icon: Wallet,
-                defaultReason: 'Bendahara sedang melakukan audit dan rekonsiliasi buku kas.'
-              },
-              {
-                key: 'tasks',
-                name: 'Daftar Tugas Kelas',
-                icon: BookOpen,
-                defaultReason: 'Pengurus kelas sedang memperbarui tenggat waktu dan daftar tugas.'
-              },
-              {
-                key: 'exams',
-                name: 'Jadwal Ujian',
-                icon: CalendarDays,
-                defaultReason: 'Jadwal ujian sedang direvisi oleh kurikulum sekolah.'
-              },
-              {
-                key: 'schedules',
-                name: 'Jadwal Pelajaran & Piket',
-                icon: Calendar,
-                defaultReason: 'Jadwal pelajaran sedang disesuaikan untuk semester berjalan.'
-              },
-              {
-                key: 'announcements',
-                name: 'Pengumuman Kelas',
-                icon: Megaphone,
-                defaultReason: 'Pengumuman kelas sedang dipersiapkan oleh wali kelas.'
-              }
-            ].map(mod => {
-              const Icon = mod.icon;
-              const modStatus = pageAccessDraft[mod.key] || { isEnabled: true, reason: '' };
-              const isEnabled = modStatus.isEnabled !== false;
-
-              return (
-                <div
-                  key={mod.key}
-                  style={{
-                    padding: '0.85rem 1rem',
-                    backgroundColor: isEnabled ? 'var(--bg-surface)' : 'rgba(239, 68, 68, 0.03)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: isEnabled ? '1px solid var(--border-subtle)' : '1px solid rgba(239, 68, 68, 0.25)',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: '200px', flex: 1 }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: 'var(--radius-xs)',
-                        backgroundColor: isEnabled ? 'var(--bg-hover)' : 'rgba(239, 68, 68, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isEnabled ? 'var(--text-secondary)' : 'var(--danger)',
-                        flexShrink: 0
-                      }}>
-                        <Icon size={16} />
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <h4 style={{ fontSize: '0.88rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
-                          {mod.name}
-                        </h4>
-                        {isEnabled ? (
-                          <StatusBadge variant="success" size="sm">Aktif</StatusBadge>
-                        ) : (
-                          <StatusBadge variant="danger" size="sm">Pemeliharaan</StatusBadge>
-                        )}
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleTogglePageAccess(mod.key)}
-                      className={`btn ${isEnabled ? 'btn-secondary' : 'btn-primary'} btn-sm`}
-                      style={{
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        padding: '0.3rem 0.75rem',
-                        backgroundColor: isEnabled ? 'transparent' : 'var(--danger)',
-                        borderColor: isEnabled ? 'var(--border-subtle)' : 'var(--danger)',
-                        color: isEnabled ? 'var(--text-secondary)' : '#FFFFFF'
-                      }}
-                    >
-                      {isEnabled ? 'Matikan Akses' : 'Aktifkan'}
-                    </button>
-                  </div>
-
-                  {!isEnabled && (
-                    <div style={{ marginTop: '0.75rem', paddingTop: '0.65rem', borderTop: '1px dashed rgba(239, 68, 68, 0.2)' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
-                        <ShieldAlert size={12} />
-                        <span>Pesan untuk Siswa:</span>
-                      </label>
-                      <textarea
-                        className="form-textarea"
-                        rows={2}
-                        placeholder={mod.defaultReason}
-                        value={modStatus.reason || ''}
-                        onChange={(e) => handleReasonPageAccessChange(mod.key, e.target.value)}
-                        style={{ fontSize: '0.8rem', width: '100%', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm"
-              style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
-            >
-              Simpan Status Modul
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* CARD 3: PENGATURAN DEFAULT WHATSAPP BRIEF */}
-      <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>Template WhatsApp Brief</h3>
+              fontFamily: 'monospace',
+              paddingRight: '2.75rem'
+            }}
+            autoFocus
+            required
+          />
           <button
             type="button"
-            onClick={onOpenWhatsApp}
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.78rem', gap: '0.35rem', color: '#16A34A', fontWeight: 600 }}
+            onClick={() => setShowUnlockPin(!showUnlockPin)}
+            style={{
+              position: 'absolute',
+              right: '0.65rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '0.25rem',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+            title={showUnlockPin ? 'Sembunyikan PIN' : 'Lihat PIN'}
           >
-            <MessageCircle size={14} />
-            <span>Pratinjau WA</span>
+            {showUnlockPin ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
 
-        <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Salam Pembuka</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Assalamu'alaikum & selamat malam rekan-rekan! 👋"
-              value={waGreeting}
-              onChange={(e) => setWaGreeting(e.target.value)}
-            />
+        {unlockError && (
+          <div style={{
+            fontSize: '0.75rem',
+            color: 'var(--danger)',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.35rem'
+          }}>
+            <AlertCircle size={14} />
+            <span>{unlockError}</span>
+          </div>
+        )}
+
+        <button type="submit" className="btn btn-primary" style={{ fontWeight: 700, width: '100%', justifyContent: 'center', padding: '0.65rem 1rem' }}>
+          <Unlock size={16} />
+          <span>Buka Kunci Akses Keamanan</span>
+        </button>
+      </form>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {/* Header & Sub-Tabs Navigation */}
+      <div>
+        <div style={{ marginBottom: '1rem' }}>
+          <h1 style={{
+            fontSize: '1.375rem',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            margin: 0
+          }}>
+            Identitas & Pengaturan
+          </h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>
+            Kelola profil kelas, kontrol keamanan sistem, dan format pengingat WhatsApp
+          </p>
+        </div>
+
+        {/* Sub-Tab Navigation Bar */}
+        <div className="admin-subtabs-nav">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('identity')}
+            className={`admin-subtab-btn ${activeSubTab === 'identity' ? 'active' : ''}`}
+          >
+            <Palette size={15} />
+            <span>Identitas & Profil</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('security')}
+            className={`admin-subtab-btn ${activeSubTab === 'security' ? 'active' : ''}`}
+          >
+            <ShieldCheck size={15} />
+            <span>Keamanan & Akses Modul</span>
+            {!isSecurityUnlocked && (
+              <Lock size={12} style={{ color: 'var(--text-muted)', marginLeft: '-0.15rem' }} />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('whatsapp')}
+            className={`admin-subtab-btn ${activeSubTab === 'whatsapp' ? 'active' : ''}`}
+          >
+            <MessageCircle size={15} />
+            <span>Format WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('audit')}
+            className={`admin-subtab-btn ${activeSubTab === 'audit' ? 'active' : ''}`}
+          >
+            <History size={15} />
+            <span>Riwayat & Audit Log</span>
+            {!isSecurityUnlocked && (
+              <Lock size={12} style={{ color: 'var(--text-muted)', marginLeft: '-0.15rem' }} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          SUB-TAB 1: IDENTITAS & BRANDING PROFIL KELAS
+          ========================================================================= */}
+      {activeSubTab === 'identity' && (
+        <div className="admin-settings-card">
+          <div className="admin-settings-card-header">
+            <div>
+              <h3 className="admin-settings-title">
+                Identitas & Profil Kelas
+              </h3>
+              <p className="admin-settings-desc">
+                Nama dan foto ini akan ditampilkan pada seluruh header, kartu pengenal, dan portal publik siswa.
+              </p>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+          <form onSubmit={handleSaveIdentity} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Logo / Foto Kelas Picker */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1rem', backgroundColor: 'var(--bg)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--primary-soft)',
+                border: '1px solid var(--primary-border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--primary)',
+                fontWeight: 700,
+                fontSize: '1.375rem',
+                overflow: 'hidden',
+                flexShrink: 0
+              }}>
+                {settingsLogoUrl ? (
+                  <img src={settingsLogoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <Camera size={26} />
+                )}
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <label style={{ fontSize: '0.875rem', fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                  Logo / Foto Kelas
+                </label>
+
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: '0.35rem', fontWeight: 600 }}>
+                    <Upload size={14} />
+                    <span>{isProcessingSettingsImg ? 'Memproses...' : 'Pilih Foto'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleSettingsLogoFileChange}
+                      style={{ display: 'none' }}
+                      disabled={isProcessingSettingsImg}
+                    />
+                  </label>
+
+                  {settingsLogoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setSettingsLogoUrl('')}
+                      className="btn btn-ghost btn-sm"
+                      style={{ color: 'var(--danger)', fontSize: '0.75rem' }}
+                    >
+                      Hapus Foto
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* URL alternatif */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Judul Banner</label>
+              <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Atau URL Gambar Eksternal
+              </label>
               <input
-                type="text"
+                type="url"
                 className="form-input"
-                placeholder="Contoh: PERSIAPAN KELAS"
-                value={waBannerTitle}
-                onChange={(e) => setWaBannerTitle(e.target.value)}
-                required
+                placeholder="https://contoh.com/logo.png"
+                value={settingsLogoUrl.startsWith('data:') ? '' : settingsLogoUrl}
+                onChange={(e) => setSettingsLogoUrl(e.target.value)}
+                style={{ fontSize: '0.875rem' }}
               />
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Nama Web / Aplikasi</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="ClassHub"
+                  value={settingsAppName}
+                  onChange={(e) => setSettingsAppName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Nama Kelas</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: XII PPLG 1"
+                  value={settingsName}
+                  onChange={(e) => setSettingsName(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Catatan / Tautan Portal</label>
+              <label className="form-label" style={{ fontWeight: 600 }}>Nama Sekolah</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Contoh: 🌐 *Buka ClassHub untuk detail lengkap.*"
+                placeholder="Contoh: SMK Negeri 1 Cibinong"
+                value={settingsSchool}
+                onChange={(e) => setSettingsSchool(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Tahun Ajaran</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="2026/2027"
+                  value={settingsAcademicYear}
+                  onChange={(e) => setSettingsAcademicYear(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Wali Kelas</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Nama Guru Pengampu"
+                  value={settingsHomeroomTeacher}
+                  onChange={(e) => setSettingsHomeroomTeacher(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.25rem' }}>
+              <button type="submit" className="btn btn-primary" style={{ fontWeight: 600, padding: '0.55rem 1.35rem' }}>
+                Simpan Identitas Kelas
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 2: KEAMANAN & AKSES SISTEM (MODUL & PIN)
+          ========================================================================= */}
+      {activeSubTab === 'security' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* 1. JIKA TERKUNCI: TAMPILKAN SECURITY GATE UNLOCK CARD */}
+          {!isSecurityUnlocked ? (
+            renderSecurityLockCard(
+              'Bagian ini berisi pengelolaan Master PIN, pemeliharaan modul publik siswa, dan reset database. Masukkan Master PIN pengurus kelas untuk membuka kunci.'
+            )
+          ) : (
+            /* 2. JIKA SUDAH TERBUKA: TAMPILKAN KONTROL LENGKAP */
+            <>
+              {/* CARD 1: FORM PENGGANTIAN PIN BERTINGKAT (MASKED & MULTI-STEP) */}
+              <div className="admin-settings-card">
+                <div className="admin-settings-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <KeyRound size={18} color="var(--primary)" />
+                    <div>
+                      <h3 className="admin-settings-title">
+                        Pengelolaan PIN Akses & Keamanan
+                      </h3>
+                      <p className="admin-settings-desc">
+                        Kelola PIN Pengurus Harian untuk login biasa dan Master PIN untuk proteksi area sensitif.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleLockSecurity}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      padding: '0.35rem 0.75rem',
+                      borderRadius: 'var(--radius-full)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      backgroundColor: 'var(--bg)',
+                      border: '1px solid var(--border-subtle)',
+                      flexShrink: 0
+                    }}
+                    title="Kunci kembali area terlindungi"
+                  >
+                    <Lock size={13} color="var(--primary)" />
+                    <span>Kunci Kembali</span>
+                  </button>
+                </div>
+
+                {/* Switcher Target PIN */}
+                <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.85rem', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPinTarget('admin');
+                      setPinChangeError('');
+                      setCurrentPinInput('');
+                      setNewPinInput('');
+                      setConfirmNewPinInput('');
+                    }}
+                    className={`clean-filter-chip ${pinTarget === 'admin' ? 'active' : ''}`}
+                    style={{ fontWeight: 600, fontSize: '0.8rem', padding: '0.35rem 0.85rem', cursor: 'pointer' }}
+                  >
+                    🔑 PIN Pengurus Harian
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPinTarget('master');
+                      setPinChangeError('');
+                      setCurrentPinInput('');
+                      setNewPinInput('');
+                      setConfirmNewPinInput('');
+                    }}
+                    className={`clean-filter-chip ${pinTarget === 'master' ? 'active' : ''}`}
+                    style={{ fontWeight: 600, fontSize: '0.8rem', padding: '0.35rem 0.85rem', cursor: 'pointer' }}
+                  >
+                    🛡️ Master PIN Keamanan
+                  </button>
+                </div>
+
+                <form onSubmit={handleChangePin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '520px' }}>
+                  {/* Field 1: PIN Saat Ini */}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontWeight: 600 }}>
+                      PIN Saat Ini
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showCurrentPin ? 'text' : 'password'}
+                        className="form-input"
+                        placeholder="Masukkan PIN saat ini..."
+                        value={currentPinInput}
+                        onChange={(e) => { setCurrentPinInput(e.target.value); setPinChangeError(''); }}
+                        style={{ fontFamily: 'monospace', letterSpacing: showCurrentPin ? '0.05em' : '0.2em', paddingRight: '2.5rem' }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPin(!showCurrentPin)}
+                        style={{
+                          position: 'absolute',
+                          right: '0.65rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: '0.25rem'
+                        }}
+                      >
+                        {showCurrentPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.85rem' }}>
+                    {/* Field 2: PIN Baru */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600 }}>PIN Baru (Min. 4 Karakter)</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showNewPin ? 'text' : 'password'}
+                          className="form-input"
+                          placeholder="PIN baru..."
+                          value={newPinInput}
+                          onChange={(e) => { setNewPinInput(e.target.value); setPinChangeError(''); }}
+                          style={{ fontFamily: 'monospace', letterSpacing: showNewPin ? '0.05em' : '0.2em', paddingRight: '2.5rem' }}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPin(!showNewPin)}
+                          style={{
+                            position: 'absolute',
+                            right: '0.65rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.25rem'
+                          }}
+                        >
+                          {showNewPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Field 3: Konfirmasi PIN Baru */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600 }}>Ulangi PIN Baru</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showConfirmPin ? 'text' : 'password'}
+                          className="form-input"
+                          placeholder="Ketik Ulang PIN..."
+                          value={confirmNewPinInput}
+                          onChange={(e) => { setConfirmNewPinInput(e.target.value); setPinChangeError(''); }}
+                          style={{ fontFamily: 'monospace', letterSpacing: showConfirmPin ? '0.05em' : '0.2em', paddingRight: '2.5rem' }}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPin(!showConfirmPin)}
+                          style={{
+                            position: 'absolute',
+                            right: '0.65rem',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '0.25rem'
+                          }}
+                        >
+                          {showConfirmPin ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {pinChangeError && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{pinChangeError}</span>
+                    </div>
+                  )}
+
+                  <div>
+                    <button type="submit" className="btn btn-primary" style={{ fontWeight: 600, padding: '0.55rem 1.25rem' }}>
+                      {pinTarget === 'admin' ? 'Perbarui PIN Pengurus' : 'Perbarui Master PIN'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* CARD 2: KONTROL AKSES & PEMELIHARAAN MODUL SISWA */}
+              <div className="admin-settings-card">
+                <div className="admin-settings-card-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Wrench size={18} color="var(--primary)" />
+                    <div>
+                      <h3 className="admin-settings-title">
+                        Kontrol Akses & Pemeliharaan Modul Siswa
+                      </h3>
+                      <p className="admin-settings-desc">
+                        Nonaktifkan modul tertentu jika sedang dalam perbaikan atau audit data.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    Akses Siswa
+                  </span>
+                </div>
+
+                <form onSubmit={handleSavePageAccess} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {[
+                      {
+                        key: 'cash',
+                        name: 'Kas & Keuangan Kelas',
+                        icon: Wallet,
+                        defaultReason: 'Bendahara sedang melakukan audit dan rekonsiliasi buku kas.'
+                      },
+                      {
+                        key: 'tasks',
+                        name: 'Daftar Tugas Kelas',
+                        icon: BookOpen,
+                        defaultReason: 'Pengurus kelas sedang memperbarui tenggat waktu dan daftar tugas.'
+                      },
+                      {
+                        key: 'exams',
+                        name: 'Jadwal Ujian',
+                        icon: CalendarDays,
+                        defaultReason: 'Jadwal ujian sedang direvisi oleh kurikulum sekolah.'
+                      },
+                      {
+                        key: 'schedules',
+                        name: 'Jadwal Pelajaran & Piket',
+                        icon: Calendar,
+                        defaultReason: 'Jadwal pelajaran sedang disesuaikan untuk semester berjalan.'
+                      },
+                      {
+                        key: 'announcements',
+                        name: 'Pengumuman Kelas',
+                        icon: Megaphone,
+                        defaultReason: 'Pengumuman kelas sedang dipersiapkan oleh wali kelas.'
+                      }
+                    ].map(mod => {
+                      const Icon = mod.icon;
+                      const modStatus = pageAccessDraft[mod.key] || { isEnabled: true, reason: '' };
+                      const isEnabled = modStatus.isEnabled !== false;
+
+                      return (
+                        <div
+                          key={mod.key}
+                          style={{
+                            padding: '0.85rem 1rem',
+                            backgroundColor: isEnabled ? 'var(--bg-surface)' : 'var(--tag-red-bg)',
+                            borderRadius: 'var(--radius-sm)',
+                            border: isEnabled ? '1px solid var(--border-subtle)' : '1px solid var(--danger)',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: '200px', flex: 1 }}>
+                              <div style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: 'var(--radius-xs)',
+                                backgroundColor: isEnabled ? 'var(--bg-hover)' : 'var(--tag-red-bg)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: isEnabled ? 'var(--text-secondary)' : 'var(--danger)',
+                                flexShrink: 0
+                              }}>
+                                <Icon size={16} />
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <h4 style={{ fontSize: '0.875rem', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
+                                  {mod.name}
+                                </h4>
+                                {isEnabled ? (
+                                  <StatusBadge variant="success" size="sm">Aktif</StatusBadge>
+                                ) : (
+                                  <StatusBadge variant="danger" size="sm">Pemeliharaan</StatusBadge>
+                                )}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePageAccess(mod.key)}
+                              className={`btn ${isEnabled ? 'btn-secondary' : 'btn-primary'} btn-sm`}
+                              style={{
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                padding: '0.3rem 0.75rem',
+                                backgroundColor: isEnabled ? 'transparent' : 'var(--danger)',
+                                borderColor: isEnabled ? 'var(--border-subtle)' : 'var(--danger)',
+                                color: isEnabled ? 'var(--text-secondary)' : '#FFFFFF'
+                              }}
+                            >
+                              {isEnabled ? 'Matikan Akses' : 'Aktifkan'}
+                            </button>
+                          </div>
+
+                          {!isEnabled && (
+                            <div style={{ marginTop: '0.75rem', paddingTop: '0.65rem', borderTop: '1px dashed var(--danger)' }}>
+                              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.3rem' }}>
+                                <AlertCircle size={12} />
+                                Alasan Pemeliharaan (Dilihat oleh siswa saat membuka halaman):
+                              </label>
+                              <input
+                                type="text"
+                                className="form-input"
+                                value={modStatus.reason || ''}
+                                placeholder={mod.defaultReason}
+                                onChange={(e) => handleReasonPageAccessChange(mod.key, e.target.value)}
+                                style={{ fontSize: '0.875rem' }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '0.25rem' }}>
+                    <button type="submit" className="btn btn-primary" style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}>
+                      Simpan Status Akses
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* CARD 3: ZONA BERBAHAYA: RESET DATA KELAS */}
+              <div className="admin-settings-card" style={{ borderColor: 'var(--danger)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: 'var(--radius-xs)',
+                    backgroundColor: 'var(--tag-red-bg)',
+                    color: 'var(--danger)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <ShieldAlert size={20} />
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--danger)', margin: 0 }}>
+                      Zona Berbahaya: Reset Data Kelas
+                    </h4>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.85rem 0', lineHeight: 1.45 }}>
+                      Tindakan ini akan mengembalikan seluruh jadwal, tugas, pengumuman, dan kas ke data bawaan demo awal. Seluruh data baru akan hilang.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsResetConfirmOpen(true)}
+                      className="btn btn-sm"
+                      style={{
+                        backgroundColor: 'var(--tag-red-bg)',
+                        borderColor: 'var(--danger)',
+                        color: 'var(--danger)',
+                        fontWeight: 600,
+                        gap: '0.35rem',
+                        padding: '0.45rem 0.95rem',
+                        fontSize: '0.875rem'
+                      }}
+                    >
+                      <RotateCcw size={13} />
+                      <span>Reset Seluruh Data</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 3: FORMAT PESAN WHATSAPP PINTAR
+          ========================================================================= */}
+      {activeSubTab === 'whatsapp' && (
+        <div className="admin-settings-card">
+          <div className="admin-settings-card-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <MessageCircle size={18} color="var(--success)" />
+              <div>
+                <h3 className="admin-settings-title">
+                  Format Pesan WhatsApp Pintar (Daily Brief)
+                </h3>
+                <p className="admin-settings-desc">
+                  Atur template briefing harian yang akan otomatis disusun saat menekan tombol WhatsApp Brief.
+                </p>
+              </div>
+            </div>
+            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+              Broadcast WA
+            </span>
+          </div>
+
+          <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Pembuka / Salam</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: Assalamu'alaikum wr. wb. & Selamat malam teman-teman..."
+                  value={waGreeting}
+                  onChange={(e) => setWaGreeting(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Judul Pengingat</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="BRIEFING KELAS"
+                  value={waBannerTitle}
+                  onChange={(e) => setWaBannerTitle(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>Catatan Kaki / Pengingat Khusus</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="📌 Harap rapikan tugas sebelum jam pelajaran pertama dimulai."
                 value={waFooterNote}
                 onChange={(e) => setWaFooterNote(e.target.value)}
               />
             </div>
-          </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" style={{ fontWeight: 600 }}>Pesan Penutup</label>
-            <textarea
-              className="form-textarea"
-              rows={2}
-              placeholder="Contoh: Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨"
-              value={waClosing}
-              onChange={(e) => setWaClosing(e.target.value)}
-            />
-          </div>
-
-          {/* Opsi Toggle Seksi Default */}
-          <div style={{ backgroundColor: 'var(--bg)', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-            <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              Seksi yang Disertakan Secara Default:
-            </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
-                <input
-                  type="checkbox"
-                  checked={waIncludeSchedule}
-                  onChange={(e) => setWaIncludeSchedule(e.target.checked)}
-                  style={{ cursor: 'pointer', width: '15px', height: '15px' }}
-                />
-                <span>📅 Jadwal Pembelajaran</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
-                <input
-                  type="checkbox"
-                  checked={waIncludeTasks}
-                  onChange={(e) => setWaIncludeTasks(e.target.checked)}
-                  style={{ cursor: 'pointer', width: '15px', height: '15px' }}
-                />
-                <span>📝 Deadline Tugas</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
-                <input
-                  type="checkbox"
-                  checked={waIncludePiket}
-                  onChange={(e) => setWaIncludePiket(e.target.checked)}
-                  style={{ cursor: 'pointer', width: '15px', height: '15px' }}
-                />
-                <span>🧹 Petugas Piket Harian</span>
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', cursor: 'pointer', userSelect: 'none' }}>
-                <input
-                  type="checkbox"
-                  checked={waIncludeExams}
-                  onChange={(e) => setWaIncludeExams(e.target.checked)}
-                  style={{ cursor: 'pointer', width: '15px', height: '15px' }}
-                />
-                <span>🎯 Pengingat Ujian</span>
-              </label>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Penutup / Signature</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Semangat belajarnya, Pengurus Kelas XI PPLG"
+                value={waClosing}
+                onChange={(e) => setWaClosing(e.target.value)}
+              />
             </div>
-          </div>
 
-          {/* Live Preview Box */}
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                Pratinjau Hasil Format:
-              </span>
-              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem' }}>
-                Preview
-              </span>
+            {/* Pilihan Modul yang Disertakan */}
+            <div>
+              <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.45rem', display: 'block' }}>
+                Pilihan Konten Pengingat:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={waIncludeSchedule}
+                    onChange={(e) => setWaIncludeSchedule(e.target.checked)}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <span>📅 Jadwal Pelajaran</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={waIncludeTasks}
+                    onChange={(e) => setWaIncludeTasks(e.target.checked)}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <span>📝 Deadline Tugas</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={waIncludePiket}
+                    onChange={(e) => setWaIncludePiket(e.target.checked)}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <span>🧹 Petugas Piket</span>
+                </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={waIncludeExams}
+                    onChange={(e) => setWaIncludeExams(e.target.checked)}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                  />
+                  <span>🎯 Pengingat Ujian</span>
+                </label>
+              </div>
             </div>
-            <div style={{
-              backgroundColor: 'var(--bg)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.75rem 1rem',
-              maxHeight: '180px',
-              overflowY: 'auto'
-            }}>
-              <pre style={{
-                margin: 0,
-                fontFamily: 'Consolas, Monaco, "Courier New", monospace',
-                fontSize: '0.75rem',
-                lineHeight: 1.5,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                color: 'var(--text-primary)'
-              }}>
-                {previewBriefText}
-              </pre>
+
+            {/* Live Preview Box */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Pratinjau Hasil Format:
+                </span>
+                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', padding: '0.1rem 0.45rem' }}>
+                  Preview
+                </span>
+              </div>
+              <div className="admin-wa-preview-box">
+                <pre className="admin-wa-preview-text">
+                  {previewBriefText}
+                </pre>
+              </div>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.25rem' }}>
-            <button
-              type="button"
-              onClick={handleResetWaBriefSettings}
-              className="btn btn-ghost btn-sm"
-              style={{ color: 'var(--text-muted)', fontSize: '0.78rem', gap: '0.3rem' }}
-            >
-              <RotateCcw size={12} />
-              <span>Reset ke Bawaan</span>
-            </button>
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.25rem' }}>
+              <button
+                type="button"
+                onClick={handleResetWaBriefSettings}
+                className="btn btn-ghost btn-sm"
+                style={{ color: 'var(--text-muted)', fontSize: '0.75rem', gap: '0.3rem' }}
+              >
+                <RotateCcw size={12} />
+                <span>Reset ke Bawaan</span>
+              </button>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-sm"
-              style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
-            >
-              Simpan Format
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* DANGER ZONE: RESET DATA CARD */}
-      <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--danger-border, #FCA5A5)', backgroundColor: 'var(--bg-surface)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.85rem' }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: 'var(--radius-xs)',
-            backgroundColor: 'var(--tag-red-bg)',
-            color: 'var(--danger)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0
-          }}>
-            <AlertCircle size={20} />
-          </div>
-
-          <div style={{ flex: 1 }}>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--danger)', margin: 0 }}>
-              Zona Berbahaya: Reset Data Kelas
-            </h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.25rem 0 0.75rem 0', lineHeight: 1.4 }}>
-              Tindakan ini akan mengembalikan seluruh jadwal, tugas, pengumuman, dan kas ke data bawaan demo awal.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (confirm('PERINGATAN: Apakah Anda benar-benar yakin ingin mereset seluruh data kelas ke kondisi awal? Tindakan ini tidak dapat dibatalkan.')) {
-                  resetToDefault();
-                  showToast('Seluruh data berhasil di-reset ke bawaan demo awal.', 'info');
-                }
-              }}
-              className="btn btn-sm"
-              style={{
-                backgroundColor: 'var(--tag-red-bg)',
-                borderColor: 'var(--danger)',
-                color: 'var(--danger)',
-                fontWeight: 600,
-                gap: '0.35rem',
-                padding: '0.4rem 0.8rem',
-                fontSize: '0.78rem'
-              }}
-            >
-              <RotateCcw size={13} />
-              <span>Reset Seluruh Data</span>
-            </button>
-          </div>
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
+              >
+                Simpan Format
+              </button>
+            </div>
+          </form>
         </div>
-      </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 4: RIWAYAT & AUDIT LOG AKTIVITAS SISTEM
+          ========================================================================= */}
+      {activeSubTab === 'audit' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {!isSecurityUnlocked ? (
+            renderSecurityLockCard(
+              'Riwayat log aktivitas bersifat terlindungi. Masukkan Master PIN pengurus kelas untuk membuka kunci riwayat log.'
+            )
+          ) : (
+            <AuditLogWidget onLockSecurity={handleLockSecurity} />
+          )}
+        </div>
+      )}
+
+      {/* CONFIRM DIALOG UNTUK RESET DATA KELAS */}
+      <ConfirmDialog
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleConfirmResetData}
+        title="Reset Seluruh Data Kelas ke Awal?"
+        message="PERINGATAN: Seluruh jadwal pelajaran, tugas kelas, agenda ujian, riwayat kas, dan pengumuman akan dikembalikan ke data demo awal. Tindakan ini tidak dapat dibatalkan."
+        confirmLabel={isResetting ? "Mereset Data..." : "Ya, Reset Seluruh Data"}
+        cancelLabel="Batal"
+        variant="danger"
+        isLoading={isResetting}
+      />
     </div>
   );
 }

@@ -3,7 +3,10 @@ import {
   Plus,
   Trash2,
   Check,
-  CheckCircle2
+  CheckCircle2,
+  MessageCircle,
+  ArrowDownLeft,
+  ArrowUpRight
 } from 'lucide-react';
 import { useStore } from '../../../context/StoreContext';
 import { useToast } from '../../../context/ToastContext';
@@ -162,16 +165,47 @@ export default function CashTab() {
     showToast(`Periode ${periodName} (${formatMonthLabel(finalMonth)}) berhasil dibuat!`, 'success');
   };
 
+  const handleCopyDuesRecap = () => {
+    if (monthlyDuesPeriods.length === 0) {
+      showToast('Belum ada periode iuran untuk bulan ini', 'warning');
+      return;
+    }
+    const monthLabel = formatMonthLabel(selectedDuesMonth);
+    let text = `*📊 REKAP IURAN KAS — BULAN ${monthLabel.toUpperCase()}*\n`;
+    text += `Total Siswa: ${totalMembers} Siswa\n`;
+    text += `Kas Terkumpul: ${selectedMonthPaidAllCount} Lunas · ${selectedMonthUnpaidCount} Belum Lunas\n\n`;
+
+    monthlyDuesPeriods.forEach((p, idx) => {
+      const paidCount = (p.paidStudentIds || []).length;
+      const unpaidMembers = members.filter(m => !(p.paidStudentIds || []).includes(m.id));
+      text += `*Minggu ${idx + 1} (${p.name} - Rp ${Number(p.amount).toLocaleString('id-ID')}):*\n`;
+      text += `Status: ${paidCount}/${totalMembers} Siswa Lunas\n`;
+      if (unpaidMembers.length === 0) {
+        text += `Semua siswa lunas! 🎉\n`;
+      } else if (unpaidMembers.length <= 15) {
+        text += `Belum Lunas: ${unpaidMembers.map(u => u.name).join(', ')}\n`;
+      } else {
+        text += `Belum Lunas: ${unpaidMembers.length} Siswa\n`;
+      }
+      text += `\n`;
+    });
+
+    text += `Mohon yang belum lunas dapat segera menyelesaikannya ke Bendahara Kelas. Terima kasih! 🙏`;
+
+    navigator.clipboard.writeText(text);
+    showToast('Teks rekap kas bulan ini berhasil disalin ke clipboard!', 'success');
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Top Cash Balance Info */}
       <div className="card" style={{ padding: '1.25rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
         <div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Saldo Kas</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0.15rem 0', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500 }}>Saldo Kas</div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0.15rem 0', letterSpacing: '-0.02em' }}>
             Rp {Number(cashStats.balance).toLocaleString('id-ID')}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
             Pemasukan <strong style={{ color: 'var(--tag-green-text)' }}>+Rp {Number(cashStats.income).toLocaleString('id-ID')}</strong> &nbsp;·&nbsp; Pengeluaran <strong style={{ color: 'var(--danger)' }}>-Rp {Number(cashStats.expense).toLocaleString('id-ID')}</strong>
           </div>
         </div>
@@ -199,7 +233,7 @@ export default function CashTab() {
       <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
               Matriks Iuran Kas
             </h3>
             {/* Mini Recap */}
@@ -224,12 +258,30 @@ export default function CashTab() {
             </div>
           </div>
 
-          {/* Month Navigator */}
-          <MonthNavigator
-            availableMonths={availableDuesMonths}
-            selectedMonth={selectedDuesMonth}
-            onMonthChange={setSelectedDuesMonth}
-          />
+          {/* Month Navigator & Recap Share */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+            <MonthNavigator
+              availableMonths={availableDuesMonths}
+              selectedMonth={selectedDuesMonth}
+              onMonthChange={setSelectedDuesMonth}
+            />
+            <button
+              type="button"
+              onClick={handleCopyDuesRecap}
+              className="btn btn-secondary btn-sm"
+              style={{
+                fontSize: '0.76rem',
+                gap: '0.35rem',
+                padding: '0.4rem 0.65rem',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+              title="Salin rekap iuran kas bulan ini untuk WhatsApp"
+            >
+              <MessageCircle size={13} color="var(--primary)" />
+              <span className="hide-mobile">Rekap WA</span>
+            </button>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
@@ -283,8 +335,8 @@ export default function CashTab() {
           >
             <thead style={{ position: 'sticky', top: 0, zIndex: 25 }}>
               <tr style={{ backgroundColor: 'var(--bg-surface)' }}>
-                <th style={{ width: '56px', minWidth: '56px', maxWidth: '56px', textAlign: 'center', padding: '0.85rem 0.65rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg-surface)' }}>#</th>
-                <th style={{ width: '190px', minWidth: '190px', maxWidth: '190px', textAlign: 'left', padding: '0.85rem 1rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg-surface)' }}>Nama Siswa</th>
+                <th style={{ width: '56px', minWidth: '56px', maxWidth: '56px', textAlign: 'center', padding: '0.85rem 0.65rem', position: 'sticky', top: 0, left: 0, zIndex: 35, backgroundColor: 'var(--bg-surface)' }}>#</th>
+                <th style={{ width: '180px', minWidth: '180px', maxWidth: '180px', textAlign: 'left', padding: '0.85rem 1rem', position: 'sticky', top: 0, left: '56px', zIndex: 35, backgroundColor: 'var(--bg-surface)', borderRight: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}>Nama Siswa</th>
                 {monthlyDuesPeriods.map(p => {
                   const periodPaidCount = (p.paidStudentIds || []).length;
                   const isAllPaid = totalMembers > 0 && periodPaidCount === totalMembers;
@@ -292,7 +344,7 @@ export default function CashTab() {
                   return (
                     <th key={p.id} style={{ width: '130px', minWidth: '130px', maxWidth: '130px', textAlign: 'center', padding: '0.85rem 0.75rem', position: 'sticky', top: 0, zIndex: 25, backgroundColor: 'var(--bg-surface)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.84rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                        <span style={{ fontWeight: 600, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
                         <button
                           type="button"
                           onClick={() => setPeriodToDelete(p)}
@@ -321,13 +373,13 @@ export default function CashTab() {
                         disabled={isAllPaid}
                         onClick={() => setPeriodToMarkAllPaid(p)}
                         style={{
-                          background: isAllPaid ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-hover)',
-                          border: `1px solid ${isAllPaid ? 'rgba(22, 163, 74, 0.2)' : 'var(--border-subtle)'}`,
+                          background: isAllPaid ? 'var(--tag-green-bg)' : 'var(--bg-hover)',
+                          border: `1px solid ${isAllPaid ? 'var(--primary-border)' : 'var(--border-subtle)'}`,
                           borderRadius: 'var(--radius-xs)',
                           padding: '0.18rem 0.45rem',
-                          fontSize: '0.7rem',
+                          fontSize: '0.75rem',
                           fontWeight: 600,
-                          color: isAllPaid ? '#16A34A' : 'var(--text-secondary)',
+                          color: isAllPaid ? 'var(--tag-green-text)' : 'var(--text-secondary)',
                           cursor: isAllPaid ? 'default' : 'pointer',
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -373,10 +425,34 @@ export default function CashTab() {
                         borderBottom: '1px solid var(--border-subtle)'
                       }}
                     >
-                      <td style={{ width: '56px', minWidth: '56px', maxWidth: '56px', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.82rem', textAlign: 'center', padding: '0.85rem 0.65rem' }}>
+                      <td style={{
+                        width: '56px',
+                        minWidth: '56px',
+                        maxWidth: '56px',
+                        color: 'var(--text-muted)',
+                        fontWeight: 600,
+                        fontSize: '0.875rem',
+                        textAlign: 'center',
+                        padding: '0.85rem 0.65rem',
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 15,
+                        backgroundColor: isOdd ? 'var(--zebra-kas-odd)' : 'var(--zebra-kas-even)'
+                      }}>
                         {String(m.absentNo || 0).padStart(2, '0')}
                       </td>
-                      <td style={{ width: '190px', minWidth: '190px', maxWidth: '190px', padding: '0.85rem 1rem' }}>
+                      <td style={{
+                        width: '180px',
+                        minWidth: '180px',
+                        maxWidth: '180px',
+                        padding: '0.85rem 1rem',
+                        position: 'sticky',
+                        left: '56px',
+                        zIndex: 15,
+                        backgroundColor: isOdd ? 'var(--zebra-kas-odd)' : 'var(--zebra-kas-even)',
+                        borderRight: '1px solid var(--border-subtle)',
+                        boxShadow: 'var(--shadow-sm)'
+                      }}>
                         <strong
                           className="kas-student-name"
                           title={m.name}
@@ -435,7 +511,7 @@ export default function CashTab() {
 
       {/* Transactions Ledger */}
       <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
-        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: '0 0 0.85rem 0', color: 'var(--text-primary)' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 0.85rem 0', color: 'var(--text-primary)' }}>
           Buku Kas & Riwayat Transaksi
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -490,14 +566,60 @@ export default function CashTab() {
         <form onSubmit={handleCreateTx} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="form-group">
             <label className="form-label">Jenis Transaksi</label>
-            <select
-              className="form-select"
-              value={txType}
-              onChange={(e) => setTxType(e.target.value)}
-            >
-              <option value="income">Pemasukan (+)</option>
-              <option value="expense">Pengeluaran (-)</option>
-            </select>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.4rem',
+              backgroundColor: 'var(--bg)',
+              padding: '0.25rem',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border-subtle)'
+            }}>
+              <button
+                type="button"
+                onClick={() => setTxType('income')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  padding: '0.55rem',
+                  borderRadius: 'var(--radius-xs)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  border: txType === 'income' ? '1px solid var(--tag-green-text)' : 'none',
+                  backgroundColor: txType === 'income' ? 'var(--tag-green-bg)' : 'transparent',
+                  color: txType === 'income' ? 'var(--tag-green-text)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <ArrowDownLeft size={16} />
+                <span>Pemasukan (+)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTxType('expense')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  padding: '0.55rem',
+                  borderRadius: 'var(--radius-xs)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  border: txType === 'expense' ? '1px solid var(--danger)' : 'none',
+                  backgroundColor: txType === 'expense' ? 'var(--primary-soft)' : 'transparent',
+                  color: txType === 'expense' ? 'var(--danger)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <ArrowUpRight size={16} />
+                <span>Pengeluaran (-)</span>
+              </button>
+            </div>
           </div>
           <div className="form-group">
             <label className="form-label">Nominal (Rp)</label>
@@ -654,8 +776,17 @@ export default function CashTab() {
         onClose={() => setTxToDelete(null)}
         onConfirm={() => {
           if (txToDelete) {
+            const backupTx = { ...txToDelete };
             deleteTransaction(txToDelete.id);
-            showToast(`Transaksi "${txToDelete.description}" telah dihapus.`, 'info');
+            showToast(`Transaksi "${backupTx.description}" dihapus.`, 'info', {
+              action: {
+                label: 'Urungkan',
+                onClick: () => {
+                  addTransaction(backupTx);
+                  showToast(`Transaksi "${backupTx.description}" dipulihkan! ✨`, 'success');
+                }
+              }
+            });
             setTxToDelete(null);
           }
         }}

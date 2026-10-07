@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus,
   Trash2,
@@ -15,12 +15,18 @@ import {
   EmptyState,
   StatusBadge,
   ActionMenu,
-  ConfirmDialog
+  ConfirmDialog,
+  SubjectPicker
 } from '../../../components/admin';
 import { formatDateIndo, formatDateTimeIndo, getDeadlineStatus } from '../../../lib/dateUtils';
 import { formatForDatetimeLocal } from '../utils/adminHelpers';
 
-export default function ExamsTab() {
+export default function ExamsTab({
+  isAddExamOpen: propIsAddExamOpen,
+  setIsAddExamOpen: propSetIsAddExamOpen,
+  examToEdit,
+  setExamToEdit
+} = {}) {
   const { data, addExam, updateExam, deleteExam, addEvent, updateEvent, deleteEvent } = useStore();
   const { showToast } = useToast();
 
@@ -37,7 +43,10 @@ export default function ExamsTab() {
   const [eventFilterStatus, setEventFilterStatus] = useState('all');
 
   // Modals state
-  const [isAddExamOpen, setIsAddExamOpen] = useState(false);
+  const [internalIsAddExamOpen, setInternalIsAddExamOpen] = useState(false);
+  const isAddExamOpen = propIsAddExamOpen !== undefined ? propIsAddExamOpen : internalIsAddExamOpen;
+  const setIsAddExamOpen = propSetIsAddExamOpen !== undefined ? propSetIsAddExamOpen : setInternalIsAddExamOpen;
+
   const [isEditExamOpen, setIsEditExamOpen] = useState(false);
   const [selectedExamForEdit, setSelectedExamForEdit] = useState(null);
   const [examToDelete, setExamToDelete] = useState(null);
@@ -160,6 +169,14 @@ export default function ExamsTab() {
     setIsEditExamOpen(true);
   };
 
+  useEffect(() => {
+    if (examToEdit) {
+      setExamSubTab('exams');
+      handleOpenEditExam(examToEdit);
+      setExamToEdit?.(null);
+    }
+  }, [examToEdit]);
+
   const handleUpdateExam = (e) => {
     e.preventDefault();
     if (!selectedExamForEdit) return;
@@ -277,7 +294,7 @@ export default function ExamsTab() {
             style={{
               gap: '0.4rem',
               fontWeight: 600,
-              fontSize: '0.8rem',
+              fontSize: '0.875rem',
               borderRadius: 'var(--radius-full)'
             }}
           >
@@ -291,7 +308,7 @@ export default function ExamsTab() {
             style={{
               gap: '0.4rem',
               fontWeight: 600,
-              fontSize: '0.8rem',
+              fontSize: '0.875rem',
               borderRadius: 'var(--radius-full)'
             }}
           >
@@ -516,12 +533,10 @@ export default function ExamsTab() {
         <form onSubmit={handleCreateExam} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="form-group">
             <label className="form-label">Mata Pelajaran</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Matematika Terapan"
+            <SubjectPicker
               value={examSubject}
-              onChange={(e) => setExamSubject(e.target.value)}
+              onChange={setExamSubject}
+              placeholder="Pilih Mata Pelajaran"
               required
             />
           </div>
@@ -537,9 +552,9 @@ export default function ExamsTab() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Tanggal & Waktu Ujian</label>
+            <label className="form-label">Tanggal Pelaksanaan Ujian</label>
             <input
-              type="datetime-local"
+              type="date"
               className="form-input"
               value={examDate}
               onChange={(e) => setExamDate(e.target.value)}
@@ -567,12 +582,10 @@ export default function ExamsTab() {
         <form onSubmit={handleUpdateExam} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="form-group">
             <label className="form-label">Mata Pelajaran</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Contoh: Matematika Terapan"
+            <SubjectPicker
               value={editExamSubject}
-              onChange={(e) => setEditExamSubject(e.target.value)}
+              onChange={setEditExamSubject}
+              placeholder="Pilih Mata Pelajaran"
               required
             />
           </div>
@@ -588,9 +601,9 @@ export default function ExamsTab() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Tanggal & Waktu Ujian</label>
+            <label className="form-label">Tanggal Pelaksanaan Ujian</label>
             <input
-              type="datetime-local"
+              type="date"
               className="form-input"
               value={editExamDate}
               onChange={(e) => setEditExamDate(e.target.value)}
@@ -709,13 +722,22 @@ export default function ExamsTab() {
         onClose={() => setExamToDelete(null)}
         onConfirm={() => {
           if (examToDelete) {
+            const backupExam = { ...examToDelete };
             deleteExam(examToDelete.id);
-            showToast(`Jadwal ujian "${examToDelete.title}" berhasil dihapus`, 'info');
+            showToast(`Jadwal ujian "${backupExam.title}" berhasil dihapus`, 'info', {
+              action: {
+                label: 'Urungkan',
+                onClick: () => {
+                  addExam(backupExam);
+                  showToast(`Jadwal ujian "${backupExam.title}" dipulihkan! ✨`, 'success');
+                }
+              }
+            });
             setExamToDelete(null);
           }
         }}
         title="Hapus Jadwal Ujian"
-        message={`Apakah Anda yakin ingin menghapus jadwal ujian "${examToDelete?.title}" (${examToDelete?.subject})? Tindakan ini tidak dapat dibatalkan.`}
+        message={`Apakah Anda yakin ingin menghapus jadwal ujian "${examToDelete?.title}" (${examToDelete?.subject})?`}
         confirmLabel="Hapus Ujian"
         variant="danger"
       />
@@ -726,13 +748,22 @@ export default function ExamsTab() {
         onClose={() => setEventToDelete(null)}
         onConfirm={() => {
           if (eventToDelete) {
+            const backupEvent = { ...eventToDelete };
             deleteEvent(eventToDelete.id);
-            showToast(`Agenda "${eventToDelete.title}" berhasil dihapus`, 'info');
+            showToast(`Agenda "${backupEvent.title}" berhasil dihapus`, 'info', {
+              action: {
+                label: 'Urungkan',
+                onClick: () => {
+                  addEvent(backupEvent);
+                  showToast(`Agenda "${backupEvent.title}" dipulihkan! ✨`, 'success');
+                }
+              }
+            });
             setEventToDelete(null);
           }
         }}
         title="Hapus Agenda Kelas"
-        message={`Apakah Anda yakin ingin menghapus agenda "${eventToDelete?.title}"? Tindakan ini tidak dapat dibatalkan.`}
+        message={`Apakah Anda yakin ingin menghapus agenda "${eventToDelete?.title}"?`}
         confirmLabel="Hapus Agenda"
         variant="danger"
       />

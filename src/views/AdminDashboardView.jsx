@@ -43,6 +43,20 @@ export default function AdminDashboardView({
     setActiveTab('tasks');
   };
 
+  // Cross-tab coordination for Exams
+  const [isAddExamOpen, setIsAddExamOpen] = useState(false);
+  const [examToEdit, setExamToEdit] = useState(null);
+
+  const handleOpenAddExamFromOverview = () => {
+    setActiveTab('exams');
+    setIsAddExamOpen(true);
+  };
+
+  const handleEditExamFromOverview = (exam) => {
+    setExamToEdit(exam);
+    setActiveTab('exams');
+  };
+
   return (
     <div style={{ maxWidth: '1080px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Tab Routing */}
@@ -50,8 +64,10 @@ export default function AdminDashboardView({
         <OverviewTab
           setActiveTab={setActiveTab}
           onOpenAddTask={handleOpenAddTaskFromOverview}
+          onOpenAddExam={handleOpenAddExamFromOverview}
           onOpenWhatsApp={() => setIsWhatsAppModalOpen(true)}
           onEditTask={handleEditTaskFromOverview}
+          onEditExam={handleEditExamFromOverview}
         />
       )}
 
@@ -64,7 +80,14 @@ export default function AdminDashboardView({
         />
       )}
 
-      {activeTab === 'exams' && <ExamsTab />}
+      {activeTab === 'exams' && (
+        <ExamsTab
+          isAddExamOpen={isAddExamOpen}
+          setIsAddExamOpen={setIsAddExamOpen}
+          examToEdit={examToEdit}
+          setExamToEdit={setExamToEdit}
+        />
+      )}
 
       {activeTab === 'schedules' && <SchedulesTab />}
 

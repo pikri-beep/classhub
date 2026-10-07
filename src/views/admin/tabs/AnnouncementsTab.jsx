@@ -192,14 +192,14 @@ export default function AnnouncementsTab() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                     <span
                       className={`notion-tag ${getCategoryClass(ann.category)}`}
-                      style={{ textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 600 }}
+                      style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 600 }}
                     >
                       {ann.category}
                     </span>
                     {ann.isPinned && (
                       <span
                         className="notion-tag notion-tag-orange"
-                        style={{ fontSize: '0.7rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
+                        style={{ fontSize: '0.75rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}
                       >
                         <Pin size={11} />
                         <span>Disematkan</span>
@@ -236,10 +236,10 @@ export default function AnnouncementsTab() {
                   />
                 </div>
 
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0 0 0.3rem 0', color: 'var(--text-primary)', wordBreak: 'break-word' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 0.3rem 0', color: 'var(--text-primary)', wordBreak: 'break-word' }}>
                   {ann.title}
                 </h3>
-                <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                   {ann.content}
                 </p>
               </div>
@@ -347,13 +347,22 @@ export default function AnnouncementsTab() {
         onClose={() => setAnnToDelete(null)}
         onConfirm={() => {
           if (annToDelete) {
+            const backupAnn = { ...annToDelete };
             deleteAnnouncement(annToDelete.id);
-            showToast(`Pengumuman "${annToDelete.title}" berhasil dihapus`, 'info');
+            showToast(`Pengumuman "${backupAnn.title}" berhasil dihapus`, 'info', {
+              action: {
+                label: 'Urungkan',
+                onClick: () => {
+                  addAnnouncement(backupAnn);
+                  showToast(`Pengumuman "${backupAnn.title}" dipulihkan! ✨`, 'success');
+                }
+              }
+            });
             setAnnToDelete(null);
           }
         }}
         title="Hapus Pengumuman Kelas"
-        message={`Apakah Anda yakin ingin menghapus pengumuman "${annToDelete?.title}"? Tindakan ini tidak dapat dibatalkan.`}
+        message={`Apakah Anda yakin ingin menghapus pengumuman "${annToDelete?.title}"?`}
         confirmLabel="Hapus Pengumuman"
         variant="danger"
       />

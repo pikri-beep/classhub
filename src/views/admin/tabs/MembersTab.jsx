@@ -100,7 +100,7 @@ export default function MembersTab() {
   return (
     <div className="card" style={{ padding: '1.25rem 1.5rem', border: '1px solid var(--border-subtle)', background: 'var(--bg-surface)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
           Data Siswa & Jabatan
         </h3>
         <button
@@ -180,7 +180,7 @@ export default function MembersTab() {
 
                 return (
                   <tr key={m.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--text-muted)', padding: '0.75rem 0.85rem', fontSize: '0.82rem' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: 'var(--text-muted)', padding: '0.75rem 0.85rem', fontSize: '0.875rem' }}>
                       {String(m.absentNo || 0).padStart(2, '0')}
                     </td>
                     <td style={{ padding: '0.75rem 0.85rem' }}>
@@ -196,14 +196,14 @@ export default function MembersTab() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.3rem',
-                            color: '#16a34a',
+                            color: 'var(--tag-green-text)',
                             fontWeight: 500,
-                            fontSize: '0.8rem',
+                            fontSize: '0.75rem',
                             textDecoration: 'none',
-                            backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                            backgroundColor: 'var(--tag-green-bg)',
                             padding: '0.15rem 0.45rem',
                             borderRadius: 'var(--radius-xs)',
-                            border: '1px solid rgba(22, 163, 74, 0.2)'
+                            border: '1px solid var(--primary-border)'
                           }}
                           title={`Chat WhatsApp dengan ${m.name}`}
                         >
@@ -211,16 +211,16 @@ export default function MembersTab() {
                           <span>{m.phone}</span>
                         </a>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>—</span>
                       )}
                     </td>
                     <td style={{ padding: '0.75rem 0.85rem' }}>
                       {hasSpecialRole ? (
-                        <span className="notion-tag notion-tag-orange" style={{ fontWeight: 600, fontSize: '0.74rem' }}>
+                        <span className="notion-tag notion-tag-orange" style={{ fontWeight: 600, fontSize: '0.75rem' }}>
                           {m.roleTitle}
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>—</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>—</span>
                       )}
                     </td>
                     <td style={{ textAlign: 'center', padding: '0.75rem 0.85rem' }}>
@@ -335,7 +335,7 @@ export default function MembersTab() {
                         <span
                           className="notion-tag notion-tag-orange"
                           style={{
-                            fontSize: '0.7rem',
+                            fontSize: '0.75rem',
                             fontWeight: 600,
                             padding: '0.1rem 0.4rem'
                           }}
@@ -358,9 +358,9 @@ export default function MembersTab() {
                         width: '30px',
                         height: '30px',
                         borderRadius: 'var(--radius-xs)',
-                        backgroundColor: 'rgba(22, 163, 74, 0.08)',
-                        border: '1px solid rgba(22, 163, 74, 0.2)',
-                        color: '#16A34A',
+                        backgroundColor: 'var(--tag-green-bg)',
+                        border: '1px solid var(--primary-border)',
+                        color: 'var(--tag-green-text)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

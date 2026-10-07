@@ -1,0 +1,516 @@
+/* ==========================================================================
+   ADMIN REDESIGN FOUNDATION & UTILITIES (FASE 0)
+   ========================================================================== */
+
+/* Accessible Focus States */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Mobile Button Touch Target (min 44px for regular buttons, compact for sm/xs) */
+@media (max-width: 768px) {
+  .btn:not(.btn-sm):not(.btn-xs) {
+    min-height: 44px;
+    padding: 0.55rem 1rem;
+  }
+  .btn-sm {
+    min-height: 32px;
+    padding: 0.35rem 0.55rem;
+  }
+  .btn-xs {
+    min-height: 28px;
+    padding: 0.25rem 0.45rem;
+  }
+}
+
+/* Zebra striping for Kas / Dues Matrix with Sticky Weeks Header & Fixed Columns */
+.zebra-kas-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.zebra-kas-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+}
+
+.zebra-kas-table th {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background-color: var(--bg);
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
+  vertical-align: middle;
+}
+
+.zebra-kas-table td {
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.zebra-kas-table .kas-student-name {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zebra-kas-table tbody tr.zebra-kas-row-even,
+.zebra-kas-table tbody tr.zebra-kas-row-even td {
+  background-color: var(--zebra-kas-even);
+}
+
+.zebra-kas-table tbody tr.zebra-kas-row-odd,
+.zebra-kas-table tbody tr.zebra-kas-row-odd td {
+  background-color: var(--zebra-kas-odd);
+}
+
+/* Sticky Columns for Tables (Optional fallback) */
+.sticky-col-left-1 {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background-color: var(--bg-surface);
+}
+
+.sticky-col-left-2 {
+  position: sticky;
+  left: 48px;
+  z-index: 10;
+  background-color: var(--bg-surface);
+  border-right: 2px solid var(--border) !important;
+}
+
+th.sticky-col-left-1,
+th.sticky-col-left-2 {
+  z-index: 20;
+  background-color: var(--bg-hover) !important;
+}
+
+tr:hover .sticky-col-left-1,
+tr:hover .sticky-col-left-2 {
+  background-color: var(--bg-hover);
+}
+
+/* Admin Mobile Sidebar Drawer */
+.admin-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-base);
+}
+
+.admin-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.admin-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(300px, 82vw);
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-drawer.open {
+  transform: translateX(0);
+}
+
+@media (min-width: 769px) {
+  .admin-drawer,
+  .admin-drawer-overlay {
+    display: none !important;
+  }
+}
+
+/* Action Menu Dropdown Styling & Animations */
+.action-menu-dropdown {
+  animation: actionMenuFadeIn 0.15s ease-out;
+  transform-origin: top right;
+}
+
+@keyframes actionMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Maintenance Screen Styles */
+.maintenance-container {
+  min-height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.maintenance-card {
+  animation: maintenanceCardFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes maintenanceCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   Admin Data Siswa & Jabatan Responsive Views
+   ========================================================================== */
+.admin-members-desktop-view {
+  display: block;
+}
+
+.admin-members-mobile-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-members-desktop-view {
+    display: none !important;
+  }
+
+  .admin-members-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .admin-members-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+  }
+
+  .admin-members-filter-bar .admin-search-input-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   Sleeping Box Pet (8-Bit Ambient Sleeping Cat & Z Z Z ZZ Floating Particles)
+   ========================================================================== */
+.live-state-row-layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.live-tracker-bottom-pet-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transition: transform var(--transition-fast);
+}
+
+.live-tracker-bottom-pet-wrapper:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 640px) {
+  .live-state-row-layout {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .live-tracker-bottom-pet-wrapper {
+    align-self: flex-end;
+    margin-top: -0.25rem;
+    padding: 0;
+  }
+}
+
+.sleeping-box-pet-container,
+.sleeping-cat-pet-container {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+.sleeping-z-stream {
+  position: absolute;
+  top: -6px;
+  left: 0px;
+  width: 28px;
+  height: 22px;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.cat-contact-shadow {
+  color: #1C1917;
+}
+
+[data-theme='dark'] .cat-contact-shadow {
+  color: #000000;
+  opacity: 0.35 !important;
+}
+
+.pixel-z {
+  position: absolute;
+  bottom: 0;
+  left: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+  animation: sleepZDrift 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.06));
+}
+
+[data-theme='dark'] .pixel-z {
+  color: #FBBF24;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+}
+
+.pixel-z.z-1 {
+  font-size: 8px;
+  animation-delay: 0s;
+}
+
+.pixel-z.z-2 {
+  font-size: 9px;
+  animation-delay: 0.7s;
+}
+
+.pixel-z.z-3 {
+  font-size: 10px;
+  animation-delay: 1.4s;
+}
+
+.pixel-z.z-4 {
+  font-size: 11px;
+  letter-spacing: -0.5px;
+  animation-delay: 2.1s;
+}
+
+@keyframes sleepZDrift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 2px) scale(0.6);
+  }
+  20% {
+    opacity: 0.85;
+    transform: translate(2px, -3px) scale(0.85);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translate(5px, -8px) scale(1);
+  }
+  85% {
+    opacity: 0.4;
+    transform: translate(8px, -13px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -17px) scale(1.1);
+  }
+}
+
+.sleeping-cat-wrapper,
+.sleeping-cat-body {
+  transform-origin: 20px 14px;
+  animation: sleepingCatBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes sleepingCatBreathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px) scaleY(1.02);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.spin-on-hover:hover {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ==========================================================================
+   Admin Sub-Tabs & Segmented Navigation
+   ========================================================================== */
+.admin-subtabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.admin-subtabs-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  touch-action: manipulation;
+}
+
+.admin-subtab-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.admin-subtab-btn.active {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary-border);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Admin Settings & Security Card Utilities
+   ========================================================================== */
+.admin-settings-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-settings-card-header {
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-settings-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.admin-settings-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.25rem 0 0 0;
+  line-height: 1.5;
+}
+
+.admin-security-unlocked-banner {
+  padding: 0.75rem 1.15rem;
+  background-color: var(--tag-green-bg);
+  border: 1px solid var(--success);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-security-lock-card {
+  padding: 2.5rem 1.75rem;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface);
+  text-align: center;
+  max-width: 520px;
+  margin: 1rem auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-wa-preview-box {
+  background-color: var(--bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.admin-wa-preview-text {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary);
+}

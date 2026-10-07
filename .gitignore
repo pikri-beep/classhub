@@ -27,11 +27,23 @@ dev-dist
 *.sln
 *.sw?
 
-# Ignore all markdown files except README
+# Ignore all markdown files except README and .agents/skills
 *.md
 !README.md
 !readme.md
 !**/README.md
 !**/readme.md
-!**/.agents/**
+!.agents/skills/**
+
+# Impeccable Design Skill
+.impeccable/
+
+# Graphify Knowledge Graph
+graphify-out/
+
+# Agent rules and workflows (Graphify, etc.)
+.agents/rules/
+.agents/workflows/
+
+
 

@@ -1,0 +1,159 @@
+/* ==========================================================================
+   CLASSROOM: GROUP MAKER (PEMBAGI KELOMPOK) - CLEAN NOTION MINIMALIST
+   ========================================================================== */
+
+.group-maker-config-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.group-maker-stepper-box {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--bg);
+  overflow: hidden;
+}
+
+.group-maker-stepper-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: background-color var(--transition-fast);
+}
+
+.group-maker-stepper-btn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+}
+
+.group-maker-stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.group-maker-stepper-val {
+  min-width: 50px;
+  padding: 0 0.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+@keyframes revealMember {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-member-reveal {
+  animation: revealMember 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.group-card-notion {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.group-card-notion:hover {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-sm);
+}
+
+.group-card-notion-header {
+  padding: 0.75rem 1rem;
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-card-notion-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.group-card-notion-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.group-card-notion-body {
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.group-member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  transition: background-color var(--transition-fast);
+}
+
+.group-member-row:hover {
+  background-color: var(--bg-hover);
+}
+
+.group-member-row.is-swap-selected {
+  background-color: var(--primary-soft);
+  border: 1px solid var(--primary);
+}
+
+.group-member-idx {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 18px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.group-member-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -27,14 +27,6 @@ import {
 
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 
-const TIME_PRESETS = [
-  { label: '07:15 - 08:35', start: '07:15', end: '08:35' },
-  { label: '08:35 - 10:15', start: '08:35', end: '10:15' },
-  { label: '10:30 - 12:00', start: '10:30', end: '12:00' },
-  { label: '12:45 - 14:15', start: '12:45', end: '14:15' },
-  { label: '14:15 - 15:35', start: '14:15', end: '15:35' }
-];
-
 export default function SchedulesTab() {
   const {
     data,
@@ -843,25 +835,6 @@ export default function SchedulesTab() {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <label className="form-label">Preset Jam Pelajaran</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-              {TIME_PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    setNewSubStart(preset.start);
-                    setNewSubEnd(preset.end);
-                  }}
-                  className="btn btn-secondary btn-xs"
-                  style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
             <div className="form-group">
@@ -911,25 +884,6 @@ export default function SchedulesTab() {
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <label className="form-label">Preset Jam Pelajaran</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-              {TIME_PRESETS.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    setEditSubStart(preset.start);
-                    setEditSubEnd(preset.end);
-                  }}
-                  className="btn btn-secondary btn-xs"
-                  style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem' }}>
             <div className="form-group">

@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
-import { formatDateIndo } from '../lib/dateUtils';
+import { formatDateIndo, getDeadlineStatus, sortTasksByDeadline, isTaskArchived } from '../lib/dateUtils';
 import LiveClassTracker from '../components/LiveClassTracker';
 import Modal from '../components/Modal';
 
@@ -40,15 +40,11 @@ export default function DashboardView({ onNavigate }) {
     currentUser.name.toLowerCase().includes(name.toLowerCase())
   );
 
-  // Tasks data - uses personalDoneTasks for device checklist and isCompleted for admin status
-  const tasks = data.tasks || [];
-  const pendingTasks = tasks.filter(t => !t.isCompleted && !personalDoneTasks.includes(t.id));
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const aDone = Boolean(a.isCompleted) || personalDoneTasks.includes(a.id);
-    const bDone = Boolean(b.isCompleted) || personalDoneTasks.includes(b.id);
-    if (aDone === bDone) return 0;
-    return aDone ? 1 : -1;
-  });
+  // Tasks data - filter out archived tasks (>14 days overdue) for clean daily dashboard
+  const allTasks = data.tasks || [];
+  const dashboardTasks = allTasks.filter(t => !isTaskArchived(t));
+  const pendingTasks = dashboardTasks.filter(t => !t.isCompleted && !personalDoneTasks.includes(t.id));
+  const sortedTasks = sortTasksByDeadline(dashboardTasks, personalDoneTasks);
 
   // Toggle task completion (personal to this device)
   const handleToggleTask = (task, e) => {
@@ -109,7 +105,8 @@ export default function DashboardView({ onNavigate }) {
     const diffTime = target - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays <= 0) return { text: 'Hari ini', tagClass: 'notion-tag-red' };
+    if (diffDays < 0) return { text: 'Sudah lewat', tagClass: 'notion-tag-gray' };
+    if (diffDays === 0) return { text: 'Hari ini', tagClass: 'notion-tag-red' };
     if (diffDays === 1) return { text: 'Besok', tagClass: 'notion-tag-red' };
     if (diffDays === 2) return { text: '2 hari lagi', tagClass: 'notion-tag-red' };
     if (diffDays <= 5) return { text: `${diffDays} hari lagi`, tagClass: 'notion-tag-orange' };
@@ -278,7 +275,7 @@ export default function DashboardView({ onNavigate }) {
           </button>
         </div>
 
-        {tasks.length === 0 ? (
+        {dashboardTasks.length === 0 ? (
           <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ width: '42px', height: '42px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--tag-green-bg)', color: 'var(--tag-green-text)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Check size={20} strokeWidth={2.5} />
@@ -288,7 +285,7 @@ export default function DashboardView({ onNavigate }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {pendingTasks.length === 0 && tasks.length > 0 && (
+            {pendingTasks.length === 0 && dashboardTasks.length > 0 && (
               <div style={{
                 padding: '0.65rem 0.85rem',
                 borderRadius: 'var(--radius-sm)',
@@ -310,8 +307,8 @@ export default function DashboardView({ onNavigate }) {
               const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
               const isGloballyDone = Boolean(task.isCompleted);
               const deadlineFormatted = formatDateIndo(task.deadline, { withDay: false, monthFormat: 'short' });
-              const daysLeft = getDaysUntil(task.deadline);
-              const isUrgent = daysLeft === 'Hari ini' || daysLeft === 'Besok';
+              const dlStatus = getDeadlineStatus(task.deadline, { compact: true });
+              const isUrgent = dlStatus.urgency === 'danger' || dlStatus.urgency === 'warning';
 
               return (
                 <div
@@ -349,7 +346,7 @@ export default function DashboardView({ onNavigate }) {
                   <div className="clean-todo-meta">
                     {!isGloballyDone && (
                       <span className={`clean-tag-deadline ${isUrgent && !isDone ? 'urgent' : ''}`}>
-                        {daysLeft || deadlineFormatted}
+                        {dlStatus.label || deadlineFormatted}
                       </span>
                     )}
                   </div>

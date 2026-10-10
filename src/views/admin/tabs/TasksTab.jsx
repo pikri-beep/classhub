@@ -21,7 +21,7 @@ import {
   ConfirmDialog,
   SubjectPicker
 } from '../../../components/admin';
-import { formatCompactDateTime, getDeadlineStatus } from '../../../lib/dateUtils';
+import { formatCompactDateTime, getDeadlineStatus, sortTasksByDeadline } from '../../../lib/dateUtils';
 import {
   formatForDatetimeLocal,
   handleCopyLink,
@@ -79,7 +79,7 @@ export default function TasksTab({
   const completedTasksCount = useMemo(() => tasks.filter(t => t.isCompleted).length, [tasks]);
 
   const filteredTasks = useMemo(() => {
-    return tasks
+    const list = tasks
       .filter(task => {
         const q = taskSearchQuery.toLowerCase().trim();
         const matchesSearch = !q ||
@@ -93,20 +93,9 @@ export default function TasksTab({
         if (taskFilterStatus === 'active') return !task.isCompleted;
         if (taskFilterStatus === 'completed') return Boolean(task.isCompleted);
         return true;
-      })
-      .sort((a, b) => {
-        // 1. Tugas belum selesai di atas, tugas selesai otomatis turun ke bawah
-        if (Boolean(a.isCompleted) !== Boolean(b.isCompleted)) {
-          return a.isCompleted ? 1 : -1;
-        }
-        // 2. Tenggat terdekat didahulukan
-        if (a.deadline && b.deadline) {
-          return new Date(a.deadline) - new Date(b.deadline);
-        }
-        if (a.deadline && !b.deadline) return -1;
-        if (!a.deadline && b.deadline) return 1;
-        return 0;
       });
+
+    return sortTasksByDeadline(list);
   }, [tasks, taskSearchQuery, taskFilterStatus]);
 
   const handleCreateTask = (e) => {

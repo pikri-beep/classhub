@@ -16,14 +16,15 @@ import {
   Clock,
   Edit3,
   CheckCircle2,
-  RotateCcw
+  RotateCcw,
+  Archive
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/Modal';
 import { MaintenanceScreen } from '../components/admin/MaintenanceScreen';
-import { formatDateIndo, formatDateTimeIndo, getDeadlineStatus } from '../lib/dateUtils';
+import { formatDateIndo, formatDateTimeIndo, getDeadlineStatus, sortTasksByDeadline, isTaskArchived } from '../lib/dateUtils';
 import { formatForDatetimeLocal } from './admin/utils/adminHelpers';
 
 export default function AcademicView() {
@@ -95,12 +96,17 @@ export default function AcademicView() {
     let completed = 0;
     let pending = 0;
     let urgent = 0;
+    let archived = 0;
 
     tasks.forEach(task => {
+      const isArchived = isTaskArchived(task);
+      if (isArchived) {
+        archived++;
+      }
       const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
       if (isDone) {
         completed++;
-      } else {
+      } else if (!isArchived) {
         pending++;
         const dl = getDeadlineStatus(task.deadline);
         if (dl.urgency === 'danger' || dl.urgency === 'warning') {
@@ -109,47 +115,43 @@ export default function AcademicView() {
       }
     });
 
-    return { completed, pending, urgent };
+    const activeTotal = Math.max(0, tasks.length - archived);
+    return { completed, pending, urgent, archived, activeTotal };
   }, [tasks, personalDoneTasks]);
 
   // Filtered tasks
   const filteredTasks = useMemo(() => {
-    return tasks
-      .filter(task => {
-        // Search
-        if (searchQuery.trim()) {
-          const q = searchQuery.toLowerCase().trim();
-          const matchTitle = (task.title || '').toLowerCase().includes(q);
-          const matchSubject = (task.subject || '').toLowerCase().includes(q);
-          const matchDesc = (task.description || '').toLowerCase().includes(q);
-          if (!matchTitle && !matchSubject && !matchDesc) return false;
-        }
+    const list = tasks.filter(task => {
+      // Search
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchTitle = (task.title || '').toLowerCase().includes(q);
+        const matchSubject = (task.subject || '').toLowerCase().includes(q);
+        const matchDesc = (task.description || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchSubject && !matchDesc) return false;
+      }
 
-        // Subject
-        if (subjectFilter !== 'all' && task.subject !== subjectFilter) {
-          return false;
-        }
+      // Subject
+      if (subjectFilter !== 'all' && task.subject !== subjectFilter) {
+        return false;
+      }
 
-        const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
-        const dl = getDeadlineStatus(task.deadline);
+      const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
+      const dl = getDeadlineStatus(task.deadline);
+      const isArchived = isTaskArchived(task);
 
-        // Status
-        if (statusFilter === 'pending') return !isDone;
-        if (statusFilter === 'completed') return isDone;
-        if (statusFilter === 'urgent') return !isDone && (dl.urgency === 'danger' || dl.urgency === 'warning');
+      // Status Filter
+      if (statusFilter === 'archived') return isArchived;
+      if (isArchived) return false; // Default: hide archived tasks from regular views
 
-        return true;
-      })
-      .sort((a, b) => {
-        const aDone = Boolean(a.isCompleted) || personalDoneTasks.includes(a.id);
-        const bDone = Boolean(b.isCompleted) || personalDoneTasks.includes(b.id);
-        // Put pending first
-        if (aDone !== bDone) return aDone ? 1 : -1;
-        // Then sort by nearest deadline
-        const aDate = new Date(a.deadline).getTime() || 0;
-        const bDate = new Date(b.deadline).getTime() || 0;
-        return aDate - bDate;
-      });
+      if (statusFilter === 'pending') return !isDone;
+      if (statusFilter === 'completed') return isDone;
+      if (statusFilter === 'urgent') return !isDone && (dl.urgency === 'danger' || dl.urgency === 'warning');
+
+      return true;
+    });
+
+    return sortTasksByDeadline(list, personalDoneTasks);
   }, [tasks, searchQuery, subjectFilter, statusFilter, personalDoneTasks]);
 
   // Filtered exams
@@ -417,7 +419,7 @@ export default function AcademicView() {
                   className={`academic-chip-btn ${statusFilter === 'all' ? 'active' : ''}`}
                 >
                   <span>Semua</span>
-                  <span style={{ opacity: 0.75 }}>({tasks.length})</span>
+                  <span style={{ opacity: 0.75 }}>({taskStats.activeTotal})</span>
                 </button>
                 <button
                   type="button"
@@ -445,8 +447,49 @@ export default function AcademicView() {
                   <span>Selesai</span>
                   <span style={{ opacity: 0.75 }}>({taskStats.completed})</span>
                 </button>
+                {taskStats.archived > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter('archived')}
+                    className={`academic-chip-btn ${statusFilter === 'archived' ? 'active' : ''}`}
+                  >
+                    <Archive size={12} color="var(--text-muted)" />
+                    <span>Arsip</span>
+                    <span style={{ opacity: 0.75 }}>({taskStats.archived})</span>
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Archived Info Banner */}
+            {statusFilter === 'archived' && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '0.5rem',
+                flexWrap: 'wrap',
+                fontSize: '0.82rem',
+                color: 'var(--text-secondary)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <Archive size={14} color="var(--text-muted)" />
+                  <span>{filteredTasks.length} tugas diarsipkan</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('all')}
+                  className="btn btn-ghost btn-xs"
+                  style={{ color: 'var(--primary)', fontWeight: 600 }}
+                >
+                  Kembali
+                </button>
+              </div>
+            )}
 
             {/* Task Items List */}
             {filteredTasks.length === 0 ? (
@@ -531,17 +574,27 @@ export default function AcademicView() {
                           <div className="academic-task-meta">
                             <span className="clean-tag-subject">{task.subject}</span>
 
-                            {/* Clean Status: If admin closed globally, show small subtle green tag. If personal, checkbox is already green! */}
-                            {isGloballyDone ? (
+                            {/* In Archive: only show completion date, remove deadline */}
+                            {statusFilter === 'archived' ? (
                               <span className="notion-tag notion-tag-green" style={{ fontSize: '0.7rem' }}>
-                                Tugas Selesai
+                                <Check size={11} style={{ marginRight: '0.2rem' }} />
+                                <span>Selesai: {formatDateIndo(task.completedAt || task.deadline, { withDay: false, monthFormat: 'short' })}</span>
                               </span>
-                            ) : !isDone ? (
-                              <span className={`clean-tag-deadline ${dlStatus.urgency === 'danger' || dlStatus.urgency === 'warning' ? 'urgent' : ''}`}>
-                                <Clock size={11} style={{ marginRight: '0.2rem' }} />
-                                <span>{dlStatus.label} • {dateStr}</span>
-                              </span>
-                            ) : null}
+                            ) : (
+                              <>
+                                {/* Clean Status: If admin closed globally, show small subtle green tag. If personal, checkbox is already green! */}
+                                {isGloballyDone ? (
+                                  <span className="notion-tag notion-tag-green" style={{ fontSize: '0.7rem' }}>
+                                    Tugas Selesai
+                                  </span>
+                                ) : !isDone ? (
+                                  <span className={`clean-tag-deadline ${dlStatus.urgency === 'danger' || dlStatus.urgency === 'warning' ? 'urgent' : ''}`}>
+                                    <Clock size={11} style={{ marginRight: '0.2rem' }} />
+                                    <span>{dlStatus.label} • {dateStr}</span>
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -591,7 +644,19 @@ export default function AcademicView() {
                       {/* Progressive Disclosure Body */}
                       {isExpanded && (
                         <div className="academic-task-details">
-                          {isGloballyDone && (
+                          {statusFilter === 'archived' ? (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.4rem',
+                              fontSize: '0.78rem',
+                              color: 'var(--success)',
+                              fontWeight: 500
+                            }}>
+                              <CheckCircle2 size={14} />
+                              <span>Selesai: {formatDateIndo(task.completedAt || task.deadline, { withDay: true, monthFormat: 'long' })}</span>
+                            </div>
+                          ) : isGloballyDone ? (
                             <div style={{
                               display: 'flex',
                               alignItems: 'center',
@@ -603,7 +668,7 @@ export default function AcademicView() {
                               <CheckCircle2 size={14} />
                               <span>Tugas ini telah selesai.</span>
                             </div>
-                          )}
+                          ) : null}
 
                           {task.description ? (
                             <p className="academic-task-desc-text">{task.description}</p>
@@ -649,6 +714,36 @@ export default function AcademicView() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Archived Tasks Notice Footer */}
+            {taskStats.archived > 0 && statusFilter !== 'archived' && (
+              <div style={{
+                padding: '0.85rem 1rem',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px dashed var(--border)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '0.5rem',
+                flexWrap: 'wrap',
+                fontSize: '0.8rem',
+                color: 'var(--text-muted)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                  <Archive size={14} />
+                  <span>{taskStats.archived} tugas diarsipkan</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('archived')}
+                  className="btn btn-ghost btn-xs"
+                  style={{ color: 'var(--primary)', fontWeight: 600 }}
+                >
+                  Lihat Arsip
+                </button>
               </div>
             )}
           </div>

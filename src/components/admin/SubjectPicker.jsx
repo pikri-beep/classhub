@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Edit3, List, Check } from 'lucide-react';
+import { Edit3, List } from 'lucide-react';
 import { useStore } from '../../context/StoreContext';
 import { getSubjectTagClass } from '../../lib/subjectColors';
 
@@ -78,22 +78,6 @@ export default function SubjectPicker({
     }
   }, [value, isValueInStandard]);
 
-  // Frequently used quick chips (top relevant subjects)
-  const quickSubjects = useMemo(() => {
-    const priority = [
-      'Pemrograman Web',
-      'Basis Data',
-      'Pemrograman Berbasis Teks dan Multimedia',
-      'Matematika',
-      'Bahasa Inggris',
-      'Bahasa Indonesia',
-      'KIK (Kreativitas, Inovasi, dan Kewirausahaan)',
-      'IOT'
-    ];
-    const matched = priority.filter(p => standardSubjects.some(s => s.toLowerCase() === p.toLowerCase()));
-    return matched.length > 0 ? matched : standardSubjects.slice(0, 7);
-  }, [standardSubjects]);
-
   const handleSelectChange = (e) => {
     const val = e.target.value;
     if (val === '__custom__') {
@@ -103,11 +87,6 @@ export default function SubjectPicker({
       setIsCustomMode(false);
       onChange(val);
     }
-  };
-
-  const handleQuickPick = (subjectName) => {
-    setIsCustomMode(false);
-    onChange(subjectName);
   };
 
   return (
@@ -186,53 +165,14 @@ export default function SubjectPicker({
         </button>
       </div>
 
-      {/* Quick Chips & Preview */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.35rem' }}>
-          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-            Pilihan Cepat:
+      {value && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.15rem' }}>
+          <span style={{ fontSize: 'var(--text-xs, 0.75rem)', color: 'var(--text-muted)' }}>Tag:</span>
+          <span className={`notion-tag ${getSubjectTagClass(value)}`} style={{ fontSize: 'var(--text-xs, 0.75rem)', fontWeight: 600 }}>
+            {value}
           </span>
-          {value && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-              <span style={{ fontSize: 'var(--text-xs, 0.75rem)', color: 'var(--text-muted)' }}>Tag Preview:</span>
-              <span className={`notion-tag ${getSubjectTagClass(value)}`} style={{ fontSize: 'var(--text-xs, 0.75rem)', fontWeight: 600 }}>
-                {value}
-              </span>
-            </div>
-          )}
         </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem' }}>
-          {quickSubjects.map(sub => {
-            const isSelected = value.trim().toLowerCase() === sub.toLowerCase();
-            return (
-              <button
-                key={sub}
-                type="button"
-                onClick={() => handleQuickPick(sub)}
-                className={`btn btn-xs ${isSelected ? 'btn-primary' : 'btn-ghost'}`}
-                style={{
-                  fontSize: '0.74rem',
-                  padding: '0.2rem 0.55rem',
-                  borderRadius: 'var(--radius-full)',
-                  border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-subtle)',
-                  backgroundColor: isSelected ? 'var(--hover-bg, rgba(16, 185, 129, 0.15))' : 'var(--bg-surface)',
-                  color: isSelected ? 'var(--primary)' : 'var(--text-secondary)',
-                  fontWeight: isSelected ? 600 : 500,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {isSelected && <Check size={11} strokeWidth={3} />}
-                <span>{sub}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

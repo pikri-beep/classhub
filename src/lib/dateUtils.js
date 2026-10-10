@@ -182,7 +182,7 @@ export const getDeadlineStatus = (dateStr, options = {}) => {
  * Checks if a task is older than thresholdDays beyond its deadline.
  * If true, it qualifies for Auto-Archive.
  */
-export const isTaskArchived = (task, thresholdDays = 14) => {
+export const isTaskArchived = (task, thresholdDays = 7) => {
   if (!task || !task.deadline) return false;
   let target;
   if (typeof task.deadline === 'string' && task.deadline.includes('-')) {

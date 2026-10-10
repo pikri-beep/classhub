@@ -44,7 +44,7 @@ export default function DashboardView({ onNavigate }) {
   const allTasks = data.tasks || [];
   const dashboardTasks = allTasks.filter(t => !isTaskArchived(t));
   const pendingTasks = dashboardTasks.filter(t => !t.isCompleted && !personalDoneTasks.includes(t.id));
-  const sortedTasks = sortTasksByDeadline(dashboardTasks, personalDoneTasks);
+  const sortedTasks = sortTasksByDeadline(pendingTasks, personalDoneTasks);
 
   // Toggle task completion (personal to this device)
   const handleToggleTask = (task, e) => {
@@ -58,7 +58,7 @@ export default function DashboardView({ onNavigate }) {
       togglePersonalTask(task.id);
     }
     if (!isDone) {
-      showToast('Tugas selesai di perangkatmu! Kerja bagus 🎉', 'success');
+      showToast('Tugas selesai & dipindahkan ke arsip! 🎉', 'success');
       if (pendingTasks.length <= 1) {
         confetti({
           particleCount: 90,
@@ -67,7 +67,7 @@ export default function DashboardView({ onNavigate }) {
         });
       }
     } else {
-      showToast('Tugas ditandai belum selesai di perangkat ini', 'info');
+      showToast('Tugas dikembalikan ke daftar aktif', 'info');
     }
   };
 

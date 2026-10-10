@@ -93,20 +93,18 @@ export default function AcademicView() {
 
   // Personal task calculation
   const taskStats = useMemo(() => {
-    let completed = 0;
     let pending = 0;
     let urgent = 0;
     let archived = 0;
 
     tasks.forEach(task => {
-      const isArchived = isTaskArchived(task);
+      const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
+      const isOverdueArchived = isTaskArchived(task);
+      const isArchived = isDone || isOverdueArchived;
+
       if (isArchived) {
         archived++;
-      }
-      const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
-      if (isDone) {
-        completed++;
-      } else if (!isArchived) {
+      } else {
         pending++;
         const dl = getDeadlineStatus(task.deadline);
         if (dl.urgency === 'danger' || dl.urgency === 'warning') {
@@ -115,8 +113,7 @@ export default function AcademicView() {
       }
     });
 
-    const activeTotal = Math.max(0, tasks.length - archived);
-    return { completed, pending, urgent, archived, activeTotal };
+    return { pending, urgent, archived, activeTotal: pending };
   }, [tasks, personalDoneTasks]);
 
   // Filtered tasks
@@ -137,16 +134,17 @@ export default function AcademicView() {
       }
 
       const isDone = Boolean(task.isCompleted) || personalDoneTasks.includes(task.id);
-      const dl = getDeadlineStatus(task.deadline);
-      const isArchived = isTaskArchived(task);
+      const isOverdueArchived = isTaskArchived(task);
+      const isArchived = isDone || isOverdueArchived;
 
-      // Status Filter
+      // Status Filter: when archived, show all completed or overdue-archived tasks
       if (statusFilter === 'archived') return isArchived;
-      if (isArchived) return false; // Default: hide archived tasks from regular views
 
-      if (statusFilter === 'pending') return !isDone;
-      if (statusFilter === 'completed') return isDone;
-      if (statusFilter === 'urgent') return !isDone && (dl.urgency === 'danger' || dl.urgency === 'warning');
+      // In active views, hide all archived/completed tasks
+      if (isArchived) return false;
+
+      const dl = getDeadlineStatus(task.deadline);
+      if (statusFilter === 'urgent') return dl.urgency === 'danger' || dl.urgency === 'warning';
 
       return true;
     });
@@ -186,9 +184,9 @@ export default function AcademicView() {
       togglePersonalTask(task.id);
       const isNowDone = !personalDoneTasks.includes(task.id) && !task.isCompleted;
       if (isNowDone) {
-        showToast('Tugas ditandai selesai! 🎉', 'success');
+        showToast('Tugas selesai & dipindahkan ke arsip! 🎉', 'success');
       } else {
-        showToast('Tugas ditandai belum selesai', 'info');
+        showToast('Tugas dikembalikan ke daftar aktif', 'info');
       }
     }
   };
@@ -419,14 +417,6 @@ export default function AcademicView() {
                   className={`academic-chip-btn ${statusFilter === 'all' ? 'active' : ''}`}
                 >
                   <span>Semua</span>
-                  <span style={{ opacity: 0.75 }}>({taskStats.activeTotal})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStatusFilter('pending')}
-                  className={`academic-chip-btn ${statusFilter === 'pending' ? 'active' : ''}`}
-                >
-                  <span>Belum Selesai</span>
                   <span style={{ opacity: 0.75 }}>({taskStats.pending})</span>
                 </button>
                 <button
@@ -440,24 +430,13 @@ export default function AcademicView() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStatusFilter('completed')}
-                  className={`academic-chip-btn ${statusFilter === 'completed' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('archived')}
+                  className={`academic-chip-btn ${statusFilter === 'archived' ? 'active' : ''}`}
                 >
-                  <Check size={12} color="var(--success)" />
-                  <span>Selesai</span>
-                  <span style={{ opacity: 0.75 }}>({taskStats.completed})</span>
+                  <Archive size={12} color="var(--text-muted)" />
+                  <span>Arsip</span>
+                  <span style={{ opacity: 0.75 }}>({taskStats.archived})</span>
                 </button>
-                {taskStats.archived > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setStatusFilter('archived')}
-                    className={`academic-chip-btn ${statusFilter === 'archived' ? 'active' : ''}`}
-                  >
-                    <Archive size={12} color="var(--text-muted)" />
-                    <span>Arsip</span>
-                    <span style={{ opacity: 0.75 }}>({taskStats.archived})</span>
-                  </button>
-                )}
               </div>
             </div>
 

@@ -8,6 +8,7 @@ import StudentHeader from './components/StudentHeader';
 import Header from './components/Header';
 import Modal from './components/Modal';
 import { InstallBanner } from './components/InstallBanner';
+import PwaUpdatePrompt from './components/pwa/PwaUpdatePrompt';
 import WhatsAppShareModal from './components/WhatsAppShareModal';
 
 import DashboardView from './views/DashboardView';
@@ -17,14 +18,22 @@ import CashStudentView from './views/CashStudentView';
 import ClassView from './views/ClassView';
 import AdminDashboardView from './views/AdminDashboardView';
 import BottomDock from './components/BottomDock';
-import { Eye, ArrowRight, ShieldCheck, LogOut } from 'lucide-react';
+import { MaintenanceScreen } from './components/admin/MaintenanceScreen';
+import { Eye, ArrowRight, ShieldCheck, LogOut, ShieldAlert } from 'lucide-react';
+import { useWhatsAppAutoScheduler } from './hooks/useWhatsAppAutoScheduler';
 
 export default function App() {
+  // Activate automatic WhatsApp brief scheduler
+  useWhatsAppAutoScheduler();
+
   const { 
     currentUser, 
     isAdmin, 
+    isEffectiveAdmin,
     previewAsStudent, 
     setPreviewAsStudent, 
+    adminPreviewBypass,
+    setAdminPreviewBypass,
     loginAsAdmin,
     logout 
   } = useAuth();
@@ -174,17 +183,42 @@ export default function App() {
           zIndex: 100,
           backgroundColor: 'var(--primary)',
           color: '#ffffff',
-          padding: '0.5rem 1.25rem',
+          padding: '0.45rem 1.25rem',
           fontSize: '0.82rem',
           fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Eye size={16} />
-            <span>Mode Pratinjau Siswa (Akun Admin Sedang Aktif)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <Eye size={16} />
+              <span>Pratinjau Siswa</span>
+            </div>
+            {/* Toggle Bypass Button */}
+            <button
+              type="button"
+              onClick={() => setAdminPreviewBypass(!adminPreviewBypass)}
+              style={{
+                backgroundColor: adminPreviewBypass ? 'rgba(234, 179, 8, 0.95)' : 'rgba(255, 255, 255, 0.25)',
+                color: adminPreviewBypass ? '#78350F' : '#ffffff',
+                border: 'none',
+                padding: '0.15rem 0.55rem',
+                borderRadius: 'var(--radius-full)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem'
+              }}
+              title="Klik untuk beralih antara melihat simulasi layar kunci siswa atau membuka bypass isi modul"
+            >
+              {adminPreviewBypass ? '🔓 Bypass Admin Aktif' : '🔒 Simulasi Kunci Siswa'}
+            </button>
           </div>
           <button
             onClick={() => setPreviewAsStudent(false)}
@@ -200,7 +234,7 @@ export default function App() {
               cursor: 'pointer'
             }}
           >
-            <span>Kembali ke Admin Dashboard</span>
+            <span>Kembali ke Admin</span>
             <ArrowRight size={13} style={{ marginLeft: '0.25rem' }} />
           </button>
         </div>
@@ -214,6 +248,7 @@ export default function App() {
       />
 
       <InstallBanner />
+      <PwaUpdatePrompt />
 
       {/* Main Companion Canvas */}
       <main 
@@ -227,13 +262,86 @@ export default function App() {
           boxSizing: 'border-box'
         }}
       >
+        {/* Admin Bypass Notice Banner on disabled pages */}
+        {isEffectiveAdmin && (() => {
+          const pageAccess = data?.pageAccess || {};
+          let disabledInfo = null;
+          if (activeStudentView === 'cash' && !pageAccess.cash?.isEnabled) {
+            disabledInfo = { name: 'Kas & Keuangan Kelas', reason: pageAccess.cash?.reason };
+          } else if (activeStudentView === 'schedule' && !pageAccess.schedules?.isEnabled) {
+            disabledInfo = { name: 'Jadwal Pelajaran & Piket', reason: pageAccess.schedules?.reason };
+          } else if (activeStudentView === 'academic' && (!pageAccess.tasks?.isEnabled && !pageAccess.exams?.isEnabled)) {
+            disabledInfo = { name: 'Akademik (Tugas & Ujian)', reason: pageAccess.tasks?.reason || pageAccess.exams?.reason };
+          }
+
+          if (!disabledInfo) return null;
+
+          return (
+            <div style={{
+              backgroundColor: 'rgba(234, 179, 8, 0.12)',
+              border: '1px solid rgba(234, 179, 8, 0.45)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.75rem 1rem',
+              marginBottom: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.65rem',
+              fontSize: '0.82rem',
+              color: '#854D0E',
+              lineHeight: 1.45
+            }}>
+              <ShieldAlert size={18} style={{ flexShrink: 0, color: '#D97706' }} />
+              <div>
+                <strong>Akses Bypass Admin:</strong> Halaman <strong>{disabledInfo.name}</strong> sedang dinonaktifkan untuk siswa.
+                {disabledInfo.reason && <span> Alasan: <em>"{disabledInfo.reason}"</em>.</span>} Siswa melihat layar pemeliharaan, sementara Anda tetap memiliki akses penuh untuk meninjau dan memperbarui data.
+              </div>
+            </div>
+          );
+        })()}
+
         {activeStudentView === 'dashboard' && (
           <DashboardView onNavigate={(view) => setActiveStudentView(view)} />
         )}
-        {activeStudentView === 'schedule' && <ScheduleView />}
-        {activeStudentView === 'academic' && <AcademicView />}
-        {activeStudentView === 'cash' && <CashStudentView />}
-        {activeStudentView === 'class' && <ClassView />}
+
+        {activeStudentView === 'schedule' && (
+          !data?.pageAccess?.schedules?.isEnabled && !isEffectiveAdmin ? (
+            <MaintenanceScreen
+              pageName="Jadwal Pelajaran & Piket"
+              reason={data?.pageAccess?.schedules?.reason}
+              onBackHome={() => setActiveStudentView('dashboard')}
+            />
+          ) : (
+            <ScheduleView />
+          )
+        )}
+
+        {activeStudentView === 'academic' && (
+          (!data?.pageAccess?.tasks?.isEnabled && !data?.pageAccess?.exams?.isEnabled && !isEffectiveAdmin) ? (
+            <MaintenanceScreen
+              pageName="Akademik & Tugas Kelas"
+              reason={data?.pageAccess?.tasks?.reason || data?.pageAccess?.exams?.reason}
+              onBackHome={() => setActiveStudentView('dashboard')}
+            />
+          ) : (
+            <AcademicView />
+          )
+        )}
+
+        {activeStudentView === 'cash' && (
+          !data?.pageAccess?.cash?.isEnabled && !isEffectiveAdmin ? (
+            <MaintenanceScreen
+              pageName="Kas & Keuangan Kelas"
+              reason={data?.pageAccess?.cash?.reason}
+              onBackHome={() => setActiveStudentView('dashboard')}
+            />
+          ) : (
+            <CashStudentView />
+          )
+        )}
+
+        {activeStudentView === 'class' && (
+          <ClassView onNavigate={(view) => setActiveStudentView(view)} />
+        )}
       </main>
 
       {/* Discreet Minimalist Footer */}

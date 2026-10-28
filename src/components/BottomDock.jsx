@@ -8,9 +8,7 @@ export default function BottomDock({ activeView, onViewChange }) {
   const { currentUser } = useAuth();
 
   // Count unfinished tasks for badge (personal to current device/browser)
-  const pendingTasksCount = (data?.tasks || []).filter(task => {
-    return !personalDoneTasks.includes(task.id);
-  }).length;
+  const pendingTasksCount = (data?.tasks || []).filter(task => !task.isCompleted && !personalDoneTasks.includes(task.id)).length;
 
   const dockItems = [
     { id: 'dashboard', label: 'Hari Ini', icon: Sparkles },

@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
-import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp } from 'lucide-react';
+import { Megaphone, Users, Plus, Pin, PinOff, Trash2, Settings, Upload, Image as ImageIcon, Camera, ChevronDown, ChevronUp, ShieldAlert, Dices } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import { useToast } from '../context/ToastContext';
 import { processImageFile } from '../lib/imageUtils';
 import Modal from '../components/Modal';
+import MaintenanceScreen from '../components/admin/MaintenanceScreen';
+import SpinningWheel from '../components/classroom/SpinningWheel';
+import GroupMaker from '../components/classroom/GroupMaker';
 
-export default function ClassView() {
-  const { currentUser, isAdmin } = useAuth();
+export default function ClassView({ onNavigate }) {
+  const { currentUser, isAdmin, isEffectiveAdmin } = useAuth();
   const { data, addAnnouncement, togglePinAnnouncement, deleteAnnouncement, updateClassInfo } = useStore();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('announcements');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || 'announcements';
+  });
+  const [activeTool, setActiveTool] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tool') || 'wheel';
+  });
   const [currentCategory, setCurrentCategory] = useState('all');
   const [annSearch, setAnnSearch] = useState('');
   const [memberSearch, setMemberSearch] = useState('');
@@ -217,6 +227,19 @@ export default function ClassView() {
           >
             <Megaphone size={14} />
             <span>Pengumuman ({announcements.length})</span>
+            {data?.pageAccess?.announcements?.isEnabled === false && (
+              <span style={{
+                fontSize: '0.65rem',
+                padding: '0.1rem 0.4rem',
+                borderRadius: 'var(--radius-full)',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                color: 'var(--danger)',
+                fontWeight: 700,
+                marginLeft: '0.35rem'
+              }}>
+                Nonaktif
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('members')}
@@ -225,9 +248,16 @@ export default function ClassView() {
             <Users size={14} />
             <span>Teman Sekelas ({members.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab('tools')}
+            className={`clean-filter-chip ${activeTab === 'tools' ? 'active' : ''}`}
+          >
+            <Dices size={14} />
+            <span>Alat Kelas</span>
+          </button>
         </div>
 
-        {activeTab === 'announcements' && isAdmin && (
+        {activeTab === 'announcements' && isEffectiveAdmin && (
           <button onClick={() => setIsAddAnnOpen(true)} className="btn btn-primary btn-sm">
             <Plus size={15} />
             <span>+ Buat Pengumuman</span>
@@ -237,8 +267,37 @@ export default function ClassView() {
 
       {/* 3. ANNOUNCEMENTS CONTENT */}
       {activeTab === 'announcements' && (
-        <div>
-          {/* Category Pills & Search */}
+        !data?.pageAccess?.announcements?.isEnabled && !isEffectiveAdmin ? (
+          <MaintenanceScreen
+            pageName="Papan Pengumuman"
+            reason={data?.pageAccess?.announcements?.reason}
+            onBackHome={() => onNavigate ? onNavigate('dashboard') : setActiveTab('members')}
+          />
+        ) : (
+          <div>
+            {/* Admin Bypass Warning Banner */}
+            {isEffectiveAdmin && data?.pageAccess?.announcements?.isEnabled === false && (
+              <div style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                border: '1px solid rgba(234, 179, 8, 0.45)',
+                borderRadius: 'var(--radius-md)',
+                padding: '0.75rem 1rem',
+                marginBottom: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                fontSize: '0.82rem',
+                color: '#854D0E',
+                lineHeight: 1.45
+              }}>
+                <ShieldAlert size={18} style={{ flexShrink: 0, color: '#D97706' }} />
+                <div>
+                  <strong>Bypass Admin:</strong> Modul <strong>Papan Pengumuman</strong> sedang dinonaktifkan untuk siswa {data?.pageAccess?.announcements?.reason ? `(Alasan: "${data.pageAccess.announcements.reason}")` : ''}. Siswa melihat layar pemeliharaan, sementara Anda tetap memiliki akses penuh.
+                </div>
+              </div>
+            )}
+
+            {/* Category Pills & Search */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -401,6 +460,7 @@ export default function ClassView() {
             </div>
           )}
         </div>
+        )
       )}
 
       {/* 4. CLASSMATES ROSTER */}
@@ -476,6 +536,56 @@ export default function ClassView() {
                 );
               })}
             </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. CLASSROOM UTILITIES / TOOLS */}
+      {activeTab === 'tools' && (
+        <div style={{ marginTop: '0.25rem' }}>
+          {/* Sub-tool Selector Bar */}
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.3rem',
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
+            marginBottom: '1.25rem'
+          }}>
+            <button
+              type="button"
+              onClick={() => setActiveTool('wheel')}
+              className={`btn btn-sm ${activeTool === 'wheel' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: activeTool === 'wheel' ? 700 : 500,
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.4rem 0.85rem'
+              }}
+            >
+              🎡 Roda Acak Siswa
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTool('groups')}
+              className={`btn btn-sm ${activeTool === 'groups' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: activeTool === 'groups' ? 700 : 500,
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.4rem 0.85rem'
+              }}
+            >
+              👥 Pembagi Kelompok
+            </button>
+          </div>
+
+          {activeTool === 'wheel' ? (
+            <SpinningWheel members={members} />
+          ) : (
+            <GroupMaker members={members} isAdmin={isEffectiveAdmin} />
           )}
         </div>
       )}

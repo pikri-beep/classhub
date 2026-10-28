@@ -40,18 +40,23 @@ const generateAdminToken = (pin) => {
 export function AuthProvider({ children }) {
   const { data } = useStore();
   const currentAdminPin = (data?.classInfo?.adminPin || 'admin123').trim();
+  const currentMasterPin = (data?.classInfo?.masterPin || 'master123').trim();
   
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     try {
       const storedToken = localStorage.getItem(ADMIN_AUTH_KEY);
-      const expectedToken = generateAdminToken(currentAdminPin);
-      return Boolean(storedToken && storedToken === expectedToken);
+      const validTokens = [
+        generateAdminToken(currentAdminPin),
+        generateAdminToken(currentMasterPin)
+      ];
+      return Boolean(storedToken && validTokens.includes(storedToken));
     } catch (e) {
       return false;
     }
   });
 
   const [previewAsStudent, setPreviewAsStudent] = useState(false);
+  const [adminPreviewBypass, setAdminPreviewBypass] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(0);
 
@@ -59,17 +64,22 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     try {
       const storedToken = localStorage.getItem(ADMIN_AUTH_KEY);
-      const expectedToken = generateAdminToken(currentAdminPin);
+      const validTokens = [
+        generateAdminToken(currentAdminPin),
+        generateAdminToken(currentMasterPin)
+      ];
       if (isAdminLoggedIn) {
-        localStorage.setItem(ADMIN_AUTH_KEY, expectedToken);
-      } else if (storedToken && storedToken !== expectedToken) {
+        if (!validTokens.includes(storedToken)) {
+          localStorage.setItem(ADMIN_AUTH_KEY, generateAdminToken(currentAdminPin));
+        }
+      } else if (storedToken && !validTokens.includes(storedToken)) {
         // Invalidate stale or forged tokens
         localStorage.removeItem(ADMIN_AUTH_KEY);
       }
     } catch (e) {
       console.error('Failed to sync admin auth', e);
     }
-  }, [isAdminLoggedIn, currentAdminPin]);
+  }, [isAdminLoggedIn, currentAdminPin, currentMasterPin]);
 
   const loginAsAdmin = (pin) => {
     // Check brute force lockout
@@ -82,9 +92,9 @@ export function AuthProvider({ children }) {
     }
 
     const inputPin = (pin || '').trim();
-    const validPin = currentAdminPin;
+    const isMatch = inputPin === currentAdminPin || inputPin === currentMasterPin;
     
-    if (inputPin !== validPin) {
+    if (!isMatch) {
       const nextAttempts = failedAttempts + 1;
       setFailedAttempts(nextAttempts);
       if (nextAttempts >= 5) {
@@ -98,14 +108,14 @@ export function AuthProvider({ children }) {
       }
       return { 
         success: false, 
-        message: `PIN Pengurus salah! Sisa kesempatan: ${5 - nextAttempts}x` 
+        message: `PIN salah! Sisa kesempatan: ${5 - nextAttempts}x` 
       };
     }
 
     // Success: reset rate limit & issue verified token
     setFailedAttempts(0);
     setLockoutUntil(0);
-    const token = generateAdminToken(validPin);
+    const token = generateAdminToken(inputPin);
     try {
       localStorage.setItem(ADMIN_AUTH_KEY, token);
     } catch (e) {}
@@ -118,6 +128,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setIsAdminLoggedIn(false);
     setPreviewAsStudent(false);
+    setAdminPreviewBypass(false);
     try {
       localStorage.removeItem(ADMIN_AUTH_KEY);
       if (window.location.hash && window.location.hash.toLowerCase().includes('admin')) {
@@ -129,14 +140,18 @@ export function AuthProvider({ children }) {
   const currentUser = isAdminLoggedIn ? ADMIN_USER : PUBLIC_CLASS_USER;
   const isAuthenticated = true;
   const isAdmin = isAdminLoggedIn;
+  const isEffectiveAdmin = isAdmin && (!previewAsStudent || adminPreviewBypass);
 
   return (
     <AuthContext.Provider value={{
       currentUser,
       isAuthenticated,
       isAdmin,
+      isEffectiveAdmin,
       previewAsStudent,
       setPreviewAsStudent,
+      adminPreviewBypass,
+      setAdminPreviewBypass,
       loginAsAdmin,
       logout
     }}>

@@ -165,7 +165,7 @@ export default function ScheduleView() {
             className={`clean-filter-chip ${activeSubTab === 'piket-mbg' ? 'active' : ''}`}
           >
             <Utensils size={14} />
-            <span>PIKET MBG</span>
+            <span>Piket MBG</span>
           </button>
         </div>
       </div>

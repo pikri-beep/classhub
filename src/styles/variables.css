@@ -1,0 +1,124 @@
+/* ==========================================================================
+   CLASSHUB DESIGN SYSTEM - WARM MINIMALIST & NOTION WORKSPACE PALETTE
+   Ultra-Readable, Calming, 100% Responsive for Mobile & Desktop
+   ========================================================================== */
+
+:root {
+  /* Light Mode (Warm Minimalist Canvas) */
+  --bg: #FAFAF9;
+  --bg-surface: #FFFFFF;
+  --bg-sidebar: #F5F5F4;
+  --bg-hover: #EFEFED;
+  --bg-active: #E7E5E4;
+  --callout-bg: #F5F5F4;
+
+  --border: #E7E5E4;
+  --border-subtle: #F5F5F4;
+  --border-focus: #D6D3D1;
+
+  /* Typography */
+  --text-primary: #1C1917;
+  --text-secondary: #57534E;
+  --text-muted: #78716C;
+
+  /* Accent - Cyber Amber & Tech Gold (XI PPLG Identity) */
+  --primary: #D97706;
+  --primary-hover: #B45309;
+  --primary-soft: rgba(245, 158, 11, 0.10);
+  --primary-border: rgba(217, 119, 6, 0.28);
+
+  /* Notion Muted Pastel Tags */
+  --tag-green-bg: #EDF3EC;
+  --tag-green-text: #2E7C57;
+  --tag-blue-bg: #F1F5F9;
+  --tag-blue-text: #475569;
+  --tag-orange-bg: #FBEDD6;
+  --tag-orange-text: #C27429;
+  --tag-red-bg: #FDEBEC;
+  --tag-red-text: #C4554D;
+  --tag-purple-bg: #F6F3F9;
+  --tag-purple-text: #6940A5;
+  --tag-gray-bg: #F1F1EF;
+  --tag-gray-text: #5A5A58;
+
+  /* Kas Zebra Striping Palette (Putih & Oren Ultra-Soft) */
+  --zebra-kas-even: #FFFFFF;
+  --zebra-kas-odd: #FFF9F2;
+  --zebra-kas-hover: #FFF2E2;
+
+  --success: #2E7C57;
+  --danger: #C4554D;
+  --warning: #C27429;
+
+  /* Shadows (Flat & Diffused) */
+  --shadow-sm: 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 2px 6px rgba(28, 25, 23, 0.06);
+  --shadow-lg: 0 8px 24px rgba(28, 25, 23, 0.09);
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.25s ease;
+
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 68px;
+  --header-height: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bottom-nav-height: calc(56px + var(--safe-bottom));
+}
+
+[data-theme="dark"] {
+  --bg: #121214;
+  --bg-surface: #1A1A1E;
+  --bg-sidebar: #161619;
+  --bg-hover: #222226;
+  --bg-active: #2A2A30;
+  --callout-bg: #1E1E24;
+
+  --border: #2A2A30;
+  --border-subtle: #202024;
+  --border-focus: #3E3E46;
+
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+
+  /* Accent - Electric Gold & Vibrant Amber (XI PPLG Identity) */
+  --primary: #F59E0B;
+  --primary-hover: #FBBF24;
+  --primary-soft: rgba(245, 158, 11, 0.16);
+  --primary-border: rgba(245, 158, 11, 0.35);
+
+  --tag-green-bg: rgba(46, 124, 87, 0.25);
+  --tag-green-text: #6BC99C;
+  --tag-blue-bg: rgba(148, 163, 184, 0.16);
+  --tag-blue-text: #CBD5E1;
+  --tag-orange-bg: rgba(194, 116, 41, 0.25);
+  --tag-orange-text: #F7B36C;
+  --tag-red-bg: rgba(196, 85, 77, 0.25);
+  --tag-red-text: #F08C85;
+  --tag-purple-bg: rgba(105, 64, 165, 0.25);
+  --tag-purple-text: #B994F7;
+  --tag-gray-bg: rgba(120, 119, 116, 0.25);
+  --tag-gray-text: #BDBDBD;
+
+  /* Kas Zebra Striping Palette Dark Mode */
+  --zebra-kas-even: #19191D;
+  --zebra-kas-odd: rgba(245, 158, 11, 0.035);
+  --zebra-kas-hover: rgba(245, 158, 11, 0.08);
+
+  --success: #6BC99C;
+  --danger: #F08C85;
+  --warning: #F7B36C;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}

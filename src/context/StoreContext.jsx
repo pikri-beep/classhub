@@ -4,6 +4,23 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 const STORAGE_KEY = 'classhub_data_v2';
 const PERSONAL_TASKS_KEY = 'classhub_personal_done_tasks_v2';
 
+export const TASK_AUTO_DELETE_DAYS = 7;
+export const TASK_AUTO_DELETE_MS = TASK_AUTO_DELETE_DAYS * 24 * 60 * 60 * 1000;
+
+export const purgeExpiredCompletedTasks = (tasksList = []) => {
+  if (!Array.isArray(tasksList)) return [];
+  const now = Date.now();
+  return tasksList.filter(task => {
+    if (task && task.isCompleted && task.completedAt) {
+      const completedTime = new Date(task.completedAt).getTime();
+      if (!isNaN(completedTime) && (now - completedTime) > TASK_AUTO_DELETE_MS) {
+        return false; // auto hapus setelah 1 minggu (7 hari)
+      }
+    }
+    return true;
+  });
+};
+
 const DEFAULT_SEED_DATA = {
   classInfo: {
     name: 'XI PPLG',
@@ -12,6 +29,7 @@ const DEFAULT_SEED_DATA = {
     homeroomTeacher: '',
     totalStudents: 35,
     adminPin: 'admin123',
+    masterPin: 'master123',
     appName: 'ClassHub',
     logoUrl: '/pwa-512x512.png',
     waGreeting: "Assalamu'alaikum & selamat malam rekan-rekan! 👋",
@@ -21,7 +39,20 @@ const DEFAULT_SEED_DATA = {
     waIncludeSchedule: true,
     waIncludeTasks: true,
     waIncludePiket: true,
-    waIncludeExams: true
+    waIncludeExams: true,
+    // WhatsApp Gateway & Group Automation
+    waGatewayEnabled: false,
+    waProvider: 'fonnte', // 'fonnte' | 'wablas' | 'webhook'
+    waApiToken: '',
+    waTargetGroup: '',
+    waCustomEndpoint: '',
+    waAutoSendSchedule: false,
+    waAutoSendTime: '19:00',
+    waAutoSendDays: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis'],
+    waLastAutoSentDate: '',
+    waLastAutoSentTime: '',
+    waLastAutoSentStatus: '',
+    waLastAutoSentMessage: ''
   },
   members: [
     { id: 'std-1', absentNo: 1, name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', avatarText: 'AF', phone: '' },
@@ -97,8 +128,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-09-28T23:59:00',
       description: 'Implementasikan form handling dan endpoint API. Unggah link repositori GitHub ke form pengumpulan.',
       link: 'https://classroom.google.com',
-      completedStudentIds: ['std-12', 'std-14', 'std-26', 'std-28', 'std-32', 'std-33'],
-      inProgressStudentIds: ['std-11', 'std-1']
+      isCompleted: false,
+      completedAt: null
     },
     {
       id: 'tsk-2',
@@ -107,8 +138,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-09-30T15:00:00',
       description: 'Buat diagram ERD dan query DDL (CREATE TABLE) beserta relasi foreign key untuk sistem akademik.',
       link: '',
-      completedStudentIds: ['std-33', 'std-11', 'std-12'],
-      inProgressStudentIds: ['std-14', 'std-26']
+      isCompleted: false,
+      completedAt: null
     },
     {
       id: 'tsk-3',
@@ -117,8 +148,8 @@ const DEFAULT_SEED_DATA = {
       deadline: '2026-10-02T15:30:00',
       description: 'Rancang modul antarmuka interaktif dan integrasikan elemen multimedia sesuai spesifikasi tugas.',
       link: '',
-      completedStudentIds: [],
-      inProgressStudentIds: ['std-33']
+      isCompleted: false,
+      completedAt: null
     }
   ],
   exams: [
@@ -265,7 +296,56 @@ const DEFAULT_SEED_DATA = {
       { id: 'tx-3', type: 'income', amount: 30000, category: 'Iuran Kas', description: 'Penerimaan iuran kas Minggu 2', date: '2026-09-08', recordedBy: 'Rani Aprilia (Bendahara 1)' },
       { id: 'tx-4', type: 'expense', amount: 25000, category: 'Perlengkapan', description: 'Beli spidol whiteboard hitam & biru', date: '2026-09-09', recordedBy: 'Salwa Azzahra (Bendahara 2)' }
     ]
-  }
+  },
+  pageAccess: {
+    cash: { isEnabled: true, reason: '' },
+    tasks: { isEnabled: true, reason: '' },
+    exams: { isEnabled: true, reason: '' },
+    schedules: { isEnabled: true, reason: '' },
+    announcements: { isEnabled: true, reason: '' }
+  },
+  auditLogs: [
+    {
+      id: 'log-seed-1',
+      action: 'cash_income',
+      category: 'cash',
+      title: 'Penerimaan Iuran Kas',
+      details: 'Penerimaan iuran kas Minggu 1 & 2 sebesar Rp 90.000',
+      timestamp: '2026-10-07T14:30:00.000Z'
+    },
+    {
+      id: 'log-seed-2',
+      action: 'task_create',
+      category: 'tasks',
+      title: 'Tugas Baru Dibuat',
+      details: 'Basis Data: Desain ERD Toko Online (Deadline 10 Okt)',
+      timestamp: '2026-10-07T11:15:00.000Z'
+    },
+    {
+      id: 'log-seed-3',
+      action: 'schedule_update',
+      category: 'schedules',
+      title: 'Jadwal & Piket Diperbarui',
+      details: 'Pembaruan daftar siswa piket kebersihan hari Senin & Rabu',
+      timestamp: '2026-10-06T16:45:00.000Z'
+    },
+    {
+      id: 'log-seed-4',
+      action: 'cash_expense',
+      category: 'cash',
+      title: 'Pengeluaran Kas Dicatat',
+      details: 'Kebersihan: Refill sabun cuci tangan & pewangi lantai (Rp 35.000)',
+      timestamp: '2026-10-06T10:20:00.000Z'
+    },
+    {
+      id: 'log-seed-5',
+      action: 'announcement_create',
+      category: 'announcements',
+      title: 'Pengumuman Diterbitkan',
+      details: 'Selamat Datang di Portal Kelas XI PPLG',
+      timestamp: '2026-10-05T09:00:00.000Z'
+    }
+  ]
 };
 
 const sanitizeData = (raw) => {
@@ -273,9 +353,11 @@ const sanitizeData = (raw) => {
   return {
     ...DEFAULT_SEED_DATA,
     ...raw,
-    classInfo: { 
-      ...DEFAULT_SEED_DATA.classInfo, 
+    classInfo: {
+      ...DEFAULT_SEED_DATA.classInfo,
       ...(raw.classInfo || {}),
+      adminPin: (raw.classInfo?.adminPin || DEFAULT_SEED_DATA.classInfo.adminPin).trim(),
+      masterPin: (raw.classInfo?.masterPin || DEFAULT_SEED_DATA.classInfo.masterPin).trim(),
       logoUrl: raw.classInfo?.logoUrl || DEFAULT_SEED_DATA.classInfo.logoUrl
     },
     members: (Array.isArray(raw.members) ? raw.members : DEFAULT_SEED_DATA.members).map(m => {
@@ -288,7 +370,7 @@ const sanitizeData = (raw) => {
       }
       return m;
     }),
-    tasks: Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks,
+    tasks: purgeExpiredCompletedTasks(Array.isArray(raw.tasks) ? raw.tasks : DEFAULT_SEED_DATA.tasks),
     announcements: Array.isArray(raw.announcements) ? raw.announcements : DEFAULT_SEED_DATA.announcements,
     exams: Array.isArray(raw.exams) ? raw.exams : DEFAULT_SEED_DATA.exams,
     events: Array.isArray(raw.events) ? raw.events : DEFAULT_SEED_DATA.events,
@@ -313,7 +395,30 @@ const sanitizeData = (raw) => {
       ...(raw.cash || {}),
       duesPeriods: Array.isArray(raw.cash?.duesPeriods) ? raw.cash.duesPeriods : DEFAULT_SEED_DATA.cash.duesPeriods,
       transactions: Array.isArray(raw.cash?.transactions) ? raw.cash.transactions : DEFAULT_SEED_DATA.cash.transactions
-    }
+    },
+    pageAccess: {
+      cash: {
+        isEnabled: raw.pageAccess?.cash?.isEnabled ?? true,
+        reason: raw.pageAccess?.cash?.reason || ''
+      },
+      tasks: {
+        isEnabled: raw.pageAccess?.tasks?.isEnabled ?? true,
+        reason: raw.pageAccess?.tasks?.reason || ''
+      },
+      exams: {
+        isEnabled: raw.pageAccess?.exams?.isEnabled ?? true,
+        reason: raw.pageAccess?.exams?.reason || ''
+      },
+      schedules: {
+        isEnabled: raw.pageAccess?.schedules?.isEnabled ?? true,
+        reason: raw.pageAccess?.schedules?.reason || ''
+      },
+      announcements: {
+        isEnabled: raw.pageAccess?.announcements?.isEnabled ?? true,
+        reason: raw.pageAccess?.announcements?.reason || ''
+      }
+    },
+    auditLogs: Array.isArray(raw.auditLogs) ? raw.auditLogs.slice(0, 100) : DEFAULT_SEED_DATA.auditLogs
   };
 };
 
@@ -356,7 +461,7 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     try {
       localStorage.setItem(PERSONAL_TASKS_KEY, JSON.stringify(personalDoneTasks));
-    } catch (e) {}
+    } catch (e) { }
   }, [personalDoneTasks]);
 
   // Always backup data to localStorage
@@ -455,7 +560,7 @@ export function StoreProvider({ children }) {
     setData(prev => {
       const safePrev = sanitizeData(prev);
       const next = sanitizeData(typeof updater === 'function' ? updater(safePrev) : updater);
-      
+
       // Push to Supabase if online
       if (isSupabaseConfigured && supabase) {
         supabase
@@ -477,34 +582,77 @@ export function StoreProvider({ children }) {
     });
   };
 
+  // Helper to commit state changes and atomically prepend an audit log entry
+  const commitWithAudit = (updater, logEntry = null) => {
+    commitData(prev => {
+      const nextState = typeof updater === 'function' ? updater(prev) : updater;
+      if (!logEntry) return nextState;
+
+      const newLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        timestamp: new Date().toISOString(),
+        action: logEntry.action || 'update',
+        category: logEntry.category || 'system',
+        title: logEntry.title || 'Aktivitas Sistem',
+        details: logEntry.details || ''
+      };
+
+      const existingLogs = Array.isArray(nextState.auditLogs) ? nextState.auditLogs : [];
+      return {
+        ...nextState,
+        auditLogs: [newLog, ...existingLogs].slice(0, 100)
+      };
+    });
+  };
+
+  const logActivity = (logEntry) => {
+    if (!logEntry) return;
+    commitWithAudit(prev => prev, logEntry);
+  };
+
+  const clearAuditLogs = () => {
+    commitData(prev => ({
+      ...prev,
+      auditLogs: []
+    }));
+  };
+
   // Actions
   const addTask = (task) => {
     const newTask = {
       id: `tsk-${Date.now()}`,
-      completedStudentIds: [],
-      inProgressStudentIds: [],
+      isCompleted: false,
+      completedAt: null,
       ...task
     };
-    commitData(prev => ({
-      ...prev,
-      tasks: [newTask, ...(prev.tasks || [])]
-    }));
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        tasks: purgeExpiredCompletedTasks([newTask, ...(prev.tasks || [])])
+      }),
+      {
+        action: 'task_create',
+        category: 'tasks',
+        title: 'Tugas Baru Dibuat',
+        details: `${newTask.title}${newTask.subject ? ` (${newTask.subject})` : ''}`
+      }
+    );
   };
 
   const deleteTask = (id) => {
-    commitData(prev => ({
-      ...prev,
-      tasks: (prev.tasks || []).filter(t => t.id !== id)
-    }));
-  };
-
-  const updateTask = (id, updatedFields) => {
-    commitData(prev => ({
-      ...prev,
-      tasks: (prev.tasks || []).map(t => 
-        t.id === id ? { ...t, ...updatedFields } : t
-      )
-    }));
+    const target = (dataRef.current?.tasks || []).find(t => t.id === id);
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        tasks: (prev.tasks || []).filter(t => t.id !== id)
+      }),
+      {
+        action: 'task_delete',
+        category: 'tasks',
+        title: 'Tugas Dihapus',
+        details: target?.title ? `Menghapus tugas "${target.title}"` : 'Tugas dihapus dari daftar'
+      }
+    );
   };
 
   // Toggle personal task checklist (stored locally per browser/device)
@@ -515,45 +663,55 @@ export function StoreProvider({ children }) {
     });
   };
 
-  // Update task completion (supports personal toggle for student or specific studentId)
+  const updateTask = (id, updatedFields) => {
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        tasks: (prev.tasks || []).map(t =>
+          t.id === id ? { ...t, ...updatedFields } : t
+        )
+      }),
+      {
+        action: 'task_update',
+        category: 'tasks',
+        title: 'Tugas Diperbarui',
+        details: updatedFields.title ? `Perubahan pada "${updatedFields.title}"` : 'Detail tugas diperbarui'
+      }
+    );
+  };
+
+  // Toggle task completion by Admin (auto-purged after 7 days when completed)
+  const toggleTaskCompleted = (id) => {
+    const target = (dataRef.current?.tasks || []).find(t => t.id === id);
+    const nextCompleted = !target?.isCompleted;
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        tasks: purgeExpiredCompletedTasks((prev.tasks || []).map(t => {
+          if (t.id !== id) return t;
+          return {
+            ...t,
+            isCompleted: nextCompleted,
+            completedAt: nextCompleted ? new Date().toISOString() : null
+          };
+        }))
+      }),
+      {
+        action: 'task_status',
+        category: 'tasks',
+        title: nextCompleted ? 'Tugas Ditandai Selesai' : 'Tugas Diaktifkan Kembali',
+        details: target?.title ? `"${target.title}"` : 'Status tugas diperbarui'
+      }
+    );
+  };
+
+  // Backward-compatibility for student view
   const updateTaskStatus = (taskId, studentId, status) => {
-    // If it's a student (public-student or specific student), track in personal storage too
     if (status === 'done') {
       setPersonalDoneTasks(prev => Array.from(new Set([...prev, taskId])));
     } else {
       setPersonalDoneTasks(prev => prev.filter(id => id !== taskId));
     }
-
-    // For public student checklist, do not broadcast/commit to shared cloud database
-    if (studentId === 'public-student') {
-      return;
-    }
-
-    commitData(prev => ({
-      ...prev,
-      tasks: (prev.tasks || []).map(t => {
-        if (t.id !== taskId) return t;
-        const completed = new Set(t.completedStudentIds || []);
-        const inProgress = new Set(t.inProgressStudentIds || []);
-
-        if (status === 'done') {
-          completed.add(studentId);
-          inProgress.delete(studentId);
-        } else if (status === 'doing') {
-          inProgress.add(studentId);
-          completed.delete(studentId);
-        } else {
-          completed.delete(studentId);
-          inProgress.delete(studentId);
-        }
-
-        return {
-          ...t,
-          completedStudentIds: Array.from(completed),
-          inProgressStudentIds: Array.from(inProgress)
-        };
-      })
-    }));
   };
 
   const addExam = (exam) => {
@@ -561,26 +719,51 @@ export function StoreProvider({ children }) {
       id: `ex-${Date.now()}`,
       ...exam
     };
-    commitData(prev => ({
-      ...prev,
-      exams: [...(prev.exams || []), newExam]
-    }));
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        exams: [...(prev.exams || []), newExam]
+      }),
+      {
+        action: 'exam_create',
+        category: 'exams',
+        title: 'Jadwal Ujian Ditambahkan',
+        details: `${newExam.title}${newExam.subject ? ` (${newExam.subject})` : ''}`
+      }
+    );
   };
 
   const deleteExam = (id) => {
-    commitData(prev => ({
-      ...prev,
-      exams: (prev.exams || []).filter(e => e.id !== id)
-    }));
+    const target = (dataRef.current?.exams || []).find(e => e.id === id);
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        exams: (prev.exams || []).filter(e => e.id !== id)
+      }),
+      {
+        action: 'exam_delete',
+        category: 'exams',
+        title: 'Jadwal Ujian Dihapus',
+        details: target?.title ? `Menghapus ujian "${target.title}"` : 'Jadwal ujian dihapus'
+      }
+    );
   };
 
   const updateExam = (id, updatedFields) => {
-    commitData(prev => ({
-      ...prev,
-      exams: (prev.exams || []).map(e => 
-        e.id === id ? { ...e, ...updatedFields } : e
-      )
-    }));
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        exams: (prev.exams || []).map(e =>
+          e.id === id ? { ...e, ...updatedFields } : e
+        )
+      }),
+      {
+        action: 'exam_update',
+        category: 'exams',
+        title: 'Jadwal Ujian Diperbarui',
+        details: updatedFields.title ? `Perubahan pada "${updatedFields.title}"` : 'Detail ujian diperbarui'
+      }
+    );
   };
 
   const addAnnouncement = (ann) => {
@@ -590,32 +773,49 @@ export function StoreProvider({ children }) {
       isPinned: false,
       ...ann
     };
-    commitData(prev => ({
-      ...prev,
-      announcements: [newAnn, ...(prev.announcements || [])]
-    }));
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        announcements: [newAnn, ...(prev.announcements || [])]
+      }),
+      {
+        action: 'announcement_create',
+        category: 'announcements',
+        title: 'Pengumuman Diterbitkan',
+        details: newAnn.title
+      }
+    );
   };
 
   const togglePinAnnouncement = (id) => {
     commitData(prev => ({
       ...prev,
-      announcements: (prev.announcements || []).map(a => 
+      announcements: (prev.announcements || []).map(a =>
         a.id === id ? { ...a, isPinned: !a.isPinned } : a
       )
     }));
   };
 
   const deleteAnnouncement = (id) => {
-    commitData(prev => ({
-      ...prev,
-      announcements: (prev.announcements || []).filter(a => a.id !== id)
-    }));
+    const target = (dataRef.current?.announcements || []).find(a => a.id === id);
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        announcements: (prev.announcements || []).filter(a => a.id !== id)
+      }),
+      {
+        action: 'announcement_delete',
+        category: 'announcements',
+        title: 'Pengumuman Dihapus',
+        details: target?.title ? `Menghapus "${target.title}"` : 'Pengumuman dihapus'
+      }
+    );
   };
 
   const updateAnnouncement = (id, updatedFields) => {
     commitData(prev => ({
       ...prev,
-      announcements: (prev.announcements || []).map(a => 
+      announcements: (prev.announcements || []).map(a =>
         a.id === id ? { ...a, ...updatedFields } : a
       )
     }));
@@ -627,75 +827,105 @@ export function StoreProvider({ children }) {
       date: new Date().toISOString().split('T')[0],
       ...tx
     };
-    commitData(prev => {
-      const isIncome = newTx.type === 'income';
-      const updatedBalance = isIncome 
-        ? prev.cash.balance + Number(newTx.amount) 
-        : prev.cash.balance - Number(newTx.amount);
+    const isIncome = newTx.type === 'income';
+    commitWithAudit(
+      prev => {
+        const updatedBalance = isIncome
+          ? prev.cash.balance + Number(newTx.amount)
+          : prev.cash.balance - Number(newTx.amount);
 
-      return {
-        ...prev,
-        cash: {
-          ...prev.cash,
-          balance: Math.max(0, updatedBalance),
-          transactions: [newTx, ...(prev.cash.transactions || [])]
-        }
-      };
-    });
+        return {
+          ...prev,
+          cash: {
+            ...prev.cash,
+            balance: Math.max(0, updatedBalance),
+            transactions: [newTx, ...(prev.cash.transactions || [])]
+          }
+        };
+      },
+      {
+        action: isIncome ? 'cash_income' : 'cash_expense',
+        category: 'cash',
+        title: isIncome ? 'Pemasukan Kas Dicatat' : 'Pengeluaran Kas Dicatat',
+        details: `${newTx.category}: Rp ${Number(newTx.amount).toLocaleString('id-ID')} — ${newTx.description || ''}`
+      }
+    );
   };
 
   const deleteTransaction = (id) => {
-    commitData(prev => {
-      const tx = (prev.cash.transactions || []).find(t => t.id === id);
-      if (!tx) return prev;
+    const target = (dataRef.current?.cash?.transactions || []).find(t => t.id === id);
+    commitWithAudit(
+      prev => {
+        const tx = (prev.cash.transactions || []).find(t => t.id === id);
+        if (!tx) return prev;
 
-      const isIncome = tx.type === 'income';
-      const updatedBalance = isIncome 
-        ? prev.cash.balance - Number(tx.amount) 
-        : prev.cash.balance + Number(tx.amount);
+        const isIncome = tx.type === 'income';
+        const updatedBalance = isIncome
+          ? prev.cash.balance - Number(tx.amount)
+          : prev.cash.balance + Number(tx.amount);
 
-      return {
-        ...prev,
-        cash: {
-          ...prev.cash,
-          balance: Math.max(0, updatedBalance),
-          transactions: prev.cash.transactions.filter(t => t.id !== id)
-        }
-      };
-    });
+        return {
+          ...prev,
+          cash: {
+            ...prev.cash,
+            balance: Math.max(0, updatedBalance),
+            transactions: prev.cash.transactions.filter(t => t.id !== id)
+          }
+        };
+      },
+      {
+        action: 'cash_delete',
+        category: 'cash',
+        title: 'Transaksi Kas Dihapus',
+        details: target ? `${target.category}: Rp ${Number(target.amount).toLocaleString('id-ID')}` : 'Transaksi kas dihapus'
+      }
+    );
   };
 
   const toggleDuesPaid = (periodId, studentId) => {
-    commitData(prev => {
-      let isNowPaid = false;
-      const updatedPeriods = (prev.cash.duesPeriods || []).map(p => {
-        if (p.id !== periodId) return p;
-        const set = new Set(p.paidStudentIds || []);
-        if (set.has(studentId)) {
-          set.delete(studentId);
-          isNowPaid = false;
-        } else {
-          set.add(studentId);
-          isNowPaid = true;
-        }
-        return { ...p, paidStudentIds: Array.from(set) };
-      });
+    const student = (dataRef.current?.members || []).find(m => m.id === studentId);
+    const period = (dataRef.current?.cash?.duesPeriods || []).find(p => p.id === periodId);
+    const isCurrentlyPaid = (period?.paidStudentIds || []).includes(studentId);
+    const willBePaid = !isCurrentlyPaid;
 
-      const period = (prev.cash.duesPeriods || []).find(p => p.id === periodId);
-      const duesAmt = period ? Number(period.amount) : Number(prev.cash.duesAmount || 10000);
-      const updatedBalance = isNowPaid 
-        ? prev.cash.balance + duesAmt 
-        : Math.max(0, prev.cash.balance - duesAmt);
+    commitWithAudit(
+      prev => {
+        let isNowPaid = false;
+        const updatedPeriods = (prev.cash.duesPeriods || []).map(p => {
+          if (p.id !== periodId) return p;
+          const set = new Set(p.paidStudentIds || []);
+          if (set.has(studentId)) {
+            set.delete(studentId);
+            isNowPaid = false;
+          } else {
+            set.add(studentId);
+            isNowPaid = true;
+          }
+          return { ...p, paidStudentIds: Array.from(set) };
+        });
 
-      return {
-        ...prev,
-        cash: {
-          ...prev.cash,
-          balance: updatedBalance,
-          duesPeriods: updatedPeriods
-        }
-      };
-    });
+        const curPeriod = (prev.cash.duesPeriods || []).find(p => p.id === periodId);
+        const duesAmt = curPeriod ? Number(curPeriod.amount) : Number(prev.cash.duesAmount || 10000);
+        const updatedBalance = isNowPaid
+          ? prev.cash.balance + duesAmt
+          : Math.max(0, prev.cash.balance - duesAmt);
+
+        return {
+          ...prev,
+          cash: {
+            ...prev.cash,
+            balance: updatedBalance,
+            duesPeriods: updatedPeriods
+          }
+        };
+      },
+      {
+        action: 'cash_due',
+        category: 'cash',
+        title: willBePaid ? 'Iuran Kas Ditandai Lunas' : 'Status Iuran Dibatalkan',
+        details: `${student?.name || 'Siswa'} (${period?.name || 'Periode'})`
+      }
+    );
   };
 
   const markAllDuesPaid = (periodId) => {
@@ -749,14 +979,31 @@ export function StoreProvider({ children }) {
     }));
   };
 
-  const updateSchedule = (day, newScheduleData) => {
+  const updateEvent = (id, updatedFields) => {
     commitData(prev => ({
       ...prev,
-      schedules: {
-        ...prev.schedules,
-        [day]: newScheduleData
-      }
+      events: (prev.events || []).map(e =>
+        e.id === id ? { ...e, ...updatedFields } : e
+      )
     }));
+  };
+
+  const updateSchedule = (day, newScheduleData) => {
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        schedules: {
+          ...prev.schedules,
+          [day]: newScheduleData
+        }
+      }),
+      {
+        action: 'schedule_update',
+        category: 'schedules',
+        title: `Jadwal & Piket Hari ${day} Diperbarui`,
+        details: `${(newScheduleData?.subjects || []).length} Mapel, ${(newScheduleData?.piket || []).length} Petugas Piket`
+      }
+    );
   };
 
   const updateMbgSchedule = (day, newMbgData) => {
@@ -811,6 +1058,37 @@ export function StoreProvider({ children }) {
     commitData(prev => ({
       ...prev,
       piketMbg: DEFAULT_SEED_DATA.piketMbg
+    }));
+  };
+
+  const updatePageAccess = (pageKey, isEnabled, reason = '') => {
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        pageAccess: {
+          ...(prev.pageAccess || DEFAULT_SEED_DATA.pageAccess),
+          [pageKey]: {
+            isEnabled: Boolean(isEnabled),
+            reason: reason !== undefined ? String(reason) : (prev.pageAccess?.[pageKey]?.reason || '')
+          }
+        }
+      }),
+      {
+        action: 'settings_update',
+        category: 'settings',
+        title: 'Akses Modul Siswa Diubah',
+        details: `Modul ${pageKey} ${isEnabled ? 'dibuka untuk siswa' : 'dikunci (pemeliharaan)'}`
+      }
+    );
+  };
+
+  const updateBulkPageAccess = (newPageAccess) => {
+    commitData(prev => ({
+      ...prev,
+      pageAccess: {
+        ...(prev.pageAccess || DEFAULT_SEED_DATA.pageAccess),
+        ...newPageAccess
+      }
     }));
   };
 
@@ -870,13 +1148,21 @@ export function StoreProvider({ children }) {
   };
 
   const updateClassInfo = (newInfo) => {
-    commitData(prev => ({
-      ...prev,
-      classInfo: {
-        ...(prev.classInfo || {}),
-        ...newInfo
+    commitWithAudit(
+      prev => ({
+        ...prev,
+        classInfo: {
+          ...(prev.classInfo || {}),
+          ...newInfo
+        }
+      }),
+      {
+        action: 'settings_update',
+        category: 'settings',
+        title: 'Pengaturan Kelas Diperbarui',
+        details: newInfo?.name ? `Identitas kelas: ${newInfo.name}` : 'Konfigurasi sistem diperbarui'
       }
-    }));
+    );
   };
 
   const addDuesPeriod = (name, amount = 10000, month = '') => {
@@ -902,7 +1188,7 @@ export function StoreProvider({ children }) {
       // Find period being deleted to optionally revert balance
       const periodToDelete = (prev.cash.duesPeriods || []).find(p => p.id === periodId);
       const remainingPeriods = (prev.cash.duesPeriods || []).filter(p => p.id !== periodId);
-      
+
       let newBalance = prev.cash.balance;
       if (periodToDelete) {
         const paidCount = (periodToDelete.paidStudentIds || []).length;
@@ -947,6 +1233,7 @@ export function StoreProvider({ children }) {
       updateTask,
       deleteTask,
       updateTaskStatus,
+      toggleTaskCompleted,
       addExam,
       updateExam,
       deleteExam,
@@ -960,11 +1247,14 @@ export function StoreProvider({ children }) {
       markAllDuesPaid,
       addEvent,
       deleteEvent,
+      updateEvent,
       updateSchedule,
       updateMbgSchedule,
       addMbgMember,
       removeMbgMember,
       resetMbgToDefault,
+      updatePageAccess,
+      updateBulkPageAccess,
       addMember,
       updateMember,
       deleteMember,
@@ -972,7 +1262,10 @@ export function StoreProvider({ children }) {
       addDuesPeriod,
       deleteDuesPeriod,
       resetToDefault,
-      getTotalCashBalance
+      getTotalCashBalance,
+      auditLogs: data.auditLogs || [],
+      logActivity,
+      clearAuditLogs
     }}>
       {children}
     </StoreContext.Provider>

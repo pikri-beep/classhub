@@ -1,0 +1,309 @@
+/* ==========================================================================
+   RESPONSIVE KAS KELAS (STICKY MATRIX TABLE & MOBILE CARD LIST)
+   ========================================================================== */
+.kas-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 2rem;
+}
+
+/* Personal Kas Status Banner */
+.kas-personal-banner {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.kas-personal-banner.is-highlighted {
+  border-color: var(--primary-border);
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--primary-soft) 100%);
+}
+
+/* Kas KPI Summary Grid */
+.kas-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.kas-kpi-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.kas-kpi-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kas-kpi-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+/* View Mode Switcher Pills */
+.kas-view-switch {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.kas-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.kas-view-btn:hover {
+  color: var(--text-primary);
+}
+
+.kas-view-btn.active {
+  background-color: var(--bg-surface);
+  color: var(--primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mobile Card Mode for Students */
+.kas-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.kas-student-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.kas-student-card:hover {
+  border-color: var(--border-focus);
+}
+
+.kas-student-card.is-me {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--bg-surface) 0%, var(--primary-soft) 100%);
+}
+
+.kas-student-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kas-student-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.kas-absent-badge {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-hover);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.kas-student-card-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kas-weeks-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+  gap: 0.4rem;
+}
+
+.kas-week-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  transition: transform var(--transition-fast);
+}
+
+.kas-week-chip.paid {
+  background-color: var(--tag-green-bg);
+  color: var(--tag-green-text);
+  border: 1px solid rgba(46, 124, 87, 0.25);
+}
+
+.kas-week-chip.unpaid {
+  background-color: var(--bg);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* Sticky Matrix Table Columns */
+.sticky-kas-no {
+  position: sticky !important;
+  left: 0 !important;
+  z-index: 12 !important;
+  width: 46px !important;
+  min-width: 46px !important;
+  max-width: 46px !important;
+  text-align: center !important;
+}
+
+.sticky-kas-name {
+  position: sticky !important;
+  left: 46px !important;
+  z-index: 12 !important;
+  width: 145px !important;
+  min-width: 145px !important;
+  max-width: 145px !important;
+  border-right: 2px solid var(--border) !important;
+  box-shadow: 3px 0 6px rgba(0, 0, 0, 0.05);
+}
+
+th.sticky-kas-no {
+  top: 0 !important;
+  z-index: 35 !important;
+  background-color: var(--bg) !important;
+}
+
+th.sticky-kas-name {
+  top: 0 !important;
+  z-index: 35 !important;
+  background-color: var(--bg) !important;
+}
+
+tr.zebra-kas-row-even td.sticky-kas-no,
+tr.zebra-kas-row-even td.sticky-kas-name {
+  background-color: var(--zebra-kas-even) !important;
+}
+
+tr.zebra-kas-row-odd td.sticky-kas-no,
+tr.zebra-kas-row-odd td.sticky-kas-name {
+  background-color: var(--zebra-kas-odd) !important;
+}
+
+tr:hover td.sticky-kas-no,
+tr:hover td.sticky-kas-name {
+  background-color: var(--bg-hover) !important;
+}
+
+tr.is-me-row td.sticky-kas-no,
+tr.is-me-row td.sticky-kas-name,
+tr.is-me-row td {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+/* Kas Card Pagination */
+.kas-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.kas-pagination-info {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.kas-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.kas-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 0.45rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.kas-page-btn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.kas-page-btn.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.kas-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

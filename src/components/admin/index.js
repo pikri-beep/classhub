@@ -8,3 +8,5 @@ export { default as SectionHeader } from './SectionHeader';
 export { default as ActionMenu } from './ActionMenu';
 export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as MaintenanceScreen } from './MaintenanceScreen';
+export { default as SubjectPicker } from './SubjectPicker';
+export { default as AuditLogWidget } from './AuditLogWidget';

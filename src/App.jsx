@@ -20,8 +20,12 @@ import AdminDashboardView from './views/AdminDashboardView';
 import BottomDock from './components/BottomDock';
 import { MaintenanceScreen } from './components/admin/MaintenanceScreen';
 import { Eye, ArrowRight, ShieldCheck, LogOut, ShieldAlert } from 'lucide-react';
+import { useWhatsAppAutoScheduler } from './hooks/useWhatsAppAutoScheduler';
 
 export default function App() {
+  // Activate automatic WhatsApp brief scheduler
+  useWhatsAppAutoScheduler();
+
   const { 
     currentUser, 
     isAdmin, 

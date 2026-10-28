@@ -39,7 +39,20 @@ const DEFAULT_SEED_DATA = {
     waIncludeSchedule: true,
     waIncludeTasks: true,
     waIncludePiket: true,
-    waIncludeExams: true
+    waIncludeExams: true,
+    // WhatsApp Gateway & Group Automation
+    waGatewayEnabled: false,
+    waProvider: 'fonnte', // 'fonnte' | 'wablas' | 'webhook'
+    waApiToken: '',
+    waTargetGroup: '',
+    waCustomEndpoint: '',
+    waAutoSendSchedule: false,
+    waAutoSendTime: '19:00',
+    waAutoSendDays: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis'],
+    waLastAutoSentDate: '',
+    waLastAutoSentTime: '',
+    waLastAutoSentStatus: '',
+    waLastAutoSentMessage: ''
   },
   members: [
     { id: 'std-1', absentNo: 1, name: 'Ahmad Fikry Al Khair', role: 'member', roleTitle: 'Anggota', avatarText: 'AF', phone: '' },

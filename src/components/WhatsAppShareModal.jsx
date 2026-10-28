@@ -13,11 +13,17 @@ import {
   Clock,
   BookOpen,
   Users,
-  GraduationCap
+  GraduationCap,
+  Send,
+  Loader2,
+  Radio,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
 import Modal from './Modal';
 import { useToast } from '../context/ToastContext';
 import { useStore } from '../context/StoreContext';
+import { generateWhatsAppBriefText, sendWhatsAppMessage } from '../lib/whatsappService';
 
 export default function WhatsAppShareModal({
   isOpen,
@@ -27,12 +33,14 @@ export default function WhatsAppShareModal({
   currentUser = {}
 }) {
   const { showToast } = useToast();
-  const { data } = useStore();
+  const { data, updateClassInfo, logActivity } = useStore();
 
   const classInfo = propClassInfo?.name ? propClassInfo : (data?.classInfo || {});
   const tasks = propTasks && propTasks.length > 0 ? propTasks : (data?.tasks || []);
   const schedules = data?.schedules || {};
   const exams = data?.exams || [];
+
+  const [isSendingToGroup, setIsSendingToGroup] = useState(false);
 
   const daysMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const monthsMap = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -104,98 +112,15 @@ export default function WhatsAppShareModal({
 
   const closestExam = upcomingExams[0] || null;
 
-  // Build clean, dynamic WhatsApp Brief
-  const generateAutoBrief = () => {
-    const lines = [];
+  // Build clean, dynamic WhatsApp Brief using shared service
+  const autoMessage = generateWhatsAppBriefText({
+    classInfo,
+    tasks,
+    schedules,
+    exams,
+    targetDate
+  });
 
-    const greeting = classInfo?.waGreeting || "Assalamu'alaikum & selamat malam rekan-rekan! 👋";
-    const bannerTitle = classInfo?.waBannerTitle || 'PERSIAPAN KELAS';
-    const footerNote = classInfo?.waFooterNote !== undefined ? classInfo.waFooterNote : `🌐 *Buka ${classInfo?.appName || 'ClassHub'} untuk detail lengkap.*`;
-    const closing = classInfo?.waClosing || 'Selamat istirahat dan jangan lupa persiapkan kebutuhan untuk besok! ✨';
-    const includeSchedule = classInfo?.waIncludeSchedule !== false;
-    const includeTasks = classInfo?.waIncludeTasks !== false;
-    const includePiket = classInfo?.waIncludePiket !== false;
-    const includeExams = classInfo?.waIncludeExams !== false;
-
-    // Greeting
-    if (greeting) {
-      lines.push(greeting);
-      lines.push('');
-    }
-
-    // Title banner
-    const targetLabel = isTomorrow ? 'BESOK' : (isToday ? 'HARI INI' : dayName.toUpperCase());
-    lines.push(`📚 *${bannerTitle} — ${targetLabel}*`);
-    lines.push(`🗓️ ${dateFormatted}`);
-    lines.push(`━━━━━━━━━━━━━━━━━━`);
-
-    let hasAnyContent = false;
-
-    // 1. Jadwal Pelajaran (Tanpa jam, tanpa guru / ruangan)
-    if (includeSchedule && subjects.length > 0) {
-      hasAnyContent = true;
-      lines.push('');
-      lines.push(`📅 *JADWAL ${targetLabel}*`);
-      subjects.forEach((sub, idx) => {
-        lines.push(`${idx + 1}. ${sub.subject}`);
-      });
-    }
-
-    // 2. Deadline Besok (Nomor, tanpa jam)
-    if (includeTasks && dueOnTargetTasks.length > 0) {
-      hasAnyContent = true;
-      lines.push('');
-      lines.push(`📝 *DEADLINE ${targetLabel}*`);
-      dueOnTargetTasks.forEach((task, idx) => {
-        lines.push(`${idx + 1}. ${task.subject} — ${task.title}`);
-      });
-    }
-
-    // 3. Piket Besok (Nomor, tanpa note hadir awal)
-    if (includePiket && piketList.length > 0) {
-      hasAnyContent = true;
-      lines.push('');
-      lines.push(`🧹 *PIKET ${targetLabel}*`);
-      piketList.forEach((person, idx) => {
-        lines.push(`${idx + 1}. ${person}`);
-      });
-    }
-
-    // 4. Ujian Terdekat (Ringkas nama ujian dan tanggal)
-    if (includeExams && upcomingExams.length > 0) {
-      hasAnyContent = true;
-      lines.push('');
-      lines.push(`🎯 *UJIAN TERDEKAT*`);
-      upcomingExams.slice(0, 2).forEach((ex, idx) => {
-        const exDate = new Date(ex.examDate);
-        const exDayName = daysMap[exDate.getDay()];
-        const exFormatted = `${exDayName}, ${exDate.getDate()} ${monthsMap[exDate.getMonth()]}`;
-        lines.push(`${idx + 1}. ${ex.subject} (${exFormatted})`);
-      });
-    }
-
-    // Fallback jika tidak ada konten sama sekali (misal akhir pekan)
-    if (!hasAnyContent) {
-      lines.push('');
-      lines.push(`🏖️ *AGENDA ${targetLabel}*`);
-      lines.push('Hari libur / tidak ada jam pembelajaran atau tugas esok hari. Selamat beristirahat!');
-    }
-
-    // Footer
-    lines.push('');
-    lines.push('━━━━━━━━━━━━━━━━━━');
-    if (footerNote) {
-      lines.push(footerNote);
-      lines.push('');
-    }
-    if (closing) {
-      lines.push(closing);
-    }
-
-    return lines.join('\n');
-  };
-
-  const autoMessage = generateAutoBrief();
   const currentMessage = hasCustomEdits ? customMessage : autoMessage;
 
   // Whenever target date changes, refresh auto text unless user has actively edited
@@ -241,6 +166,68 @@ export default function WhatsAppShareModal({
     const encoded = encodeURIComponent(currentMessage);
     const waUrl = `https://api.whatsapp.com/send?text=${encoded}`;
     window.open(waUrl, '_blank');
+  };
+
+  const handleSendToGroup = async () => {
+    const {
+      waGatewayEnabled,
+      waProvider = 'fonnte',
+      waApiToken,
+      waTargetGroup,
+      waCustomEndpoint
+    } = classInfo;
+
+    if (!waGatewayEnabled) {
+      showToast('Integrasi WhatsApp Gateway belum diaktifkan. Buka Pengaturan Admin > Format WhatsApp untuk menyalakannya.', 'warning');
+      return;
+    }
+
+    if (!waTargetGroup) {
+      showToast('Target ID Grup WhatsApp belum ditentukan. Atur di Pengaturan Admin > Format WhatsApp.', 'warning');
+      return;
+    }
+
+    if (waProvider !== 'webhook' && !waApiToken) {
+      showToast('API Token WhatsApp belum diisi. Atur di Pengaturan Admin > Format WhatsApp.', 'warning');
+      return;
+    }
+
+    setIsSendingToGroup(true);
+    try {
+      const result = await sendWhatsAppMessage({
+        provider: waProvider,
+        token: waApiToken,
+        target: waTargetGroup,
+        message: currentMessage,
+        customEndpoint: waCustomEndpoint
+      });
+
+      if (result.success) {
+        showToast('🚀 Pesan WhatsApp Brief berhasil terkirim langsung ke grup kelas!', 'success');
+        if (updateClassInfo) {
+          updateClassInfo({
+            waLastAutoSentDate: targetDateStr,
+            waLastAutoSentTime: new Date().toISOString(),
+            waLastAutoSentStatus: 'success',
+            waLastAutoSentMessage: 'Manual Send via Modal'
+          });
+        }
+        if (logActivity) {
+          logActivity({
+            action: 'whatsapp_manual_send',
+            category: 'system',
+            title: 'WhatsApp Brief Terkirim ke Grup',
+            details: `Briefing kelas dikirim langsung ke grup (${waTargetGroup}) via ${waProvider.toUpperCase()}.`
+          });
+        }
+      } else {
+        showToast(`Gagal mengirim ke grup: ${result.error}`, 'error');
+      }
+    } catch (err) {
+      showToast(`Terjadi kesalahan: ${err.message}`, 'error');
+    } finally {
+      setIsSendingToGroup(false);
+    }
   };
 
   return (
@@ -412,25 +399,49 @@ export default function WhatsAppShareModal({
           )}
         </div>
 
-        {/* Automatic WhatsApp Brief Roadmap Hook */}
+        {/* WhatsApp Gateway & Automation Live Status Banner */}
         <div style={{
-          padding: '0.55rem 0.8rem',
-          backgroundColor: 'var(--hover-bg)',
+          padding: '0.65rem 0.85rem',
+          backgroundColor: classInfo?.waGatewayEnabled ? 'var(--bg-surface)' : 'var(--hover-bg)',
           borderRadius: 'var(--radius-sm)',
-          border: '1px dashed var(--border)',
+          border: classInfo?.waGatewayEnabled ? '1px solid var(--success-border, rgba(34,197,94,0.3))' : '1px dashed var(--border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.4rem'
+          gap: '0.5rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.73rem', color: 'var(--text-secondary)' }}>
-            <Sparkles size={13} style={{ color: 'var(--primary)' }} />
-            <span><strong>Automatic WhatsApp Brief:</strong> Status ON • 19.00 WIB (Senin–Jumat)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.74rem' }}>
+            {classInfo?.waGatewayEnabled ? (
+              <>
+                <Radio size={14} style={{ color: 'var(--success, #22c55e)' }} />
+                <span>
+                  <strong>Gateway Aktif ({classInfo?.waProvider ? classInfo.waProvider.toUpperCase() : 'FONNTE'}):</strong> Target: <code style={{ fontSize: '0.72rem', padding: '0.1rem 0.3rem', background: 'var(--bg)', borderRadius: '4px' }}>{classInfo?.waTargetGroup || 'Belum diisi'}</code>
+                  {classInfo?.waAutoSendSchedule && (
+                    <span style={{ marginLeft: '0.4rem', color: 'var(--text-muted)' }}>
+                      • Otomatis jam {classInfo?.waAutoSendTime || '19:00'} WIB
+                    </span>
+                  )}
+                </span>
+              </>
+            ) : (
+              <>
+                <AlertCircle size={14} style={{ color: 'var(--warning, #f59e0b)' }} />
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  <strong>Gateway Otomatisasi:</strong> Belum dikonfigurasi. Atur di menu Pengaturan Admin &rarr; Format WhatsApp.
+                </span>
+              </>
+            )}
           </div>
-          <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.62rem', padding: '0.05rem 0.35rem' }}>
-            Rencana Lanjutan
-          </span>
+          {classInfo?.waGatewayEnabled && classInfo?.waLastAutoSentDate ? (
+            <span className="notion-tag notion-tag-green" style={{ fontSize: '0.65rem', padding: '0.05rem 0.4rem' }}>
+              Terakhir: {classInfo.waLastAutoSentDate}
+            </span>
+          ) : (
+            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.65rem', padding: '0.05rem 0.4rem' }}>
+              {classInfo?.waGatewayEnabled ? 'Siap Kirim' : 'Manual Mode'}
+            </span>
+          )}
         </div>
 
         {/* Modal Action Buttons */}
@@ -438,7 +449,7 @@ export default function WhatsAppShareModal({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
-          gap: '0.6rem',
+          gap: '0.55rem',
           flexWrap: 'wrap',
           paddingTop: '0.65rem',
           borderTop: '1px solid var(--border)'
@@ -457,22 +468,49 @@ export default function WhatsAppShareModal({
             style={{ gap: '0.35rem' }}
           >
             {isCopied ? <Check size={14} /> : <Copy size={14} />}
-            <span>{isCopied ? 'Tersalin ke Clipboard!' : 'Copy Message'}</span>
+            <span>{isCopied ? 'Tersalin!' : 'Copy Message'}</span>
           </button>
           <button
             type="button"
             className="btn btn-sm"
             onClick={handleOpenWhatsApp}
+            title="Buka WhatsApp Web / App untuk memilih kontak/grup manual"
             style={{
               gap: '0.35rem',
               backgroundColor: '#25D366',
               color: '#FFFFFF',
               borderColor: '#25D366',
-              fontWeight: 700
+              fontWeight: 600
             }}
           >
             <MessageCircle size={14} />
-            <span>Share WhatsApp</span>
+            <span>Buka WhatsApp</span>
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={handleSendToGroup}
+            disabled={isSendingToGroup}
+            title="Kirim pesan langsung ke grup kelas via Gateway WhatsApp"
+            style={{
+              gap: '0.35rem',
+              backgroundColor: '#128C7E',
+              color: '#FFFFFF',
+              borderColor: '#128C7E',
+              fontWeight: 700
+            }}
+          >
+            {isSendingToGroup ? (
+              <>
+                <Loader2 size={14} className="spin" />
+                <span>Mengirim...</span>
+              </>
+            ) : (
+              <>
+                <Send size={14} />
+                <span>Kirim ke Grup WA</span>
+              </>
+            )}
           </button>
         </div>
 

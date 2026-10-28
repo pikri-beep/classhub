@@ -120,6 +120,17 @@ ClassHub dapat diinstal langsung ke layar utama (*Add to Home Screen*) pada pera
 
 ---
 
+## 📲 Integrasi WhatsApp Gateway & Otomasi Grup
+
+ClassHub dilengkapi dengan integrasi WhatsApp Gateway untuk mengirimkan pesan briefing kelas harian (*Daily Brief*) langsung dan otomatis ke grup WhatsApp kelas:
+
+* **Penyedia Gateway:** Mendukung **Fonnte** (rekomendasi untuk Indonesia), **Wablas**, dan **Custom Webhook/REST API**.
+* **Otomasi Pengiriman Terjadwal:** Mengirimkan pesan pengingat jadwal, deadline tugas, dan petugas piket esok hari secara otomatis pada jam yang ditentukan (default: **19:00 WIB**, Minggu–Kamis malam).
+* **1-Click Kirim Langsung:** Tombol **"Kirim ke Grup WA"** di dialog WhatsApp Brief untuk pengiriman instan ke grup kelas dengan feedback status real-time.
+* **Pengaturan & Uji Coba:** Dikonfigurasi melalui **Konsol Admin &rarr; Identitas & Pengaturan &rarr; WhatsApp & Otomasi**, lengkap dengan tombol pengujian koneksi (*Test Ping*).
+
+---
+
 <div align="center">
 
   <sub>Dibuat dengan dedikasi untuk seluruh warga kelas XI PPLG.</sub><br/>

@@ -19,13 +19,20 @@ import {
   Eye,
   EyeOff,
   ShieldAlert,
-  History
+  History,
+  Send,
+  Radio,
+  CheckCircle2,
+  Loader2,
+  HelpCircle,
+  Sparkles
 } from 'lucide-react';
 import { useStore } from '../../../context/StoreContext';
 import { useToast } from '../../../context/ToastContext';
 import { processImageFile } from '../../../lib/imageUtils';
 import { StatusBadge, ConfirmDialog, AuditLogWidget } from '../../../components/admin';
 import { formatDateIndo } from '../../../lib/dateUtils';
+import { sendTestWhatsAppMessage } from '../../../lib/whatsappService';
 import {
   DEFAULT_WA_GREETING,
   DEFAULT_WA_BANNER_TITLE,
@@ -85,6 +92,18 @@ export default function SettingsTab({ onOpenWhatsApp }) {
   const [waIncludePiket, setWaIncludePiket] = useState(data.classInfo?.waIncludePiket !== false);
   const [waIncludeExams, setWaIncludeExams] = useState(data.classInfo?.waIncludeExams !== false);
 
+  // WhatsApp Gateway & Automation state
+  const [waGatewayEnabled, setWaGatewayEnabled] = useState(Boolean(data.classInfo?.waGatewayEnabled));
+  const [waProvider, setWaProvider] = useState(data.classInfo?.waProvider || 'fonnte');
+  const [waApiToken, setWaApiToken] = useState(data.classInfo?.waApiToken || '');
+  const [waTargetGroup, setWaTargetGroup] = useState(data.classInfo?.waTargetGroup || '');
+  const [waCustomEndpoint, setWaCustomEndpoint] = useState(data.classInfo?.waCustomEndpoint || '');
+  const [waAutoSendSchedule, setWaAutoSendSchedule] = useState(Boolean(data.classInfo?.waAutoSendSchedule));
+  const [waAutoSendTime, setWaAutoSendTime] = useState(data.classInfo?.waAutoSendTime || '19:00');
+  const [waAutoSendDays, setWaAutoSendDays] = useState(data.classInfo?.waAutoSendDays || ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis']);
+  const [showApiToken, setShowApiToken] = useState(false);
+  const [isTestingWa, setIsTestingWa] = useState(false);
+
   // Page Access (Maintenance Mode)
   const defaultPageAccess = useMemo(() => ({
     cash: { isEnabled: true, reason: '' },
@@ -125,6 +144,15 @@ export default function SettingsTab({ onOpenWhatsApp }) {
       setWaIncludeTasks(data.classInfo.waIncludeTasks !== false);
       setWaIncludePiket(data.classInfo.waIncludePiket !== false);
       setWaIncludeExams(data.classInfo.waIncludeExams !== false);
+
+      setWaGatewayEnabled(Boolean(data.classInfo.waGatewayEnabled));
+      setWaProvider(data.classInfo.waProvider || 'fonnte');
+      setWaApiToken(data.classInfo.waApiToken || '');
+      setWaTargetGroup(data.classInfo.waTargetGroup || '');
+      setWaCustomEndpoint(data.classInfo.waCustomEndpoint || '');
+      setWaAutoSendSchedule(Boolean(data.classInfo.waAutoSendSchedule));
+      setWaAutoSendTime(data.classInfo.waAutoSendTime || '19:00');
+      setWaAutoSendDays(data.classInfo.waAutoSendDays || ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis']);
     }
   }, [data.classInfo]);
 
@@ -281,7 +309,7 @@ export default function SettingsTab({ onOpenWhatsApp }) {
   };
 
   const handleSaveWaBriefSettings = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     updateClassInfo({
       waGreeting: waGreeting.trim(),
       waBannerTitle: waBannerTitle.trim() || DEFAULT_WA_BANNER_TITLE,
@@ -290,9 +318,49 @@ export default function SettingsTab({ onOpenWhatsApp }) {
       waIncludeSchedule,
       waIncludeTasks,
       waIncludePiket,
-      waIncludeExams
+      waIncludeExams,
+      waGatewayEnabled,
+      waProvider,
+      waApiToken: waApiToken.trim(),
+      waTargetGroup: waTargetGroup.trim(),
+      waCustomEndpoint: waCustomEndpoint.trim(),
+      waAutoSendSchedule,
+      waAutoSendTime,
+      waAutoSendDays
     });
-    showToast('Format default WhatsApp Brief berhasil disimpan! 📲', 'success');
+    showToast('Pengaturan WhatsApp & Otomasi Grup berhasil disimpan! 📲', 'success');
+  };
+
+  const handleTestWhatsAppConnection = async () => {
+    if (!waTargetGroup) {
+      showToast('Target ID Grup WhatsApp belum diisi! Masukkan ID grup terlebih dahulu.', 'warning');
+      return;
+    }
+    if (waProvider !== 'webhook' && !waApiToken) {
+      showToast('API Token WhatsApp belum diisi!', 'warning');
+      return;
+    }
+
+    setIsTestingWa(true);
+    try {
+      const result = await sendTestWhatsAppMessage({
+        provider: waProvider,
+        token: waApiToken,
+        target: waTargetGroup,
+        customEndpoint: waCustomEndpoint,
+        className: settingsName || 'XI PPLG'
+      });
+
+      if (result.success) {
+        showToast('✅ Pesan uji coba berhasil terkirim ke grup WhatsApp!', 'success');
+      } else {
+        showToast(`❌ Uji coba gagal: ${result.error}`, 'error');
+      }
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error');
+    } finally {
+      setIsTestingWa(false);
+    }
   };
 
   const handleResetWaBriefSettings = () => {
@@ -503,7 +571,17 @@ export default function SettingsTab({ onOpenWhatsApp }) {
             className={`admin-subtab-btn ${activeSubTab === 'whatsapp' ? 'active' : ''}`}
           >
             <MessageCircle size={15} />
-            <span>Format WhatsApp</span>
+            <span>WhatsApp & Otomasi</span>
+            {waGatewayEnabled && (
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--success, #22c55e)',
+                display: 'inline-block',
+                marginLeft: '0.15rem'
+              }} title="Gateway Aktif" />
+            )}
           </button>
 
           <button
@@ -1076,158 +1154,516 @@ export default function SettingsTab({ onOpenWhatsApp }) {
           SUB-TAB 3: FORMAT PESAN WHATSAPP PINTAR
           ========================================================================= */}
       {activeSubTab === 'whatsapp' && (
-        <div className="admin-settings-card">
-          <div className="admin-settings-card-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <MessageCircle size={18} color="var(--success)" />
-              <div>
-                <h3 className="admin-settings-title">
-                  Format Pesan WhatsApp Pintar (Daily Brief)
-                </h3>
-                <p className="admin-settings-desc">
-                  Atur template briefing harian yang akan otomatis disusun saat menekan tombol WhatsApp Brief.
-                </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+          {/* KARTU 1: FORMAT TEMPLATE PESAN WHATSAPP BRIEF */}
+          <div className="admin-settings-card">
+            <div className="admin-settings-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MessageCircle size={18} color="var(--success)" />
+                <div>
+                  <h3 className="admin-settings-title">
+                    Format Pesan WhatsApp Pintar (Daily Brief)
+                  </h3>
+                  <p className="admin-settings-desc">
+                    Atur template susunan briefing harian yang akan otomatis dirangkum saat menekan tombol WhatsApp Brief.
+                  </p>
+                </div>
               </div>
+              <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                Template Brief
+              </span>
             </div>
-            <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-              Broadcast WA
-            </span>
+
+            <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Pembuka / Salam</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: Assalamu'alaikum wr. wb. & Selamat malam teman-teman..."
+                    value={waGreeting}
+                    onChange={(e) => setWaGreeting(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 600 }}>Judul Pengingat</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="BRIEFING KELAS"
+                    value={waBannerTitle}
+                    onChange={(e) => setWaBannerTitle(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Catatan Kaki / Pengingat Khusus</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="📌 Harap rapikan tugas sebelum jam pelajaran pertama dimulai."
+                  value={waFooterNote}
+                  onChange={(e) => setWaFooterNote(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Penutup / Signature</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Semangat belajarnya, Pengurus Kelas XI PPLG"
+                  value={waClosing}
+                  onChange={(e) => setWaClosing(e.target.value)}
+                />
+              </div>
+
+              {/* Pilihan Modul yang Disertakan */}
+              <div>
+                <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.45rem', display: 'block' }}>
+                  Pilihan Konten Pengingat:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeSchedule}
+                      onChange={(e) => setWaIncludeSchedule(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    />
+                    <span>📅 Jadwal Pelajaran</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeTasks}
+                      onChange={(e) => setWaIncludeTasks(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    />
+                    <span>📝 Deadline Tugas</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludePiket}
+                      onChange={(e) => setWaIncludePiket(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    />
+                    <span>🧹 Petugas Piket</span>
+                  </label>
+
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={waIncludeExams}
+                      onChange={(e) => setWaIncludeExams(e.target.checked)}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    />
+                    <span>🎯 Pengingat Ujian</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Pratinjau Hasil Format:
+                  </span>
+                  <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', padding: '0.1rem 0.45rem' }}>
+                    Preview
+                  </span>
+                </div>
+                <div className="admin-wa-preview-box">
+                  <pre className="admin-wa-preview-text">
+                    {previewBriefText}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.25rem' }}>
+                <button
+                  type="button"
+                  onClick={handleResetWaBriefSettings}
+                  className="btn btn-ghost btn-sm"
+                  style={{ color: 'var(--text-muted)', fontSize: '0.75rem', gap: '0.3rem' }}
+                >
+                  <RotateCcw size={12} />
+                  <span>Reset ke Bawaan</span>
+                </button>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-sm"
+                  style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
+                >
+                  Simpan Format Template
+                </button>
+              </div>
+            </form>
           </div>
 
-          <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Pembuka / Salam</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: Assalamu'alaikum wr. wb. & Selamat malam teman-teman..."
-                  value={waGreeting}
-                  onChange={(e) => setWaGreeting(e.target.value)}
-                />
+          {/* KARTU 2: INTEGRASI WHATSAPP GATEWAY & OTOMASI GRUP KELAS */}
+          <div className="admin-settings-card">
+            <div className="admin-settings-card-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Radio size={18} color="var(--primary)" />
+                <div>
+                  <h3 className="admin-settings-title">
+                    Integrasi WhatsApp Gateway & Otomasi Grup Kelas
+                  </h3>
+                  <p className="admin-settings-desc">
+                    Hubungkan API WhatsApp gateway (Fonnte, Wablas, atau Webhook) agar pesan briefing harian otomatis terkirim langsung ke grup kelas XI PPLG.
+                  </p>
+                </div>
               </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: 600 }}>Judul Pengingat</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="BRIEFING KELAS"
-                  value={waBannerTitle}
-                  onChange={(e) => setWaBannerTitle(e.target.value)}
-                  required
-                />
-              </div>
+              <span className={`notion-tag ${waGatewayEnabled ? 'notion-tag-green' : 'notion-tag-gray'}`} style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                {waGatewayEnabled ? 'Gateway Aktif' : 'Nonaktif'}
+              </span>
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Catatan Kaki / Pengingat Khusus</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="📌 Harap rapikan tugas sebelum jam pelajaran pertama dimulai."
-                value={waFooterNote}
-                onChange={(e) => setWaFooterNote(e.target.value)}
-              />
-            </div>
+            <form onSubmit={handleSaveWaBriefSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Toggle Master Gateway */}
+              <div style={{
+                padding: '0.85rem 1rem',
+                backgroundColor: 'var(--bg)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Aktifkan Pengiriman Otomatis ke Grup WhatsApp
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Izinkan sistem mengirimkan pesan WhatsApp brief langsung ke grup kelas tanpa perlu konfirmasi manual satu per satu.
+                  </div>
+                </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ fontWeight: 600 }}>Kalimat Penutup / Signature</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="Semangat belajarnya, Pengurus Kelas XI PPLG"
-                value={waClosing}
-                onChange={(e) => setWaClosing(e.target.value)}
-              />
-            </div>
-
-            {/* Pilihan Modul yang Disertakan */}
-            <div>
-              <label className="form-label" style={{ fontWeight: 600, marginBottom: '0.45rem', display: 'block' }}>
-                Pilihan Konten Pengingat:
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.65rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
+                <label className="toggle-switch" style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
-                    checked={waIncludeSchedule}
-                    onChange={(e) => setWaIncludeSchedule(e.target.checked)}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    checked={waGatewayEnabled}
+                    onChange={(e) => setWaGatewayEnabled(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                   />
-                  <span>📅 Jadwal Pelajaran</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={waIncludeTasks}
-                    onChange={(e) => setWaIncludeTasks(e.target.checked)}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                  />
-                  <span>📝 Deadline Tugas</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={waIncludePiket}
-                    onChange={(e) => setWaIncludePiket(e.target.checked)}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                  />
-                  <span>🧹 Petugas Piket</span>
-                </label>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={waIncludeExams}
-                    onChange={(e) => setWaIncludeExams(e.target.checked)}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
-                  />
-                  <span>🎯 Pengingat Ujian</span>
+                  <span style={{ marginLeft: '0.5rem', fontSize: '0.82rem', fontWeight: 600 }}>
+                    {waGatewayEnabled ? 'Aktif' : 'Mati'}
+                  </span>
                 </label>
               </div>
-            </div>
 
-            {/* Live Preview Box */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  Pratinjau Hasil Format:
-                </span>
-                <span className="notion-tag notion-tag-gray" style={{ fontSize: '0.75rem', padding: '0.1rem 0.45rem' }}>
-                  Preview
-                </span>
-              </div>
-              <div className="admin-wa-preview-box">
-                <pre className="admin-wa-preview-text">
-                  {previewBriefText}
-                </pre>
-              </div>
-            </div>
+              {waGatewayEnabled && (
+                <>
+                  {/* Grid Konfigurasi Gateway */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                    {/* Provider */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600 }}>
+                        Penyedia WhatsApp Gateway
+                      </label>
+                      <select
+                        className="form-input"
+                        value={waProvider}
+                        onChange={(e) => setWaProvider(e.target.value)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <option value="fonnte">Fonnte (Rekomendasi Indonesia — Stabil & Cepat)</option>
+                        <option value="wablas">Wablas Gateway</option>
+                        <option value="webhook">Custom Webhook / REST Bot API</option>
+                      </select>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                        {waProvider === 'fonnte' && 'Menggunakan endpoint resmi https://api.fonnte.com/send'}
+                        {waProvider === 'wablas' && 'Menggunakan endpoint resmi https://phone.wablas.com'}
+                        {waProvider === 'webhook' && 'Kirim payload JSON ke endpoint server atau n8n/bot kustom Anda.'}
+                      </span>
+                    </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.65rem', marginTop: '0.25rem' }}>
-              <button
-                type="button"
-                onClick={handleResetWaBriefSettings}
-                className="btn btn-ghost btn-sm"
-                style={{ color: 'var(--text-muted)', fontSize: '0.75rem', gap: '0.3rem' }}
-              >
-                <RotateCcw size={12} />
-                <span>Reset ke Bawaan</span>
-              </button>
+                    {/* Target Group ID */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span>Target ID Grup WhatsApp</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 400 }}>Format: ...@g.us</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Contoh: 120363012345678901@g.us"
+                        value={waTargetGroup}
+                        onChange={(e) => setWaTargetGroup(e.target.value)}
+                        required={waGatewayEnabled}
+                      />
+                    </div>
+                  </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary btn-sm"
-                style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
-              >
-                Simpan Format
-              </button>
-            </div>
-          </form>
+                  {/* API Token Input */}
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontWeight: 600 }}>
+                      API Token / Secret Key ({waProvider.toUpperCase()})
+                    </label>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type={showApiToken ? 'text' : 'password'}
+                        className="form-input"
+                        placeholder="Masukkan API Token / Authorization Key..."
+                        value={waApiToken}
+                        onChange={(e) => setWaApiToken(e.target.value)}
+                        style={{ paddingRight: '2.5rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowApiToken(prev => !prev)}
+                        style={{
+                          position: 'absolute',
+                          right: '0.6rem',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                        title={showApiToken ? 'Sembunyikan Token' : 'Lihat Token'}
+                      >
+                        {showApiToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                      Token dapat diperoleh dari menu <strong>Device</strong> di dashboard penyedia Anda (misal: <em>fonnte.com</em>).
+                    </span>
+                  </div>
+
+                  {/* Custom Webhook URL (jika provider webhook) */}
+                  {waProvider === 'webhook' && (
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 600 }}>
+                        URL Endpoint Webhook / Bot API
+                      </label>
+                      <input
+                        type="url"
+                        className="form-input"
+                        placeholder="https://api.domain-anda.com/send-message"
+                        value={waCustomEndpoint}
+                        onChange={(e) => setWaCustomEndpoint(e.target.value)}
+                        required={waProvider === 'webhook'}
+                      />
+                    </div>
+                  )}
+
+                  {/* Panduan Mendapatkan ID Grup WhatsApp */}
+                  <div style={{
+                    padding: '0.75rem 0.95rem',
+                    backgroundColor: 'var(--hover-bg)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px dashed var(--border)',
+                    fontSize: '0.75rem',
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.5
+                  }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <HelpCircle size={14} style={{ color: 'var(--primary)' }} />
+                      <span>Cara Mudah Mendapatkan ID Grup WhatsApp:</span>
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                      <li>Pastikan nomor WhatsApp bot Anda sudah terdaftar dan terhubung di dashboard Fonnte / Wablas.</li>
+                      <li>Undang nomor bot masuk ke dalam grup WhatsApp kelas XI PPLG.</li>
+                      <li>Buka menu <strong>Groups</strong> di dashboard Fonnte untuk melihat daftar ID grup yang berakhiran <code>@g.us</code>, lalu salin ke kolom di atas.</li>
+                    </ol>
+                  </div>
+
+                  {/* Bagian Jadwal Otomatis Harian */}
+                  <div style={{
+                    padding: '0.85rem 1rem',
+                    backgroundColor: 'var(--bg)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.85rem'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Sparkles size={14} style={{ color: 'var(--primary)' }} />
+                          <span>Jadwal Pengiriman Otomatis Harian (Daily Auto-Send)</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Sistem akan mengirimkan rangkuman KBM besok secara berkala ke grup WhatsApp saat portal aktif.
+                        </div>
+                      </div>
+
+                      <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '0.4rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={waAutoSendSchedule}
+                          onChange={(e) => setWaAutoSendSchedule(e.target.checked)}
+                          style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Jadwal Aktif</span>
+                      </label>
+                    </div>
+
+                    {waAutoSendSchedule && (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border)' }}>
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                          <label className="form-label" style={{ fontWeight: 600 }}>Jam Pengiriman (WIB)</label>
+                          <input
+                            type="time"
+                            className="form-input"
+                            value={waAutoSendTime}
+                            onChange={(e) => setWaAutoSendTime(e.target.value)}
+                            required
+                          />
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem', display: 'block' }}>
+                            Waktu rekomendasi: <strong>19:00 WIB</strong> (malam sebelum KBM).
+                          </span>
+                        </div>
+
+                        <div>
+                          <label className="form-label" style={{ fontWeight: 600, display: 'block', marginBottom: '0.35rem' }}>
+                            Hari Pengiriman Aktif:
+                          </label>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'].map(day => {
+                              const isChecked = Array.isArray(waAutoSendDays) && waAutoSendDays.includes(day);
+                              return (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isChecked) {
+                                      setWaAutoSendDays(waAutoSendDays.filter(d => d !== day));
+                                    } else {
+                                      setWaAutoSendDays([...waAutoSendDays, day]);
+                                    }
+                                  }}
+                                  className={`btn btn-xs ${isChecked ? 'btn-primary' : 'btn-ghost'}`}
+                                  style={{ fontSize: '0.72rem', borderRadius: 'var(--radius-full)' }}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.3rem', display: 'block' }}>
+                            Rekomendasi: <em>Minggu s/d Kamis</em> untuk briefing jadwal Senin s/d Jumat.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Status Pengiriman Terakhir */}
+                  <div style={{
+                    padding: '0.75rem 0.95rem',
+                    backgroundColor: 'var(--bg-surface)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem',
+                    fontSize: '0.75rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                      <CheckCircle2 size={15} style={{ color: data.classInfo?.waLastAutoSentStatus === 'success' ? 'var(--success)' : 'var(--text-muted)' }} />
+                      <span>
+                        <strong>Status Terakhir:</strong>{' '}
+                        {data.classInfo?.waLastAutoSentDate
+                          ? `Terkirim pada ${data.classInfo.waLastAutoSentDate} (${data.classInfo?.waLastAutoSentStatus || 'ok'})`
+                          : 'Belum pernah dikirim otomatis'}
+                      </span>
+                    </div>
+
+                    {data.classInfo?.waLastAutoSentTime && (
+                      <span style={{ color: 'var(--text-muted)' }}>
+                        {new Date(data.classInfo.waLastAutoSentTime).toLocaleTimeString('id-ID')} WIB
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tombol Aksi Gateway */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.65rem',
+                    paddingTop: '0.5rem',
+                    borderTop: '1px solid var(--border)'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={handleTestWhatsAppConnection}
+                      disabled={isTestingWa}
+                      className="btn btn-secondary btn-sm"
+                      style={{ gap: '0.4rem', fontWeight: 600 }}
+                      title="Kirim pesan tes ke grup WhatsApp untuk memverifikasi koneksi API dan ID grup"
+                    >
+                      {isTestingWa ? (
+                        <>
+                          <Loader2 size={14} className="spin" />
+                          <span>Menguji Koneksi...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          <span>🧪 Uji Coba Kirim ke Grup</span>
+                        </>
+                      )}
+                    </button>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {onOpenWhatsApp && (
+                        <button
+                          type="button"
+                          onClick={onOpenWhatsApp}
+                          className="btn btn-ghost btn-sm"
+                          style={{ fontSize: '0.8rem' }}
+                        >
+                          Buka Dialog Briefing
+                        </button>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-sm"
+                        style={{ fontWeight: 600, padding: '0.5rem 1.25rem' }}
+                      >
+                        Simpan Konfigurasi Otomasi
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {!waGatewayEnabled && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-sm"
+                    style={{ fontWeight: 600 }}
+                  >
+                    Simpan Perubahan
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+
         </div>
       )}
 
